@@ -242,7 +242,6 @@ const screenStyles = StyleSheet.create({
   },
   title: {
     fontSize: 18,
-    fontWeight: '700',
     color: colors.text,
     fontFamily: 'Poppins_700Bold',
   },
@@ -255,7 +254,6 @@ const screenStyles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: 16,
-    fontWeight: '600',
     color: colors.text,
     fontFamily: 'Poppins_600SemiBold',
     marginTop: 8,
@@ -331,7 +329,7 @@ const gridStyles = StyleSheet.create({
   likeCount: {
     fontSize: 14,
     color: '#FFFFFF',
-    fontWeight: '600',
+    fontFamily: 'Poppins_600SemiBold',
   },
   multiIndicator: {
     position: 'absolute',

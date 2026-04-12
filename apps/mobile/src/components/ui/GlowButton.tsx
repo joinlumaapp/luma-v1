@@ -19,7 +19,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { palette } from '../../theme/colors';
 import { borderRadius, spacing } from '../../theme/spacing';
-import { fontWeights } from '../../theme/typography';
+import {  } from '../../theme/typography';
 
 const SPRING_CONFIG = { damping: 14, stiffness: 200 };
 
@@ -154,13 +154,13 @@ const styles = StyleSheet.create({
   },
   text: {
     fontSize: 16,
-    fontWeight: fontWeights.semibold,
+    fontFamily: 'Poppins_700Bold',
     color: palette.white,
     letterSpacing: 0.3,
   },
   textSmall: {
     fontSize: 14,
-    fontWeight: fontWeights.semibold,
+    fontFamily: 'Poppins_700Bold',
     color: palette.white,
     letterSpacing: 0.2,
   },

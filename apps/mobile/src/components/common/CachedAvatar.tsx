@@ -4,7 +4,7 @@
 import React, { memo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { CachedImage } from './CachedImage';
-import { fontWeights } from '../../theme/typography';
+import {  } from '../../theme/typography';
 
 interface CachedAvatarProps {
   /** Remote avatar URI — shows initials fallback when null/undefined */
@@ -126,7 +126,7 @@ const styles = StyleSheet.create({
   },
   initialsText: {
     color: '#FFFFFF',
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
     includeFontPadding: false,
   },
 });

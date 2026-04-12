@@ -68,6 +68,10 @@ export interface FeedPost {
   currentMood?: string | null;
   /** Random prompt answer from the user — shown as conversation starter */
   promptPreview?: { id: string; question: string; answer: string; emoji?: string } | null;
+  /** User's job title */
+  userJob?: string | null;
+  /** Compatibility percentage with current user (0-100) */
+  compatibilityPercent?: number | null;
 }
 
 export interface CreatePostRequest {

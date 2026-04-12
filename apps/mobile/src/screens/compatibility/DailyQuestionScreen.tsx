@@ -257,7 +257,6 @@ const celebrationStyles = StyleSheet.create({
     ...typography.h3,
     color: palette.gold[400],
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     marginBottom: spacing.md,
     textAlign: 'center',
   },
@@ -274,13 +273,11 @@ const celebrationStyles = StyleSheet.create({
     ...typography.bodyLarge,
     color: colors.text,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   milestoneText: {
     ...typography.body,
     color: palette.gold[400],
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     textAlign: 'center',
     marginTop: spacing.xs,
   },
@@ -351,7 +348,6 @@ const streakStyles = StyleSheet.create({
     ...typography.bodySmall,
     color: colors.accent,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   message: {
     ...typography.captionSmall,
@@ -447,7 +443,7 @@ const OptionCard: React.FC<OptionCardProps> = ({
           <Text
             style={[
               optionStyles.text,
-              isSelected && { color: colors.text, fontWeight: '600' },
+              isSelected && { color: colors.text, fontFamily: 'Poppins_600SemiBold' },
             ]}
           >
             {option.labelTr}
@@ -473,7 +469,7 @@ const OptionCard: React.FC<OptionCardProps> = ({
             <Text
               style={[
                 optionStyles.insightPercent,
-                isUserChoice && { color: optionColors[index], fontWeight: '600' },
+                isUserChoice && { color: optionColors[index], fontFamily: 'Poppins_600SemiBold' },
               ]}
             >
               %{insightPercent}
@@ -507,7 +503,6 @@ const optionStyles = StyleSheet.create({
     ...typography.bodySmall,
     color: colors.textTertiary,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   text: {
     ...typography.body,
@@ -713,7 +708,7 @@ export const DailyQuestionScreen: React.FC = () => {
           style={{ marginTop: 24 }}
           onPress={() => navigation.goBack()}
         >
-          <Text style={[styles.retryText, { color: colors.textSecondary }]}>Geri Dön</Text>
+          <Text style={[styles.retryText, { color: colors.textSecondary }]}>Geri dön</Text>
         </TouchableOpacity>
       </View>
     );
@@ -733,7 +728,7 @@ export const DailyQuestionScreen: React.FC = () => {
           style={{ marginTop: 12 }}
           onPress={() => navigation.goBack()}
         >
-          <Text style={[styles.retryText, { color: colors.textSecondary }]}>Geri Dön</Text>
+          <Text style={[styles.retryText, { color: colors.textSecondary }]}>Geri dön</Text>
         </TouchableOpacity>
       </View>
     );
@@ -1020,7 +1015,6 @@ const styles = StyleSheet.create({
     ...typography.bodyLarge,
     color: colors.text,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   dayBadge: {
     backgroundColor: colors.primary + '20',
@@ -1032,7 +1026,6 @@ const styles = StyleSheet.create({
     ...typography.captionSmall,
     color: colors.primary,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
 
   // Streak
@@ -1063,7 +1056,6 @@ const styles = StyleSheet.create({
     ...typography.captionSmall,
     color: colors.primary,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   questionText: {
     ...typography.h4,
@@ -1099,14 +1091,12 @@ const styles = StyleSheet.create({
     ...typography.bodyLarge,
     color: colors.primary,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     marginBottom: spacing.xs,
   },
   insightStat: {
     ...typography.body,
     color: colors.text,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     marginBottom: spacing.sm,
   },
   insightMessage: {
@@ -1180,7 +1170,6 @@ const styles = StyleSheet.create({
     ...typography.body,
     color: colors.text,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     flex: 1,
   },
   answerStatsBreakdown: {
@@ -1200,7 +1189,6 @@ const styles = StyleSheet.create({
   answerStatsBarLabelActive: {
     color: colors.primary,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   answerStatsBarTrack: {
     flex: 1,
@@ -1222,13 +1210,11 @@ const styles = StyleSheet.create({
   answerStatsBarPercentActive: {
     color: colors.primary,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   answerStatsInsightMessage: {
     ...typography.bodySmall,
     color: colors.accent,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     marginBottom: spacing.xs,
   },
   answerStatsTotalCount: {

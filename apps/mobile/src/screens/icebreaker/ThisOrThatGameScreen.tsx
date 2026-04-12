@@ -23,7 +23,7 @@ import Animated, {
   SlideInRight,
 } from 'react-native-reanimated';
 import { colors, palette } from '../../theme/colors';
-import { fontWeights } from '../../theme/typography';
+import {  } from '../../theme/typography';
 import { spacing, borderRadius } from '../../theme/spacing';
 import type { MatchesStackParamList } from '../../navigation/types';
 
@@ -239,10 +239,10 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     flex: 1, textAlign: 'center',
-    fontSize: 18, fontWeight: fontWeights.bold, color: colors.text,
+    fontSize: 18, fontFamily: 'Poppins_800ExtraBold', color: colors.text,
   },
   progressText: {
-    fontSize: 14, fontWeight: fontWeights.semibold, color: palette.purple[400], width: 40, textAlign: 'right',
+    fontSize: 14, fontFamily: 'Poppins_700Bold', color: palette.purple[400], width: 40, textAlign: 'right',
   },
   progressBar: {
     height: 4, backgroundColor: colors.surface, marginHorizontal: spacing.lg,
@@ -255,7 +255,7 @@ const styles = StyleSheet.create({
     flex: 1, justifyContent: 'center', alignItems: 'center', padding: spacing.xl,
   },
   questionTitle: {
-    fontSize: 22, fontWeight: fontWeights.bold, color: colors.text,
+    fontSize: 22, fontFamily: 'Poppins_800ExtraBold', color: colors.text,
     textAlign: 'center', marginBottom: spacing.xl,
   },
   choicesRow: {
@@ -269,10 +269,10 @@ const styles = StyleSheet.create({
   },
   choiceEmoji: { fontSize: 48 },
   choiceLabel: {
-    fontSize: 20, fontWeight: fontWeights.bold, color: '#FFFFFF',
+    fontSize: 20, fontFamily: 'Poppins_800ExtraBold', color: '#FFFFFF',
   },
   vsText: {
-    fontSize: 16, fontWeight: fontWeights.bold, color: colors.textTertiary,
+    fontSize: 16, fontFamily: 'Poppins_800ExtraBold', color: colors.textTertiary,
   },
   // Results
   resultsContent: {
@@ -280,9 +280,9 @@ const styles = StyleSheet.create({
   },
   resultsHeader: { alignItems: 'center', gap: spacing.sm, marginTop: spacing.lg },
   resultsEmoji: { fontSize: 56 },
-  resultsTitle: { fontSize: 24, fontWeight: fontWeights.bold, color: colors.text },
+  resultsTitle: { fontSize: 24, fontFamily: 'Poppins_800ExtraBold', color: colors.text },
   resultsScore: {
-    fontSize: 16, fontWeight: fontWeights.medium, color: palette.purple[400],
+    fontSize: 16, fontFamily: 'Poppins_700Bold', color: palette.purple[400],
     textAlign: 'center',
   },
   comparisonList: { gap: spacing.sm, marginTop: spacing.md },
@@ -296,18 +296,18 @@ const styles = StyleSheet.create({
   comparisonCenter: {
     flex: 1, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 6,
   },
-  comparisonVs: { fontSize: 14, fontWeight: fontWeights.medium, color: colors.text },
+  comparisonVs: { fontSize: 14, fontFamily: 'Poppins_700Bold', color: colors.text },
   resultsLabels: {
     flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: spacing.xl,
   },
-  resultsLabelLeft: { fontSize: 14, fontWeight: fontWeights.semibold, color: palette.purple[400] },
-  resultsLabelRight: { fontSize: 14, fontWeight: fontWeights.semibold, color: '#EC4899' },
+  resultsLabelLeft: { fontSize: 14, fontFamily: 'Poppins_700Bold', color: palette.purple[400] },
+  resultsLabelRight: { fontSize: 14, fontFamily: 'Poppins_700Bold', color: '#EC4899' },
   resultsButtons: { gap: spacing.md, marginTop: spacing.lg },
   secondaryBtn: {
     paddingVertical: 16, alignItems: 'center', borderRadius: borderRadius.xl,
     backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.surfaceBorder,
   },
-  secondaryBtnText: { fontSize: 16, fontWeight: fontWeights.semibold, color: colors.text },
+  secondaryBtnText: { fontSize: 16, fontFamily: 'Poppins_700Bold', color: colors.text },
   primaryBtn: { paddingVertical: 16, alignItems: 'center', borderRadius: borderRadius.xl },
-  primaryBtnText: { fontSize: 16, fontWeight: fontWeights.bold, color: '#FFFFFF' },
+  primaryBtnText: { fontSize: 16, fontFamily: 'Poppins_800ExtraBold', color: '#FFFFFF' },
 });

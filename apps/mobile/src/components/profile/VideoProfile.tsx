@@ -15,7 +15,7 @@ import { Video, ResizeMode, type AVPlaybackStatus } from 'expo-av';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { colors, palette } from '../../theme/colors';
-import { fontWeights } from '../../theme/typography';
+import {  } from '../../theme/typography';
 import { spacing, borderRadius } from '../../theme/spacing';
 import { CachedImage } from '../common/CachedImage';
 
@@ -450,7 +450,7 @@ const styles = StyleSheet.create({
   },
   durationText: {
     fontSize: 14,
-    fontWeight: fontWeights.semibold,
+    fontFamily: 'Poppins_700Bold',
     color: palette.white,
     includeFontPadding: false,
   },
@@ -472,7 +472,7 @@ const styles = StyleSheet.create({
   },
   videoBadgeText: {
     fontSize: 14,
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
     color: palette.white,
     includeFontPadding: false,
   },
@@ -506,7 +506,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 14,
-    fontWeight: fontWeights.medium,
+    fontFamily: 'Poppins_700Bold',
     color: palette.white,
     includeFontPadding: false,
   },
@@ -524,7 +524,7 @@ const styles = StyleSheet.create({
   },
   retryButtonText: {
     fontSize: 14,
-    fontWeight: fontWeights.medium,
+    fontFamily: 'Poppins_700Bold',
     color: palette.white,
     includeFontPadding: false,
   },

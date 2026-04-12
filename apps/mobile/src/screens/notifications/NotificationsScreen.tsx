@@ -395,7 +395,7 @@ export const NotificationsScreen: React.FC = () => {
             accessibilityRole="button"
           >
             <Ionicons name="checkmark-done" size={16} color={palette.purple[500]} />
-            <Text style={styles.markAllText}>Tümünü Okundu İşaretle</Text>
+            <Text style={styles.markAllText}>Tümünü okundu işaretle</Text>
           </Pressable>
         )}
       </View>
@@ -481,7 +481,7 @@ const styles = StyleSheet.create({
   markAllText: {
     ...typography.caption,
     color: palette.purple[500],
-    fontWeight: '600',
+    fontFamily: 'Poppins_600SemiBold',
   },
   loadingContainer: {
     flex: 1,
@@ -497,7 +497,7 @@ const styles = StyleSheet.create({
   emptyText: {
     ...typography.bodyLarge,
     color: colors.text,
-    fontWeight: '600',
+    fontFamily: 'Poppins_600SemiBold',
     marginTop: spacing.md,
   },
   emptySubtext: {
@@ -535,7 +535,7 @@ const styles = StyleSheet.create({
   sectionBadgeText: {
     ...typography.captionSmall,
     color: '#FFFFFF',
-    fontWeight: '600',
+    fontFamily: 'Poppins_600SemiBold',
   },
   // ---- Notification Item ----
   notifItem: {
@@ -585,7 +585,7 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   notifName: {
-    fontWeight: '600',
+    fontFamily: 'Poppins_600SemiBold',
   },
   notifTime: {
     ...typography.caption,
@@ -602,7 +602,7 @@ const styles = StyleSheet.create({
   blurredHint: {
     ...typography.caption,
     color: palette.purple[400],
-    fontWeight: '500',
+    fontFamily: 'Poppins_500Medium',
     marginTop: 2,
   },
 });

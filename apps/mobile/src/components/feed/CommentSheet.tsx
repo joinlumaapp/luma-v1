@@ -406,7 +406,6 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 16,
-    fontWeight: '600',
     color: '#FFFFFF',
     fontFamily: 'Poppins_600SemiBold',
   },
@@ -450,7 +449,7 @@ const styles = StyleSheet.create({
   },
   avatarInitial: {
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: 'Poppins_600SemiBold',
     color: '#FFFFFF',
   },
   commentContent: {
@@ -465,7 +464,6 @@ const styles = StyleSheet.create({
   },
   commentName: {
     fontSize: 14,
-    fontWeight: '700',
     color: '#FFFFFF',
     fontFamily: 'Poppins_600SemiBold',
   },
@@ -541,7 +539,6 @@ const styles = StyleSheet.create({
   sendButtonText: {
     color: '#FFFFFF',
     fontSize: 14,
-    fontWeight: '600',
     fontFamily: 'Poppins_600SemiBold',
   },
   charCount: {

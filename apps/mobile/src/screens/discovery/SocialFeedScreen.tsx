@@ -1356,10 +1356,9 @@ const storySheetStyles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   title: {
-    fontSize: 17,
+    fontSize: 13,
     color: colors.text,
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
     marginBottom: spacing.sm,
   },
   row: {
@@ -1379,16 +1378,14 @@ const storySheetStyles = StyleSheet.create({
     flex: 1,
   },
   rowTitle: {
-    fontSize: 19,
+    fontSize: 15,
     color: colors.text,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_700Bold',
   },
   rowSub: {
-    fontSize: 18,
+    fontSize: 14,
     color: colors.textTertiary,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '700',
+    fontFamily: 'Poppins_700Bold',
     marginTop: 1,
   },
 });
@@ -1423,10 +1420,9 @@ const createStyles = StyleSheet.create({
     elevation: 4,
   },
   placeholder: {
-    fontSize: 20,
+    fontSize: 15,
     color: colors.textTertiary,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '700',
+    fontFamily: 'Poppins_500Medium',
     marginBottom: spacing.lg,
   },
   iconRow: {
@@ -1439,9 +1435,8 @@ const createStyles = StyleSheet.create({
     flex: 1,
   },
   iconLabel: {
-    fontSize: 18,
-    fontFamily: 'Poppins_500Medium',
-    fontWeight: '700',
+    fontSize: 13,
+    fontFamily: 'Poppins_600SemiBold',
   },
 });
 
@@ -1453,9 +1448,8 @@ const starsStyles = StyleSheet.create({
     marginBottom: 4,
   },
   title: {
-    fontSize: 24,
+    fontSize: 22,
     fontFamily: 'Poppins_800ExtraBold',
-    fontWeight: '800',
     color: '#1A1A2E',
     textAlign: 'center',
     marginBottom: 12,
@@ -1476,12 +1470,11 @@ const starsStyles = StyleSheet.create({
     gap: 6,
   },
   emoji: {
-    fontSize: 26,
+    fontSize: 16,
   },
   category: {
-    fontSize: 17,
+    fontSize: 13,
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
     color: 'rgba(0,0,0,0.65)',
     textAlign: 'center',
   },
@@ -1494,23 +1487,20 @@ const starsStyles = StyleSheet.create({
     marginTop: 4,
   },
   avatarInitial: {
-    fontSize: 24,
+    fontSize: 14,
     fontFamily: 'Poppins_800ExtraBold',
-    fontWeight: '800',
     color: '#FFFFFF',
   },
   name: {
-    fontSize: 18,
-    fontFamily: 'Poppins_800ExtraBold',
-    fontWeight: '800',
+    fontSize: 13,
+    fontFamily: 'Poppins_700Bold',
     color: '#1A1A2E',
     marginTop: 2,
   },
   value: {
-    fontSize: 17,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
-    color: 'rgba(0,0,0,0.65)',
+    fontSize: 12,
+    fontFamily: 'Poppins_500Medium',
+    color: 'rgba(0,0,0,0.55)',
   },
   seeAllButton: {
     flexDirection: 'row',
@@ -1522,9 +1512,8 @@ const starsStyles = StyleSheet.create({
     paddingVertical: 8,
   },
   seeAllText: {
-    fontSize: 18,
+    fontSize: 14,
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
     color: '#8B5CF6',
   },
 });
@@ -1548,13 +1537,11 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.divider ?? 'rgba(0,0,0,0.1)',
   },
   headerTitle: {
-    fontSize: 32,
+    fontSize: 28,
     lineHeight: 38,
     fontFamily: 'Poppins_800ExtraBold',
-    fontWeight: '800',
     color: '#1A1A2E',
     letterSpacing: 0.2,
-    includeFontPadding: false,
     flexShrink: 1,
   },
   headerRight: {
@@ -1613,10 +1600,9 @@ const tabStyles = StyleSheet.create({
     paddingHorizontal: spacing.md,
   },
   tabTextActive: {
-    fontSize: 18,
+    fontSize: 14,
     color: '#FFFFFF',
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
   },
   // Inactive tab — soft surface
   tabInactiveOuter: {
@@ -1637,10 +1623,9 @@ const tabStyles = StyleSheet.create({
     paddingHorizontal: spacing.md,
   },
   tabText: {
-    fontSize: 18,
+    fontSize: 14,
     color: colors.textSecondary,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_700Bold',
   },
 });
 
@@ -1671,8 +1656,7 @@ const mediaCaptionStyles = StyleSheet.create({
   headerTitle: {
     ...typography.body,
     color: colors.text,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_700Bold',
   },
   cancelText: {
     ...typography.body,
@@ -1685,9 +1669,8 @@ const mediaCaptionStyles = StyleSheet.create({
   },
   submitButtonText: {
     color: '#FFFFFF',
-    fontSize: 18,
+    fontSize: 14,
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
   },
   previewContainer: {
     marginHorizontal: spacing.lg,
@@ -1769,8 +1752,7 @@ const modalStyles = StyleSheet.create({
   headerTitle: {
     ...typography.body,
     color: colors.text,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_700Bold',
   },
   headerBadge: {
     flexDirection: 'row',
@@ -1781,12 +1763,11 @@ const modalStyles = StyleSheet.create({
     gap: 4,
   },
   headerBadgeEmoji: {
-    fontSize: 18,
+    fontSize: 14,
   },
   headerBadgeLabel: {
-    fontSize: 18,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '700',
+    fontSize: 14,
+    fontFamily: 'Poppins_700Bold',
   },
   cancelText: {
     ...typography.body,
@@ -1795,8 +1776,7 @@ const modalStyles = StyleSheet.create({
   submitText: {
     ...typography.body,
     color: colors.primary,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_700Bold',
   },
   submitTextDisabled: {
     opacity: 0.4,
@@ -1826,15 +1806,13 @@ const modalStyles = StyleSheet.create({
     flex: 1,
   },
   trackTitle: {
-    fontSize: 18,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '700',
+    fontSize: 14,
+    fontFamily: 'Poppins_700Bold',
     color: colors.text,
   },
   trackArtist: {
-    fontSize: 18,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '700',
+    fontSize: 14,
+    fontFamily: 'Poppins_700Bold',
     color: colors.textSecondary,
     marginTop: 1,
   },
@@ -1852,9 +1830,8 @@ const modalStyles = StyleSheet.create({
   },
   _addMusicText_removed: {
     flex: 1,
-    fontSize: 18,
-    fontFamily: 'Poppins_500Medium',
-    fontWeight: '700',
+    fontSize: 14,
+    fontFamily: 'Poppins_700Bold',
     color: palette.purple[500],
   },
   moodTagsRow: {
@@ -1871,9 +1848,8 @@ const modalStyles = StyleSheet.create({
     backgroundColor: colors.surfaceLight,
   },
   moodTagText: {
-    fontSize: 18,
-    fontFamily: 'Poppins_500Medium',
-    fontWeight: '700',
+    fontSize: 14,
+    fontFamily: 'Poppins_700Bold',
     color: colors.textSecondary,
   },
   textInput: {
@@ -1914,9 +1890,8 @@ const modalStyles = StyleSheet.create({
   },
   mediaRemoveText: {
     color: '#FFFFFF',
-    fontSize: 18,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '700',
+    fontSize: 14,
+    fontFamily: 'Poppins_700Bold',
   },
   videoOverlay: {
     ...StyleSheet.absoluteFillObject,
@@ -1925,7 +1900,7 @@ const modalStyles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.2)',
   },
   videoOverlayText: {
-    fontSize: 22,
+    fontSize: 13,
     color: '#FFFFFF',
   },
   bottomBar: {
@@ -1951,13 +1926,12 @@ const modalStyles = StyleSheet.create({
     backgroundColor: colors.surfaceLight,
   },
   mediaButtonIcon: {
-    fontSize: 20,
+    fontSize: 16,
   },
   mediaButtonLabel: {
     ...typography.captionSmall,
     color: colors.textSecondary,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_700Bold',
   },
   charCount: {
     ...typography.captionSmall,
@@ -1983,7 +1957,7 @@ const emptyStyles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   icon: {
-    fontSize: 32,
+    fontSize: 14,
   },
   title: {
     ...typography.h4,

@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { palette } from '../../theme/colors';
-import { typography, fontWeights } from '../../theme/typography';
+import { typography } from '../../theme/typography';
 import { spacing, borderRadius } from '../../theme/spacing';
 import { useIncognito } from '../../hooks/useIncognito';
 
@@ -182,7 +182,7 @@ const styles = StyleSheet.create({
   },
   labelActive: {
     color: palette.gold[500],
-    fontWeight: fontWeights.medium,
+    fontFamily: 'Poppins_700Bold',
   },
   labelLocked: {
     ...typography.bodySmall,
@@ -206,7 +206,7 @@ const styles = StyleSheet.create({
   lockedTitle: {
     ...typography.bodySmall,
     color: palette.gray[300],
-    fontWeight: fontWeights.medium,
+    fontFamily: 'Poppins_700Bold',
   },
   lockedDescription: {
     ...typography.caption,
@@ -245,7 +245,7 @@ const styles = StyleSheet.create({
   upsellText: {
     ...typography.captionSmall,
     color: palette.white,
-    fontWeight: fontWeights.semibold,
+    fontFamily: 'Poppins_700Bold',
   },
 
   // Explanation tooltip

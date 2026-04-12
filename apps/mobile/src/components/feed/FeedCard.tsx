@@ -254,7 +254,6 @@ const likeButtonStyles = StyleSheet.create({
     fontSize: 14,
     color: colors.textSecondary,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
 });
 
@@ -281,10 +280,10 @@ const formatTimeAgo = (dateString: string): string => {
 
 // ─── Mood display config (Anlık Ruh Hali) ──────────────────
 const FEED_MOOD_DISPLAY: Record<string, { label: string; emoji: string; color: string }> = {
-  sohbete_acigim: { label: 'Sohbete a\u00E7\u0131\u011F\u0131m', emoji: '\uD83D\uDCAC', color: '#22C55E' },
-  bugun_sessizim: { label: 'Bug\u00FCn sessizim', emoji: '\uD83E\uDD2B', color: '#6B7280' },
-  bulusmaya_varim: { label: 'Bulu\u015Fmaya var\u0131m', emoji: '\u2615', color: '#F59E0B' },
-  kafede_takiliyorum: { label: 'Kafede tak\u0131l\u0131yorum', emoji: '\uD83C\uDFEA', color: '#3B82F6' },
+  sohbete_acigim: { label: 'Sohbete açığım', emoji: '💬', color: '#22C55E' },
+  bugun_sessizim: { label: 'Bugün sessizim', emoji: '🤫', color: '#6B7280' },
+  bulusmaya_varim: { label: 'Buluşmaya varım', emoji: '☕', color: '#F59E0B' },
+  kafede_takiliyorum: { label: 'Kafede takılıyorum', emoji: '🏪', color: '#3B82F6' },
 };
 
 // ─── Feed Video Player ──────────────────────────────────────
@@ -582,13 +581,27 @@ export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onComment, onF
             )}
           </View>
 
-          {/* Subtitle: city + time */}
+          {/* Subtitle: job + city + time */}
           <View style={styles.subtitleRow}>
-            {post.userCity ? (
-              <Text style={styles.subtitleText}>{post.userCity}</Text>
+            {post.userJob ? (
+              <>
+                <Text style={styles.subtitleJob}>{post.userJob}</Text>
+                <Text style={styles.subtitleDot}>·</Text>
+              </>
             ) : null}
-            {post.userCity ? <Text style={styles.subtitleDot}>{'\u00B7'}</Text> : null}
+            {post.userCity ? (
+              <>
+                <Text style={styles.subtitleText}>{post.userCity}</Text>
+                <Text style={styles.subtitleDot}>·</Text>
+              </>
+            ) : null}
             <Text style={styles.subtitleText}>{timeAgo}</Text>
+            {post.compatibilityPercent != null && post.compatibilityPercent > 0 && (
+              <>
+                <Text style={styles.subtitleDot}>·</Text>
+                <Text style={styles.compatBadgeText}>💜 %{post.compatibilityPercent}</Text>
+              </>
+            )}
           </View>
 
           {/* Prompt preview — conversation starter */}
@@ -677,11 +690,6 @@ export const FeedCard: React.FC<FeedCardProps> = ({ post, onLike, onComment, onF
           )}
         </View>
 
-        <View style={styles.actionWithCount}>
-          <TouchableOpacity style={styles.commentButton} activeOpacity={0.7}>
-            <Ionicons name="share-outline" size={24} color="#9CA3AF" />
-          </TouchableOpacity>
-        </View>
       </View>
 
     </View>
@@ -746,7 +754,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: colors.text,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     flexShrink: 1,
   },
   verifiedIcon: {
@@ -778,24 +785,33 @@ const styles = StyleSheet.create({
   feedMoodLabel: {
     fontSize: 14,
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
     includeFontPadding: false,
   },
   subtitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    flexWrap: 'wrap',
     gap: 4,
     marginTop: 2,
   },
+  subtitleJob: {
+    fontSize: 13,
+    color: palette.purple[500],
+    fontFamily: 'Poppins_600SemiBold',
+  },
   subtitleText: {
-    fontSize: 14,
+    fontSize: 13,
     color: colors.textTertiary,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '500',
+    fontFamily: 'Poppins_500Medium',
   },
   subtitleDot: {
-    fontSize: 14,
+    fontSize: 13,
     color: colors.textTertiary,
+  },
+  compatBadgeText: {
+    fontSize: 12,
+    fontFamily: 'Poppins_700Bold',
+    color: '#8B5CF6',
   },
   followButton: {
     flexDirection: 'row',
@@ -813,7 +829,6 @@ const styles = StyleSheet.create({
   followButtonText: {
     fontSize: 14,
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
     color: palette.purple[500],
   },
   followButtonActive: {
@@ -822,8 +837,7 @@ const styles = StyleSheet.create({
   },
   followButtonTextActive: {
     fontSize: 14,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '500',
+    fontFamily: 'Poppins_500Medium',
     color: colors.textTertiary,
   },
 
@@ -845,7 +859,6 @@ const styles = StyleSheet.create({
   intentionLabel: {
     fontSize: 11.5,
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
     letterSpacing: 0.3,
   },
 
@@ -855,15 +868,13 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     color: colors.text,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     marginBottom: 2,
   },
   bodyText: {
     fontSize: 14,
     lineHeight: 22,
     color: colors.text,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '500',
+    fontFamily: 'Poppins_500Medium',
     marginBottom: spacing.sm,
   },
 
@@ -897,7 +908,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#FFFFFF',
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
 
   // ── Action Separator ──
@@ -925,7 +935,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.textTertiary,
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
   },
   commentButton: {
     flexDirection: 'row',
@@ -942,7 +951,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.textSecondary,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
 
   // ── Like button styles now in AnimatedLikeButton (likeButtonStyles) ──

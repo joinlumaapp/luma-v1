@@ -654,7 +654,6 @@ const styles = StyleSheet.create({
   balanceText: {
     fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: palette.gold[400],
   },
 });
@@ -695,14 +694,12 @@ const confirmStyles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
     color: '#FFFFFF',
     textAlign: 'center',
   },
   subtitle: {
     fontSize: 14,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '500',
+    fontFamily: 'Poppins_500Medium',
     color: 'rgba(255,255,255,0.55)',
     textAlign: 'center',
     lineHeight: 21,
@@ -726,7 +723,6 @@ const confirmStyles = StyleSheet.create({
   warningText: {
     fontSize: 14,
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
     color: 'rgba(245, 158, 11, 0.9)',
   },
   ctaWrapper: {
@@ -744,20 +740,17 @@ const confirmStyles = StyleSheet.create({
   ctaText: {
     fontSize: 17,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: '#FFFFFF',
   },
   insufficientText: {
     fontSize: 14,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '500',
+    fontFamily: 'Poppins_500Medium',
     color: '#EF4444',
     marginTop: spacing.sm,
   },
   noteText: {
     fontSize: 14,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '500',
+    fontFamily: 'Poppins_500Medium',
     color: 'rgba(255,255,255,0.3)',
     textAlign: 'center',
     marginTop: spacing.lg,
@@ -809,15 +802,13 @@ const searchStyles = StyleSheet.create({
   searchingText: {
     fontSize: 18,
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
     color: '#FFFFFF',
     textAlign: 'center',
     minWidth: 220,
   },
   timer: {
     fontSize: 14,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '500',
+    fontFamily: 'Poppins_500Medium',
     color: 'rgba(255,255,255,0.3)',
     marginTop: spacing.sm,
   },
@@ -835,7 +826,6 @@ const searchStyles = StyleSheet.create({
   cancelText: {
     fontSize: 15,
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
     color: 'rgba(255,255,255,0.7)',
   },
 });
@@ -874,13 +864,11 @@ const connectedStyles = StyleSheet.create({
   userName: {
     fontSize: 18,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: '#FFFFFF',
   },
   userCity: {
     fontSize: 14,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '500',
+    fontFamily: 'Poppins_500Medium',
     color: 'rgba(255,255,255,0.6)',
     marginTop: 1,
   },
@@ -893,7 +881,6 @@ const connectedStyles = StyleSheet.create({
   compatText: {
     fontSize: 14,
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
   },
   bottomControls: {
     position: 'absolute',
@@ -939,14 +926,12 @@ const connectedStyles = StyleSheet.create({
   actionLabel: {
     fontSize: 14,
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
     color: 'rgba(255,255,255,0.7)',
     marginTop: 6,
   },
   costLabel: {
     fontSize: 14,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '500',
+    fontFamily: 'Poppins_500Medium',
     color: palette.gold[400],
     marginTop: 2,
   },

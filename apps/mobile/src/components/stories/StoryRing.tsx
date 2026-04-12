@@ -237,7 +237,7 @@ export const StoryRing: React.FC<StoryRingProps> = ({
 
       {/* "Oneri" micro-label below the username for suggested stories */}
       {isSuggested && showLabel && (
-        <Text style={styles.suggestedMicroLabel}>{'\u00D6neri'}</Text>
+        <Text style={styles.suggestedMicroLabel}>{'Öneri'}</Text>
       )}
     </Pressable>
   );
@@ -269,7 +269,6 @@ const styles = StyleSheet.create({
   avatarInitial: {
     fontSize: 22,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: colors.textSecondary,
   },
   avatarInitialMedium: {
@@ -289,7 +288,6 @@ const styles = StyleSheet.create({
   plusIcon: {
     color: '#FFFFFF',
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     marginTop: -1,
   },
   label: {
@@ -343,7 +341,6 @@ const styles = StyleSheet.create({
   suggestedMicroLabel: {
     fontSize: 8,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: palette.gold[500],
     textAlign: 'center',
     marginTop: 1,

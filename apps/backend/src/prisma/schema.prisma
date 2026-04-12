@@ -205,6 +205,16 @@ model UserProfile {
   maritalStatus  String?        @map("marital_status") @db.VarChar(30)
   pets           String?         @db.VarChar(30)   // var, yok, istiyor
   lifeValues     String?         @map("life_values") @db.VarChar(200)
+  // Hakkımda Daha Fazlası — 9 new lifestyle fields (added 2026-04-12)
+  livingSituation    String?    @map("living_situation") @db.VarChar(30)
+  languages          String[]   @default([]) @map("languages")
+  sleepSchedule      String?    @map("sleep_schedule") @db.VarChar(30)
+  diet               String?    @db.VarChar(30)
+  workStyle          String?    @map("work_style") @db.VarChar(30)
+  travelFrequency    String?    @map("travel_frequency") @db.VarChar(30)
+  distancePreference String?    @map("distance_preference") @db.VarChar(30)
+  communicationStyle String?    @map("communication_style") @db.VarChar(30)
+  hookah             String?    @db.VarChar(30)
   isIncognito    Boolean      @default(false) @map("is_incognito") // hide from discovery feed
   // Personality types (MBTI + Enneagram)
   mbtiType       String?      @map("mbti_type") @db.VarChar(4)       // INTJ, ENFP, etc.

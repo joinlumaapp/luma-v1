@@ -248,14 +248,12 @@ const styles = StyleSheet.create({
     ...typography.captionSmall,
     color: '#FFFFFF',
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     fontSize: 14,
   },
   balanceText: {
     ...typography.bodySmall,
     color: palette.gold[600],
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
 });
 
@@ -286,7 +284,6 @@ const historyStyles = StyleSheet.create({
     ...typography.h4,
     color: colors.text,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   closeButton: {
     width: 32,
@@ -300,7 +297,6 @@ const historyStyles = StyleSheet.create({
     ...typography.body,
     color: colors.textSecondary,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
 
   // Balance card
@@ -328,7 +324,6 @@ const historyStyles = StyleSheet.create({
     ...typography.h4,
     color: '#FFFFFF',
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   balanceLabelText: {
     ...typography.caption,
@@ -339,7 +334,6 @@ const historyStyles = StyleSheet.create({
     ...typography.h4,
     color: palette.gold[500],
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
 
   // Transaction list
@@ -365,7 +359,6 @@ const historyStyles = StyleSheet.create({
   amountText: {
     ...typography.bodySmall,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   transactionInfo: {
     flex: 1,
@@ -383,7 +376,6 @@ const historyStyles = StyleSheet.create({
     ...typography.caption,
     color: colors.textSecondary,
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
   },
 
   // Empty state

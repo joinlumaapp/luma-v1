@@ -300,7 +300,6 @@ const styles = StyleSheet.create({
   stepText: {
     fontSize: 14,
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
     color: colors.textSecondary,
   },
   progressTrack: {
@@ -323,14 +322,12 @@ const styles = StyleSheet.create({
   questionText: {
     fontSize: 26,
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
     color: colors.text,
     marginBottom: 8,
   },
   subtitleText: {
     fontSize: 15,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '500',
+    fontFamily: 'Poppins_500Medium',
     color: colors.textSecondary,
     marginBottom: 32,
   },
@@ -358,7 +355,6 @@ const styles = StyleSheet.create({
   optionLabel: {
     fontSize: 16,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: colors.text,
     flex: 1,
   },
@@ -379,7 +375,6 @@ const styles = StyleSheet.create({
   resultType: {
     fontSize: 36,
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
     color: colors.primary,
     letterSpacing: 4,
     marginBottom: 4,
@@ -387,14 +382,12 @@ const styles = StyleSheet.create({
   resultTitle: {
     fontSize: 20,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: colors.text,
     marginBottom: 8,
   },
   resultDesc: {
     fontSize: 14,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '500',
+    fontFamily: 'Poppins_500Medium',
     color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 22,
@@ -407,7 +400,6 @@ const styles = StyleSheet.create({
   compatTitle: {
     fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: colors.textSecondary,
     marginBottom: 12,
   },
@@ -432,14 +424,12 @@ const styles = StyleSheet.create({
   compatType: {
     fontSize: 16,
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
     color: colors.primary,
     letterSpacing: 2,
   },
   compatLabel: {
     fontSize: 14,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '500',
+    fontFamily: 'Poppins_500Medium',
     color: colors.textSecondary,
     marginTop: 2,
   },
@@ -454,7 +444,6 @@ const styles = StyleSheet.create({
   doneText: {
     fontSize: 16,
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
     color: '#fff',
   },
 });

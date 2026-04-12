@@ -181,6 +181,5 @@ const styles = StyleSheet.create({
     color: palette.white,
     fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
 });

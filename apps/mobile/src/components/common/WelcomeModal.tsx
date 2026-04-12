@@ -61,16 +61,16 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({ visible, onDismiss }
           </Animated.Text>
 
           {/* Title */}
-          <Text style={styles.title}>Ho{'\u015F'} geldin!</Text>
+          <Text style={styles.title}>Hoş geldin!</Text>
 
           {/* Body */}
           <Text style={styles.body}>
-            {'\u2B50'} 48 saatlik Premium deneyimin ba{'\u015F'}lad{'\u0131'}!{'\n'}
-            Premium {'\u00F6'}zelliklerinin keyfini {'\u00E7'}{'\u0131'}kar.
+            ⭐ 48 saatlik Premium deneyimin başladı!{'\n'}
+            Premium özelliklerinin keyfini çıkar.
           </Text>
 
           <Text style={styles.body}>
-            {'\uD83C\uDF81'} Ho{'\u015F'} geldin hediyesi: <Text style={styles.bodyBold}>100 Jeton!</Text>
+            🎁 Hoş geldin hediyesi: <Text style={styles.bodyBold}>100 Jeton!</Text>
           </Text>
 
           {/* CTA Button */}
@@ -85,7 +85,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({ visible, onDismiss }
               end={{ x: 1, y: 0 }}
               style={styles.buttonGradient}
             >
-              <Text style={styles.buttonText}>Ba{'\u015F'}layal{'\u0131'}m!</Text>
+              <Text style={styles.buttonText}>Başlayalım!</Text>
             </LinearGradient>
           </TouchableOpacity>
         </Animated.View>
@@ -115,7 +115,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontFamily: 'Poppins_800ExtraBold',
-    fontWeight: '800',
     color: '#8B5CF6',
     textAlign: 'center',
     marginBottom: 16,
@@ -123,7 +122,6 @@ const styles = StyleSheet.create({
   body: {
     fontSize: 17,
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
     color: '#374151',
     textAlign: 'center',
     lineHeight: 26,
@@ -131,7 +129,6 @@ const styles = StyleSheet.create({
   },
   bodyBold: {
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
     color: '#8B5CF6',
   },
   buttonWrapper: {
@@ -154,7 +151,6 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: 18,
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
     color: '#FFFFFF',
     letterSpacing: 0.5,
   },

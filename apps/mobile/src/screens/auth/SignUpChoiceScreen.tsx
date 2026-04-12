@@ -212,7 +212,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 32,
     fontFamily: 'Poppins_800ExtraBold',
-    fontWeight: '800',
     color: onboardingColors.text,
     letterSpacing: -0.5,
     marginBottom: 8,
@@ -220,7 +219,6 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 17,
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
     color: onboardingColors.textSecondary,
     lineHeight: 24,
   },
@@ -247,7 +245,6 @@ const styles = StyleSheet.create({
   googleButtonText: {
     fontSize: 17,
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
     color: onboardingColors.text,
   },
   phoneButton: {
@@ -262,13 +259,11 @@ const styles = StyleSheet.create({
   phoneButtonText: {
     fontSize: 17,
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
     color: onboardingColors.buttonText,
   },
   privacyNote: {
     fontSize: 14,
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
     color: onboardingColors.textTertiary,
     textAlign: 'center',
     marginTop: 4,

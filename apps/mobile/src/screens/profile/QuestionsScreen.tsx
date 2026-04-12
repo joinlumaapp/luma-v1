@@ -7,12 +7,15 @@ import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
   View,
   Text,
+  Image,
+  ScrollView,
   Pressable,
   StyleSheet,
   ActivityIndicator,
   Platform,
   TouchableOpacity,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -30,94 +33,105 @@ import Animated, {
 import Svg, { Circle } from 'react-native-svg';
 import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
+import { useNavigation, useRoute, useFocusEffect, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { ProfileStackParamList } from '../../navigation/types';
 import { useProfileStore } from '../../stores/profileStore';
 import { compatibilityService } from '../../services/compatibilityService';
 import { spacing, borderRadius } from '../../theme/spacing';
 import { onboardingColors, FullWidthButton } from '../../components/onboarding/OnboardingLayout';
+import { BrandedBackground } from '../../components/common/BrandedBackground';
+import { LinearGradient } from 'expo-linear-gradient';
 
 type QuestionsNavigationProp = NativeStackNavigationProp<ProfileStackParamList, 'Questions'>;
 type QuestionsRouteProp = RouteProp<ProfileStackParamList, 'Questions'>;
 
-// 20 LOCKED core questions
+// 20 core compatibility questions — 8 psychological dimensions
+// Each question's 4 options form an ordinal spectrum for step-distance scoring
 const CORE_QUESTIONS = [
-  { id: 1, question: 'Hafta sonu planlarında hangisi sana daha yakın?', options: ['Evde kitap okumak veya film izlemek', 'Arkadaşlarla dışarı çıkmak', 'Doğada yürüyüş veya spor yapmak', 'Yeni bir hobi veya etkinlik denemek'] },
-  { id: 2, question: 'Bir anlaşmazlıkta nasıl bir yaklaşım benimsersin?', options: ['Hemen konuşup çözmek isterim', 'Biraz soğuyup sonra konuşurum', 'Karşı tarafın başlatmasını beklerim', 'Yazılı iletişimi tercih ederim'] },
-  { id: 3, question: 'İdeal bir tatil nasıl olurdu?', options: ['Sahilde dinlenmek', 'Tarih ve kültür turu', 'Macera ve doğa sporları', 'Şehir keşfi ve gastronomi'] },
-  { id: 4, question: 'Para yönetimi konusunda nasıl birisin?', options: ['Biriktirmeyi severim, planlıyım', 'Dengeli harcama, orta yol', 'Anın tadını çıkarır, fazla düşünmem', 'Deneyimlere yatırım yaparım'] },
-  { id: 5, question: 'Sosyal ortamlarda kendini nasıl tanımlarsın?', options: ['Hayatın merkezi, enerjik', 'Küçük gruplarla rahat', 'Seçici, az ama öz', 'Dinleyici ve gözlemci'] },
-  { id: 6, question: 'Gelecek planların konusunda ne düşünürsün?', options: ['Net hedeflerim var, plan yaparım', 'Genel bir yönüm var ama esneyim', 'Akışına bırakırım', 'Şimdiyi yaşarım, gelecek gelir'] },
-  { id: 7, question: 'Sevgi dilini en iyi ne ifade eder?', options: ['Fiziksel yakınlık ve dokunma', 'Söz ve iltifatlar', 'Birlikte zaman geçirmek', 'Hediye ve sürprizler'] },
-  { id: 8, question: 'Stresle nasıl başa çıkarsın?', options: ['Egzersiz ve fiziksel aktivite', 'Yalnız vakit geçirmek', 'Birileriyle konuşmak', 'Yaratıcı bir uğraş (müzik, resim vb.)'] },
-  { id: 9, question: 'İlişkide bağımsızlık konusundaki görüşün?', options: ['Her şey birlikte yapılmalı', 'Bağımsız alanlar önemli', 'Dengeli bir karışım ideal', 'Duruma göre değişir'] },
-  { id: 10, question: 'Sabah rutinin nasıl?', options: ['Erken kalkıcı, üretken sabahlar', 'Normal saatlerde, sakin başlangıç', 'Geç kalkıcı, gece kuşuyum', 'Gününe göre değişir'] },
-  { id: 11, question: 'Yemek konusunda tercihin?', options: ['Evde yemek yapmak', 'Dışarıda yemek', 'Yeni tatlar keşfetmek', 'Pratik ve hızlı çözümler'] },
-  { id: 12, question: 'Evcil hayvan tercihin?', options: ['Köpek sever', 'Kedi sever', 'Her ikisi de', 'Evcil hayvan istemem'] },
-  { id: 13, question: 'İlişkide iletişim sıklığı?', options: ['Sürekli iletişimde olmak', 'Gün içerisinde birkaç kez', 'İhtiyaç duydukça', 'Görüşmeyi tercih ederim'] },
-  { id: 14, question: 'Aile ile ilişkin nasıl?', options: ['Çok yakınız, sık görüşürüz', 'İyi ilişkimiz var, makul mesafe', 'Mesafeli ama saygıyla', 'Karmaşık bir durum'] },
-  { id: 15, question: 'Fit olmak senin için ne kadar önemli?', options: ['Çok önemli, düzenli spor yaparım', 'Önemli ama obsesif değilim', 'Ara sıra hareket ederim', 'Çok takılmam'] },
-  { id: 16, question: 'Teknoloji ve sosyal medya kullanımım?', options: ['Çok aktifim, her yerdeyim', 'Orta düzeyde kullanırım', 'Minimalist, sınırlı kullanım', 'Mümkün oldukça uzak dururum'] },
-  { id: 17, question: 'Çocuk sahibi olmak hakkındaki görüşün?', options: ['Kesinlikle istiyorum', 'Açığım ama acele yok', 'Emin değilim', 'İstemiyorum'] },
-  { id: 18, question: 'Hangi ortam seni daha iyi tanımlar?', options: ['Şehir hayatı, kalabalık', 'Sakin bir mahalle', 'Kırsal, doğayla iç içe', 'Fark etmez, esnek davranırım'] },
-  { id: 19, question: 'Seyahat tercihin?', options: ['Yurt dışı, uzak ülkeler', 'Yurt içi, yakın yerler', 'Her ikisi de', 'Seyahati pek sevmem'] },
-  { id: 20, question: 'Bir ilişkide en çok neye değer verirsin?', options: ['Güven ve sadakat', 'Mizah ve eğlence', 'Entelektüel uyum', 'Duygusal destek'] },
+  // ── İletişim Tarzı — S1, S2, S3
+  { id: 1, question: 'Canını sıkan bir şey olsa ne yaparsın?', options: ['Hemen söylerim, net olmak isterim', 'Düşünür, doğru anı beklerim', 'İma ederim, direkt söylemem', 'Kendi içimde hallederim'] },
+  { id: 2, question: 'Sevdiğin biriyle nasıl sohbet edersin?', options: ['Derin konuşmalar severim', 'Günlük + arada anlamlı konular', 'Hafif ve eğlenceli şeyler', 'Sessizce yan yana olmak da güzel'] },
+  { id: 3, question: 'Önemli bir karar alacaksın. Ne yaparsın?', options: ['Hemen paylaşır, fikrini alırım', 'Düşünür, sonra danışırım', 'Karar verir, sonra söylerim', 'Beni ilgilendiriyorsa paylaşırım'] },
+  // ── Çatışma Çözümü — S4, S5
+  { id: 4, question: 'Tartışma kızışınca ilk tepkin ne?', options: ['Sakinleşir, sonra konuşurum', 'Hemen konuşarak çözerim', 'Karşı tarafı beklerim', 'Ortamdan uzaklaşırım'] },
+  { id: 5, question: 'Kavgadan sonra nasıl barışırsın?', options: ['Konuşurum, açıkça özür dilerim', 'Güzel bir jest yaparım', 'Sarılırım, dokunarak barışırım', 'Zamanla geçmesini beklerim'] },
+  // ── Duygusal Derinlik — S6, S7, S8
+  { id: 6, question: 'Kötü bir gün geçirdin. Ne istersin?', options: ['Biri dinlesin, anlatayım', 'Yanımda olsun yeter', 'Güldürsün, dağıtsın', 'Yalnız kalıp toparlanayım'] },
+  { id: 7, question: 'Birinin yanında ağlar mısın?', options: ['Rahatça ağlarım', 'Güvendiğim biriyle evet', 'Nadiren ama engellemem', 'Pek ağlamam'] },
+  { id: 8, question: 'Biri sana "Seni çok seviyorum" dese?', options: ['Aynı sıcaklıkla karşılık veririm', 'Mutlu olurum ama söylemem zor', 'Sarılarak gösteririm', 'Sevinirim ama utanırım'] },
+  // ── Sosyal Enerji — S9, S10
+  { id: 9, question: '"Bu akşam plan var, gel!" deseler?', options: ['Hemen hazırlanırım!', 'Kim var, kaç kişi diye sorarım', 'Muhtemelen evde kalırım', 'Bu akşam kendime ayırdım'] },
+  { id: 10, question: 'İdeal hafta sonun nasıl olur?', options: ['İki gün dolu dolu sosyal plan', 'Bir gün dışarı, bir gün evde', 'Kısa görüşme, geri kalan huzur', 'Tamamen yalnız, sessiz'] },
+  // ── Yaşam Temposu — S11, S12
+  { id: 11, question: 'Boş bir pazar günün var. Ne yaparsın?', options: ['Hemen plan yaparım', 'Yarısı sakin, yarısı aktif', 'Akışına bırakırım', 'Pijamalarla sıfır plan!'] },
+  { id: 12, question: 'Tatile nasıl gidersin?', options: ['Her şeyi önceden planlarım', 'Ana hatları belirler, arası serbest', 'Otel + uçak, geri kalan spontane', 'Plansız, son dakika kararları'] },
+  // ── Uzun Vadeli Vizyon — S13, S14, S15
+  { id: 13, question: '5 yıl sonra en önemli şey ne olsun?', options: ['Güçlü bir kariyer', 'Sıcak bir aile', 'Özgürlük ve deneyimler', 'İç huzur'] },
+  { id: 14, question: 'Çocuk ister misin?', options: ['Kesinlikle istiyorum', 'İstiyorum ama acele yok', 'Emin değilim', 'Hayır, istemiyorum'] },
+  { id: 15, question: 'Parayla arası nasıl?', options: ['Biriktirmeyi severim', 'Planlı ama kendimi de şımartırım', 'Deneyimlere harcarım', 'Çok düşünmem'] },
+  // ── İlişki Beklentisi — S16, S17
+  { id: 16, question: 'İdeal ilişki günlük nasıl olur?', options: ['Her şeyi birlikte yaparız', 'Akşam birlikte, gündüz özgür', 'Özlenir buluşuruz', 'Herkes özgür, özel anlarda birlikte'] },
+  { id: 17, question: 'Sevgini nasıl gösterirsin?', options: ['Sözlerle, iltifatlarla', 'Dokunarak, sarılarak', 'Vakit ayırarak', 'İşlerini kolaylaştırarak'] },
+  // ── Yaşam Tarzı Uyumu — S18, S19, S20
+  { id: 18, question: 'Spor hayatında ne kadar var?', options: ['Haftada 3-4 kez antrenman', 'Yürüyüş, yoga, ara sıra spor', 'Canım isteyince yaparım', 'Pek yapmam'] },
+  { id: 19, question: 'Akşamları genelde ne yaparsın?', options: ['Dışarıda — restoran, etkinlik', 'Bazen dışarı, bazen ev', 'Evde — dizi, yemek, kitap', 'Erken yatarım'] },
+  { id: 20, question: 'Seni en çok ne mutlu eder?', options: ['Başarı ve hedeflerim', 'Sevdiklerimle güzel anlar', 'Yeni yerler keşfetmek', 'Huzur ve sadelik'] },
 ];
 
-// 2C: Question category badges
+// 2C: Question category badges — 8 psychological dimensions
 const QUESTION_CATEGORIES: Record<number, { emoji: string; label: string }> = {
-  1: { emoji: '\uD83C\uDFD6', label: 'Ya\u015Fam Tarz\u0131' },
-  2: { emoji: '\uD83D\uDCAC', label: '\u0130leti\u015Fim' },
-  3: { emoji: '\uD83C\uDFD6', label: 'Ya\u015Fam Tarz\u0131' },
-  4: { emoji: '\uD83D\uDCB0', label: 'Finansal Bak\u0131\u015F' },
-  5: { emoji: '\uD83D\uDC95', label: '\u0130li\u015Fki De\u011Ferleri' },
-  6: { emoji: '\uD83D\uDC68\u200D\uD83D\uDC69\u200D\uD83D\uDC67', label: 'Aile' },
-  7: { emoji: '\uD83E\uDDE0', label: 'Ki\u015Filik' },
-  8: { emoji: '\uD83C\uDFAF', label: 'Hedefler' },
-  9: { emoji: '\uD83D\uDC8E', label: 'De\u011Ferler' },
-  10: { emoji: '\uD83D\uDDE3', label: '\u0130leti\u015Fim' },
-  11: { emoji: '\uD83C\uDFE0', label: 'Ya\u015Fam Tarz\u0131' },
-  12: { emoji: '\uD83C\uDFAD', label: 'Sosyal Hayat' },
-  13: { emoji: '\u23F0', label: 'Zaman Y\u00F6netimi' },
-  14: { emoji: '\uD83D\uDCAA', label: 'Sa\u011Fl\u0131k' },
-  15: { emoji: '\uD83C\uDFCB\uFE0F', label: 'Fitness' },
-  16: { emoji: '\uD83D\uDCF1', label: 'Teknoloji' },
-  17: { emoji: '\uD83D\uDC76', label: 'Gelecek Planlar\u0131' },
-  18: { emoji: '\uD83C\uDF06', label: 'Ya\u015Fam Ortam\u0131' },
-  19: { emoji: '\u2708\uFE0F', label: 'Seyahat' },
-  20: { emoji: '\uD83D\uDC95', label: '\u0130li\u015Fki De\u011Ferleri' },
+  1: { emoji: '💬', label: 'İletişim Tarzı' },
+  2: { emoji: '💬', label: 'İletişim Tarzı' },
+  3: { emoji: '💬', label: 'İletişim Tarzı' },
+  4: { emoji: '🤝', label: 'Çatışma Çözümü' },
+  5: { emoji: '🤝', label: 'Çatışma Çözümü' },
+  6: { emoji: '💜', label: 'Duygusal Derinlik' },
+  7: { emoji: '💜', label: 'Duygusal Derinlik' },
+  8: { emoji: '💜', label: 'Duygusal Derinlik' },
+  9: { emoji: '⚡', label: 'Sosyal Enerji' },
+  10: { emoji: '⚡', label: 'Sosyal Enerji' },
+  11: { emoji: '🏃', label: 'Yaşam Temposu' },
+  12: { emoji: '🏃', label: 'Yaşam Temposu' },
+  13: { emoji: '🔮', label: 'Uzun Vadeli Vizyon' },
+  14: { emoji: '🔮', label: 'Uzun Vadeli Vizyon' },
+  15: { emoji: '🔮', label: 'Uzun Vadeli Vizyon' },
+  16: { emoji: '💑', label: 'İlişki Beklentisi' },
+  17: { emoji: '💑', label: 'İlişki Beklentisi' },
+  18: { emoji: '🏠', label: 'Yaşam Tarzı Uyumu' },
+  19: { emoji: '🏠', label: 'Yaşam Tarzı Uyumu' },
+  20: { emoji: '🏠', label: 'Yaşam Tarzı Uyumu' },
 };
 
 // 2D: Option emojis per question
 const OPTION_EMOJIS: Record<number, string[]> = {
-  1: ['\uD83D\uDCDA', '\uD83C\uDF89', '\uD83C\uDFD4', '\uD83C\uDFA8'],
-  2: ['\uD83D\uDDE3', '\uD83E\uDDD8', '\uD83E\uDD1D', '\u270D\uFE0F'],
-  3: ['\uD83C\uDFD6', '\uD83C\uDFDB', '\uD83E\uDDD7', '\uD83C\uDF7D'],
-  4: ['\uD83D\uDCB0', '\uD83C\uDF81', '\uD83D\uDCCA', '\uD83E\uDD32'],
-  5: ['\uD83D\uDC95', '\uD83E\uDD1D', '\uD83D\uDCAA', '\uD83C\uDF39'],
-  6: ['\uD83D\uDC68\u200D\uD83D\uDC69\u200D\uD83D\uDC67', '\uD83C\uDFE0', '\uD83C\uDF0D', '\uD83D\uDCBC'],
-  7: ['\uD83E\uDDE0', '\u2764\uFE0F', '\uD83C\uDFAD', '\uD83D\uDD2C'],
-  8: ['\uD83C\uDFAF', '\uD83C\uDF1F', '\uD83C\uDFC6', '\uD83E\uDD14'],
-  9: ['\uD83D\uDC8E', '\uD83C\uDF31', '\u2696\uFE0F', '\uD83D\uDE4F'],
-  10: ['\uD83D\uDDE3', '\uD83D\uDC42', '\uD83D\uDCF1', '\uD83E\uDD17'],
-  11: ['\uD83C\uDFE0', '\uD83C\uDF03', '\uD83D\uDE97', '\uD83C\uDFD5'],
-  12: ['\uD83C\uDFAD', '\uD83D\uDCDA', '\uD83C\uDFB5', '\uD83C\uDFC3'],
-  13: ['\u23F0', '\uD83D\uDCC5', '\uD83C\uDF05', '\uD83C\uDF19'],
-  14: ['\uD83D\uDCAA', '\uD83E\uDDD8', '\uD83C\uDFE5', '\uD83C\uDF4E'],
-  15: ['\uD83C\uDFCB\uFE0F', '\uD83C\uDFCA', '\uD83D\uDEB4', '\uD83E\uDDD8'],
-  16: ['\uD83D\uDCF1', '\uD83D\uDCBB', '\uD83D\uDCF7', '\uD83C\uDFAE'],
-  17: ['\uD83D\uDC76', '\uD83C\uDFE0', '\u2708\uFE0F', '\uD83D\uDCDA'],
-  18: ['\uD83C\uDF06', '\uD83C\uDFE1', '\uD83C\uDF33', '\uD83C\uDFD4'],
-  19: ['\u2708\uFE0F', '\uD83C\uDFD6', '\uD83D\uDDFA', '\uD83C\uDFD5'],
-  20: ['\uD83D\uDC95', '\uD83E\uDD1D', '\uD83D\uDCAA', '\uD83C\uDF39'],
+  1: ['🎯', '🤔', '🌊', '🔒'],
+  2: ['💭', '☕', '😄', '🤫'],
+  3: ['🤝', '🧠', '📋', '🚶'],
+  4: ['🧘', '🗣', '⏳', '🚪'],
+  5: ['💬', '🎁', '🤗', '⏰'],
+  6: ['👂', '🫂', '😂', '🏠'],
+  7: ['💧', '🤝', '😌', '💪'],
+  8: ['❤️', '😊', '🤗', '😳'],
+  9: ['🎉', '🤔', '😴', '📖'],
+  10: ['🎊', '⚖️', '☕', '🧘'],
+  11: ['📋', '🌤', '🌊', '😴'],
+  12: ['📝', '🗺', '✈️', '🎲'],
+  13: ['💼', '👨‍👩‍👧', '🌍', '🧘'],
+  14: ['👶', '⏳', '🤷', '🚫'],
+  15: ['🏦', '⚖️', '✈️', '🤷'],
+  16: ['💕', '🌙', '✨', '🦅'],
+  17: ['💬', '🤗', '⏰', '🔧'],
+  18: ['🏋️', '🧘', '😌', '🛋'],
+  19: ['🌃', '⚖️', '🏠', '🌅'],
+  20: ['🏆', '❤️', '🌍', '☮️'],
 };
 
 // 2G: Milestone messages
 const MILESTONE_MESSAGES: Record<number, string> = {
-  5: '\uD83C\uDF89 Harika gidiyorsun!',
-  10: '\uD83D\uDCAA Yar\u0131s\u0131n\u0131 tamamlad\u0131n!',
-  15: '\u2B50 Neredeyse bitti!',
+  5: '🎉 Harika gidiyorsun!',
+  10: '💪 Yarısını tamamladın!',
+  15: '⭐ Neredeyse bitti!',
 };
 
 interface NormalizedQuestion {
@@ -127,6 +141,7 @@ interface NormalizedQuestion {
 }
 
 const ANALYSIS_DURATION = 2500;
+const STORAGE_KEY = 'compatibility_answers';
 
 interface ResultSection {
   emoji: string;
@@ -136,24 +151,24 @@ interface ResultSection {
 
 const PERSONALITY_POOLS: Record<string, ResultSection[]> = {
   calm: [
-    { emoji: '\uD83E\uDDE0', title: 'Ki\u015Filik \u00D6zelliklerin', items: ['Sakin ve d\u00FC\u015F\u00FCnceli bir yap\u0131n var', 'Derin d\u00FC\u015F\u00FCnme yetene\u011Fin g\u00FC\u00E7l\u00FC', '\u0130\u00E7 d\u00FCnyan zengin ve katmanl\u0131'] },
-    { emoji: '\uD83C\uDFE0', title: 'Ya\u015Fam Tercihlerin', items: ['Huzurlu bir ya\u015Fam alan\u0131 \u00F6nemsiyorsun', 'Planl\u0131 ve d\u00FCzenli bir yakla\u015F\u0131m\u0131n var', 'Kaliteli zaman ge\u00E7irmeye de\u011Fer veriyorsun'] },
-    { emoji: '\uD83D\uDC9C', title: 'Sosyal Tarz\u0131n', items: ['Derin ve anlaml\u0131 sohbetleri tercih ediyorsun', 'G\u00FCvendi\u011Fin insanlarla vakit ge\u00E7irmeyi seviyorsun', 'Dinlemeyi ve anlay\u0131\u015Fl\u0131 olmay\u0131 \u00F6nemsiyorsun'] },
+    { emoji: '🧠', title: 'Kişilik Özelliklerin', items: ['Sakin ve düşünceli bir yapın var', 'Derin düşünme yeteneğin güçlü', 'İç dünyan zengin ve katmanlı'] },
+    { emoji: '🏠', title: 'Yaşam Tercihlerin', items: ['Huzurlu bir yaşam alanı önemsiyorsun', 'Planlı ve düzenli bir yaklaşımın var', 'Kaliteli zaman geçirmeye değer veriyorsun'] },
+    { emoji: '💜', title: 'Sosyal Tarzın', items: ['Derin ve anlamlı sohbetleri tercih ediyorsun', 'Güvendiğin insanlarla vakit geçirmeyi seviyorsun', 'Dinlemeyi ve anlayışlı olmayı önemsiyorsun'] },
   ],
   balanced: [
-    { emoji: '\uD83E\uDDE0', title: 'Ki\u015Filik \u00D6zelliklerin', items: ['Duygusal zekan y\u00FCksek', '\u0130leti\u015Fime a\u00E7\u0131k bir yap\u0131n var', 'Empati yetene\u011Fin g\u00FC\u00E7l\u00FC'] },
-    { emoji: '\uD83C\uDFE0', title: 'Ya\u015Fam Tercihlerin', items: ['Dengeyi seven bir yakla\u015F\u0131m\u0131n var', 'Hem sosyal hem de bireysel zaman\u0131 \u00F6nemsiyorsun', 'Uyum sa\u011Flama yetene\u011Fin geli\u015Fmi\u015F'] },
-    { emoji: '\uD83D\uDC9C', title: 'Sosyal Tarz\u0131n', items: ['Samimi ve i\u00E7ten bir ileti\u015Fim tarz\u0131n var', 'K\u00FC\u00E7\u00FCk gruplarda rahat hissediyorsun', 'Kar\u015F\u0131ndakini dinlemeyi seviyorsun'] },
+    { emoji: '🧠', title: 'Kişilik Özelliklerin', items: ['Duygusal zekan yüksek', 'İletişime açık bir yapın var', 'Empati yeteneğin güçlü'] },
+    { emoji: '🏠', title: 'Yaşam Tercihlerin', items: ['Dengeyi seven bir yaklaşımın var', 'Hem sosyal hem de bireysel zamanı önemsiyorsun', 'Uyum sağlama yeteneğin gelişmiş'] },
+    { emoji: '💜', title: 'Sosyal Tarzın', items: ['Samimi ve içten bir iletişim tarzın var', 'Küçük gruplarda rahat hissediyorsun', 'Karşındakini dinlemeyi seviyorsun'] },
   ],
   active: [
-    { emoji: '\uD83E\uDDE0', title: 'Ki\u015Filik \u00D6zelliklerin', items: ['Enerjik ve kararl\u0131 bir yap\u0131n var', 'Harekete ge\u00E7me motivasyonun y\u00FCksek', 'Zorluklar kar\u015F\u0131s\u0131nda dayan\u0131kl\u0131s\u0131n'] },
-    { emoji: '\uD83C\uDFE0', title: 'Ya\u015Fam Tercihlerin', items: ['Aktif bir sosyal hayat\u0131n var', 'Spor ve fiziksel aktivitelere de\u011Fer veriyorsun', 'Do\u011Fada vakit ge\u00E7irmekten keyif al\u0131yorsun'] },
-    { emoji: '\uD83D\uDC9C', title: 'Sosyal Tarz\u0131n', items: ['Giri\u015Fken ve \u00E7evrende sevilen birisin', 'Grup aktivitelerinde liderlik yapabiliyorsun', 'Enerjinle \u00E7evrendekileri motive ediyorsun'] },
+    { emoji: '🧠', title: 'Kişilik Özelliklerin', items: ['Enerjik ve kararlı bir yapın var', 'Harekete geçme motivasyonun yüksek', 'Zorluklar karşısında dayanıklısın'] },
+    { emoji: '🏠', title: 'Yaşam Tercihlerin', items: ['Aktif bir sosyal hayatın var', 'Spor ve fiziksel aktivitelere değer veriyorsun', 'Doğada vakit geçirmekten keyif alıyorsun'] },
+    { emoji: '💜', title: 'Sosyal Tarzın', items: ['Girişken ve çevrende sevilen birisin', 'Grup aktivitelerinde liderlik yapabiliyorsun', 'Enerjinle çevrendekileri motive ediyorsun'] },
   ],
   explorer: [
-    { emoji: '\uD83E\uDDE0', title: 'Ki\u015Filik \u00D6zelliklerin', items: ['Merakl\u0131 ve ke\u015Ffetmeye a\u00E7\u0131k bir yap\u0131n var', 'Yarat\u0131c\u0131 d\u00FC\u015F\u00FCnce yetene\u011Fin g\u00FC\u00E7l\u00FC', 'Farkl\u0131 bak\u0131\u015F a\u00E7\u0131lar\u0131na de\u011Fer veriyorsun'] },
-    { emoji: '\uD83C\uDFE0', title: 'Ya\u015Fam Tercihlerin', items: ['Yeni deneyimlere a\u00E7\u0131ks\u0131n', 'Seyahat ve k\u00FClt\u00FCr ke\u015Ffi seni heyecanland\u0131r\u0131yor', 'Rutine kar\u015F\u0131 esnek bir yakla\u015F\u0131m\u0131n var'] },
-    { emoji: '\uD83D\uDC9C', title: 'Sosyal Tarz\u0131n', items: ['Farkl\u0131 insanlarla kolayca ba\u011F kurabiliyorsun', 'A\u00E7\u0131k fikirli ve kabul edici birisin', 'Yeni ortamlara h\u0131zla uyum sa\u011Fl\u0131yorsun'] },
+    { emoji: '🧠', title: 'Kişilik Özelliklerin', items: ['Meraklı ve keşfetmeye açık bir yapın var', 'Yaratıcı düşünce yeteneğin güçlü', 'Farklı bakış açılarına değer veriyorsun'] },
+    { emoji: '🏠', title: 'Yaşam Tercihlerin', items: ['Yeni deneyimlere açıksın', 'Seyahat ve kültür keşfi seni heyecanlandırıyor', 'Rutine karşı esnek bir yaklaşımın var'] },
+    { emoji: '💜', title: 'Sosyal Tarzın', items: ['Farklı insanlarla kolayca bağ kurabiliyorsun', 'Açık fikirli ve kabul edici birisin', 'Yeni ortamlara hızla uyum sağlıyorsun'] },
   ],
 };
 
@@ -200,6 +215,25 @@ export const QuestionsScreen: React.FC = () => {
   const route = useRoute<QuestionsRouteProp>();
   const setProfileField = useProfileStore((s) => s.setField);
 
+  // Hide tab bar while quiz is active
+  useFocusEffect(
+    useCallback(() => {
+      const parent = navigation.getParent();
+      parent?.setOptions({ tabBarStyle: { display: 'none' } });
+      return () => {
+        parent?.setOptions({
+          tabBarStyle: {
+            backgroundColor: '#08080F',
+            borderTopWidth: 0,
+            height: 70,
+            paddingBottom: 12,
+            paddingTop: 6,
+          },
+        });
+      };
+    }, [navigation]),
+  );
+
   // Onboarding mode: when NOT in edit mode, apply 10+10 split
   const isOnboarding = !route.params?.editMode;
   const onboardingQuestionLimit = 10;
@@ -224,15 +258,20 @@ export const QuestionsScreen: React.FC = () => {
   const phaseScale = useSharedValue(0.85);
 
   useEffect(() => {
-    const fallback = CORE_QUESTIONS.map((q) => ({
-      id: String(q.id),
-      question: q.question,
-      options: q.options.map((label, index) => ({ id: `q${q.id}-opt${index}`, label })),
-    }));
-    setQuestions(fallback);
-    setIsLoadingQuestions(false);
+    const init = async () => {
+      // 1. Load cached answers from AsyncStorage (fast, offline backup)
+      let cachedAnswers: Record<string, string> = {};
+      let cachedIndex = 0;
+      try {
+        const stored = await AsyncStorage.getItem(STORAGE_KEY);
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          cachedAnswers = parsed.answers ?? {};
+          cachedIndex = parsed.lastIndex ?? 0;
+        }
+      } catch { /* no cached data */ }
 
-    const fetchFromApi = async () => {
+      // 2. Fetch from API — source of truth for question IDs + saved answers
       try {
         const response = await compatibilityService.getQuestions();
         const normalized: NormalizedQuestion[] = response.questions
@@ -249,7 +288,7 @@ export const QuestionsScreen: React.FC = () => {
           }));
         if (normalized.length > 0) setQuestions(normalized);
 
-        // Load previously saved answers and skip to first unanswered
+        // Restore previously saved answers from backend
         const previousAnswers: Record<string, string> = {};
         let firstUnansweredIndex = 0;
         response.questions.forEach((q, idx) => {
@@ -258,16 +297,43 @@ export const QuestionsScreen: React.FC = () => {
             if (idx >= firstUnansweredIndex) firstUnansweredIndex = idx + 1;
           }
         });
+
         if (Object.keys(previousAnswers).length > 0) {
+          // Backend has answers — use as source of truth
           setAnswers(previousAnswers);
-          // Skip to first unanswered question (capped at list length)
           const cappedIndex = Math.min(firstUnansweredIndex, normalized.length - 1);
           setCurrentIndex(cappedIndex);
+          // Sync profileStore + AsyncStorage with backend truth
+          setProfileField('answers', previousAnswers);
+          AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({
+            answers: previousAnswers,
+            lastIndex: cappedIndex,
+          })).catch(() => {});
+        } else if (Object.keys(cachedAnswers).length > 0) {
+          // No backend answers but we have AsyncStorage cache — use as fallback
+          // (answers may have been saved offline)
+          setAnswers(cachedAnswers);
+          setCurrentIndex(Math.min(cachedIndex, normalized.length - 1));
         }
-      } catch { /* fallback */ }
+      } catch {
+        // API failed — use hardcoded questions + AsyncStorage cache
+        const fallback = CORE_QUESTIONS.map((q) => ({
+          id: String(q.id),
+          question: q.question,
+          options: q.options.map((label, index) => ({ id: `q${q.id}-opt${index}`, label })),
+        }));
+        setQuestions(fallback);
+        if (Object.keys(cachedAnswers).length > 0) {
+          setAnswers(cachedAnswers);
+          setCurrentIndex(Math.min(cachedIndex, fallback.length - 1));
+        }
+      }
+
+      // Only show questions AFTER we have proper data
+      setIsLoadingQuestions(false);
     };
-    fetchFromApi();
-  }, []);
+    init();
+  }, [setProfileField]);
 
   const totalQuestions = questions.length;
   const currentQuestion = questions[currentIndex];
@@ -304,11 +370,19 @@ export const QuestionsScreen: React.FC = () => {
 
   const showAnalysisAndResult = useCallback(
     (finalAnswers: Record<string, string>) => {
+      // Save to profileStore
       try {
         setProfileField('answers', finalAnswers);
       } catch {
         // Silent -- answers saved in local state regardless
       }
+
+      // Trigger score calculation on backend (non-blocking)
+      compatibilityService.triggerCalculate().catch(() => {});
+
+      // Clear AsyncStorage cache — quiz complete, no need for backup
+      AsyncStorage.removeItem(STORAGE_KEY).catch(() => {});
+
       try {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       } catch {
@@ -342,15 +416,23 @@ export const QuestionsScreen: React.FC = () => {
       setSelectedOption(null);
       setSlideDirection('forward');
 
-      // Save each answer individually to backend (non-blocking)
-      if (currentQuestion) {
-        compatibilityService.submitAnswer({
-          questionId: currentQuestion.id,
-          answerIndex: currentQuestion.options.findIndex((o) => o.id === option.id),
-        }).catch((error) => {
-          console.warn('[Compat] Answer save failed:', error?.message || error);
-        });
-      }
+      // 1. Save to backend IMMEDIATELY (non-blocking)
+      compatibilityService.submitAnswer({
+        questionId: currentQuestion.id,
+        answerIndex: currentQuestion.options.findIndex((o) => o.id === option.id),
+      }).catch((error) => {
+        console.warn('[Compat] Answer save failed:', error?.message || error);
+      });
+
+      // 2. Save to AsyncStorage as backup (non-blocking)
+      const nextIdx = isLastQuestion ? currentIndex : currentIndex + 1;
+      AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({
+        answers: newAnswers,
+        lastIndex: nextIdx,
+      })).catch(() => {});
+
+      // 3. Update profileStore so profile card reflects progress
+      setProfileField('answers', newAnswers);
 
       if (isLastQuestion) {
         showAnalysisAndResult(newAnswers);
@@ -359,7 +441,6 @@ export const QuestionsScreen: React.FC = () => {
         setShowHalfwayScreen(true);
       } else {
         const nextIndex = currentIndex + 1;
-        // Check milestone after advancing (question just completed = currentIndex + 1)
         const completedQuestionNumber = currentIndex + 1;
         if (MILESTONE_MESSAGES[completedQuestionNumber]) {
           showMilestone(completedQuestionNumber);
@@ -368,7 +449,7 @@ export const QuestionsScreen: React.FC = () => {
         setCardKey((p) => p + 1);
       }
     }, 700); // 2E: 700ms delay for auto-advance
-  }, [answers, currentQuestion, isLastQuestion, currentIndex, showAnalysisAndResult, showMilestone, isOnboarding, onboardingQuestionLimit]);
+  }, [answers, currentQuestion, isLastQuestion, currentIndex, showAnalysisAndResult, showMilestone, isOnboarding, onboardingQuestionLimit, setProfileField]);
 
   // 2F: Back button handler
   const handleGoBack = useCallback(() => {
@@ -402,13 +483,17 @@ export const QuestionsScreen: React.FC = () => {
     setSlideDirection('forward');
 
     if (isLastQuestion) {
-      try { await compatibilityService.submitAnswers(answers); } catch { /* ok */ }
       showAnalysisAndResult(answers);
     } else if (isOnboarding && currentIndex === onboardingQuestionLimit - 1) {
       // 10+10 split: pause after Q10 in onboarding
       setShowHalfwayScreen(true);
     } else {
       const nextIndex = currentIndex + 1;
+      // Save skip progress to AsyncStorage
+      AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({
+        answers,
+        lastIndex: nextIndex,
+      })).catch(() => {});
       const completedQuestionNumber = currentIndex + 1;
       if (MILESTONE_MESSAGES[completedQuestionNumber]) {
         showMilestone(completedQuestionNumber);
@@ -433,8 +518,15 @@ export const QuestionsScreen: React.FC = () => {
       console.warn('[Compat] Answer save failed:', error?.message || error);
     });
 
+    // Update profileStore + AsyncStorage
+    setProfileField('answers', newAnswers);
+    AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({
+      answers: newAnswers,
+      lastIndex: currentIndex,
+    })).catch(() => {});
+
     showAnalysisAndResult(newAnswers);
-  }, [answers, currentQuestion, selectedOption, showAnalysisAndResult]);
+  }, [answers, currentQuestion, selectedOption, showAnalysisAndResult, currentIndex, setProfileField]);
 
   const enteringAnim = slideDirection === 'forward'
     ? SlideInRight.duration(350).easing(Easing.out(Easing.cubic))
@@ -450,14 +542,16 @@ export const QuestionsScreen: React.FC = () => {
 
   // Get current question number (1-based) for category lookup
   const questionNumber = currentIndex + 1;
-  const category = QUESTION_CATEGORIES[questionNumber] || { emoji: '\u2753', label: 'Soru' };
-  const optionEmojis = OPTION_EMOJIS[questionNumber] || ['\uD83D\uDCA1', '\uD83D\uDCA1', '\uD83D\uDCA1', '\uD83D\uDCA1'];
+  const category = QUESTION_CATEGORIES[questionNumber] || { emoji: '❓', label: 'Soru' };
+  const optionEmojis = OPTION_EMOJIS[questionNumber] || ['💡', '💡', '💡', '💡'];
 
   if (isLoadingQuestions || !currentQuestion) {
     return (
       <View style={[styles.container, styles.centeredContainer]}>
-        <ActivityIndicator size="large" color={onboardingColors.text} />
-        <Text style={styles.loadingText}>Sorular y\u00FCkleniyor...</Text>
+        <BrandedBackground />
+        <Image source={require('../../../assets/splash-logo.png')} style={styles.loadingLogo} resizeMode="contain" />
+        <ActivityIndicator size="large" color="#8B5CF6" />
+        <Text style={styles.loadingText}>Sorular yükleniyor...</Text>
       </View>
     );
   }
@@ -466,15 +560,16 @@ export const QuestionsScreen: React.FC = () => {
   if (showHalfwayScreen) {
     return (
       <View style={[styles.container, styles.centeredContainer]}>
+        <BrandedBackground />
         <Animated.View entering={FadeIn.duration(500)} style={styles.halfwayContent}>
-          <Text style={styles.halfwayEmoji}>{'\uD83C\uDF89'}</Text>
+          <Text style={styles.halfwayEmoji}>🎉</Text>
           <Text style={styles.halfwayTitle}>Harika! İlk 10 soruyu tamamladın.</Text>
           <Text style={styles.halfwaySubtitle}>
             Kalan 10 soruyu istediğin zaman profilinden tamamlayabilirsin.
           </Text>
           <View style={styles.halfwayButtons}>
             <FullWidthButton
-              label="Devam Et"
+              label="Devam et"
               onPress={() => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
                 setShowHalfwayScreen(false);
@@ -505,13 +600,21 @@ export const QuestionsScreen: React.FC = () => {
   if (phase === 'analysis') {
     return (
       <View style={[styles.container, styles.centeredContainer]}>
+        <BrandedBackground />
         <Animated.View style={[styles.celebrationContent, phaseAnimStyle]}>
-          <Text style={styles.celebrationEmoji}>{'\uD83D\uDD2C'}</Text>
-          <Text style={styles.celebrationTitle}>LUMA senin karakterini analiz ediyor...</Text>
+          <Image source={require('../../../assets/splash-logo.png')} style={styles.analysisLogo} resizeMode="contain" />
+          <Text style={styles.celebrationTitle}>Luma senin karakterini analiz ediyor...</Text>
           <Text style={styles.celebrationSubtitle}>
-            Cevaplar\u0131n de\u011Ferlendiriliyor ve en uyumlu profiller belirleniyor.
+            Cevapların değerlendiriliyor ve en uyumlu profiller belirleniyor.
           </Text>
-          <ActivityIndicator size="small" color={onboardingColors.text} style={{ marginTop: spacing.lg }} />
+          <View style={styles.analysisProgressWrap}>
+            <LinearGradient
+              colors={['#8B5CF6', '#EC4899']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.analysisProgressBar}
+            />
+          </View>
         </Animated.View>
       </View>
     );
@@ -519,38 +622,50 @@ export const QuestionsScreen: React.FC = () => {
 
   if (phase === 'result') {
     return (
-      <View style={[styles.container, styles.resultContainer]}>
-        <Animated.View style={[styles.resultContent, phaseAnimStyle]}>
-          <Animated.Text entering={FadeIn.duration(400).delay(100)} style={styles.resultEmoji}>
-            {'\uD83C\uDF89'}
-          </Animated.Text>
-          <Animated.Text entering={FadeIn.duration(400).delay(200)} style={styles.resultTitle}>
-            Uyum profilin haz\u0131r!
-          </Animated.Text>
-          <Animated.Text entering={FadeIn.duration(400).delay(300)} style={styles.resultSubtitle}>
-            \u0130\u015Fte seni tan\u0131mam\u0131za yard\u0131mc\u0131 olan \u00F6zellikler:
-          </Animated.Text>
+      <View style={styles.container}>
+        <BrandedBackground />
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.resultScrollContent}
+        >
+          <Animated.View style={[styles.resultContent, phaseAnimStyle]}>
+            <Animated.Text entering={FadeIn.duration(400).delay(100)} style={styles.resultTitle}>
+              Uyum profilin hazır! 🎉
+            </Animated.Text>
+            <Animated.Text entering={FadeIn.duration(400).delay(300)} style={styles.resultSubtitle}>
+              İşte seni tanımamıza yardımcı olan özellikler:
+            </Animated.Text>
 
-          {getResultSections(answers, questions).map((section, sIdx) => (
-            <Animated.View
-              key={section.title}
-              entering={FadeIn.duration(400).delay(400 + sIdx * 150)}
-              style={styles.resultSection}
-            >
-              <View style={styles.resultSectionHeader}>
-                <Text style={styles.resultSectionEmoji}>{section.emoji}</Text>
-                <Text style={styles.resultSectionTitle}>{section.title}</Text>
-              </View>
-              {section.items.map((item) => (
-                <Text key={item} style={styles.resultItem}>{'\u2022'} {item}</Text>
-              ))}
-            </Animated.View>
-          ))}
-        </Animated.View>
+            {getResultSections(answers, questions).map((section, sIdx) => (
+              <Animated.View
+                key={section.title}
+                entering={FadeIn.duration(400).delay(400 + sIdx * 150)}
+                style={styles.resultSection}
+              >
+                <View style={styles.resultSectionHeader}>
+                  <Text style={styles.resultSectionEmoji}>{section.emoji}</Text>
+                  <Text style={styles.resultSectionTitle}>{section.title}</Text>
+                </View>
+                {section.items.map((item) => (
+                  <Text key={item} style={styles.resultItem}>• {item}</Text>
+                ))}
+              </Animated.View>
+            ))}
+          </Animated.View>
 
-        <View style={styles.resultFooter}>
-          <FullWidthButton label="Profile D\u00F6n" onPress={handleResultContinue} />
-        </View>
+          <View style={styles.resultFooter}>
+            <TouchableOpacity onPress={handleResultContinue} activeOpacity={0.85}>
+              <LinearGradient
+                colors={['#8B5CF6', '#EC4899']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.resultButton}
+              >
+                <Text style={styles.resultButtonText}>Profile dön</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
       </View>
     );
   }
@@ -575,7 +690,7 @@ export const QuestionsScreen: React.FC = () => {
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               style={styles.backButton}
             >
-              <Ionicons name="chevron-back" size={20} color="#FFFFFF" />
+              <Ionicons name="chevron-back" size={20} color="#3D2B1F" />
             </TouchableOpacity>
           ) : (
             <View style={styles.backButtonPlaceholder} />
@@ -635,7 +750,12 @@ export const QuestionsScreen: React.FC = () => {
         </View>
       </View>
 
-      <View style={styles.content}>
+      <ScrollView
+        style={styles.content}
+        contentContainerStyle={styles.contentScroll}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
         <Animated.View
           key={cardKey}
           entering={enteringAnim}
@@ -647,7 +767,7 @@ export const QuestionsScreen: React.FC = () => {
             {currentQuestion.options.map((option, index) => {
               const isSelected = selectedOption === option.id || answers[currentQuestion.id] === option.id;
               const hasSelection = selectedOption !== null || answers[currentQuestion.id] !== undefined;
-              const emoji = optionEmojis[index] || '\uD83D\uDCA1';
+              const emoji = optionEmojis[index] || '💡';
 
               return (
                 <Pressable
@@ -665,17 +785,12 @@ export const QuestionsScreen: React.FC = () => {
                     ]}
                     entering={FadeIn.duration(300).delay(index * 60)}
                   >
-                    {/* Left: emoji in rounded background */}
                     <View style={styles.optionEmojiContainer}>
                       <Text style={styles.optionEmoji}>{emoji}</Text>
                     </View>
-
-                    {/* Center: option text */}
                     <Text style={[styles.optionText, isSelected && styles.optionTextSelected]}>
                       {option.label}
                     </Text>
-
-                    {/* Right: selection circle */}
                     <View style={[styles.selectionCircle, isSelected && styles.selectionCircleFilled]}>
                       {isSelected && (
                         <Animated.View entering={FadeIn.duration(200)}>
@@ -689,16 +804,14 @@ export const QuestionsScreen: React.FC = () => {
             })}
           </View>
         </Animated.View>
-      </View>
 
-      {/* 2E: Only show Tamamla button on last question */}
-      {isLastQuestion && selectedOption ? (
-        <View style={styles.footer}>
-          <FullWidthButton label="Tamamla" onPress={handleComplete} />
-        </View>
-      ) : (
-        <View style={styles.footerSpacer} />
-      )}
+        {/* 2E: Only show Tamamla button on last question */}
+        {isLastQuestion && selectedOption && (
+          <View style={styles.footer}>
+            <FullWidthButton label="Tamamla" onPress={handleComplete} />
+          </View>
+        )}
+      </ScrollView>
     </View>
   );
 };
@@ -727,21 +840,20 @@ const styles = StyleSheet.create({
   },
   // 2F: Back button
   backButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(0,0,0,0.06)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   backButtonPlaceholder: {
-    width: 36,
-    height: 36,
+    width: 44,
+    height: 44,
   },
   analysisLabel: {
     fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: onboardingColors.text,
     letterSpacing: 0.3,
     ...Platform.select({ android: { includeFontPadding: false } }),
@@ -749,9 +861,8 @@ const styles = StyleSheet.create({
   // 2H: Skip button
   skipTopText: {
     fontSize: 14,
-    fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
-    color: 'rgba(255,255,255,0.4)',
+    fontFamily: 'Poppins_600SemiBold',
+    color: '#8B5CF6',
     ...Platform.select({ android: { includeFontPadding: false } }),
   },
   // 2B: Ring progress
@@ -764,37 +875,34 @@ const styles = StyleSheet.create({
   },
   ringCenterText: {
     position: 'absolute',
-    justifyContent: 'center',
-    alignItems: 'center',
+    flexDirection: 'row',
+    alignItems: 'baseline',
   },
   ringCurrentNumber: {
-    fontSize: 28,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontSize: 32,
+    fontFamily: 'Poppins_800ExtraBold',
     color: onboardingColors.text,
-    lineHeight: 32,
     ...Platform.select({ android: { includeFontPadding: false } }),
   },
   ringTotalText: {
     fontSize: 14,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '500',
-    color: onboardingColors.textTertiary,
-    marginTop: -2,
+    fontFamily: 'Poppins_500Medium',
+    color: '#999999',
     ...Platform.select({ android: { includeFontPadding: false } }),
   },
   // 2C: Category badge
   categoryBadge: {
     alignSelf: 'center',
     paddingHorizontal: spacing.smd,
-    paddingVertical: 4,
+    paddingVertical: 6,
     borderRadius: borderRadius.full,
-    marginBottom: spacing.xs,
+    marginBottom: 16,
+    zIndex: 10,
+    backgroundColor: 'rgba(139, 92, 246, 0.1)',
   },
   categoryBadgeText: {
     fontSize: 14,
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
     color: '#8B5CF6',
     letterSpacing: 1.5,
     textTransform: 'uppercase',
@@ -803,7 +911,10 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     paddingHorizontal: spacing.lg,
-    justifyContent: 'center',
+  },
+  contentScroll: {
+    paddingBottom: 100,
+    paddingTop: spacing.sm,
   },
   questionCard: {
     backgroundColor: onboardingColors.surface,
@@ -824,7 +935,6 @@ const styles = StyleSheet.create({
   questionText: {
     fontSize: 20,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: onboardingColors.text,
     marginBottom: spacing.lg,
     lineHeight: 28,
@@ -866,7 +976,6 @@ const styles = StyleSheet.create({
   optionText: {
     fontSize: 15,
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
     color: onboardingColors.textSecondary,
     flex: 1,
     ...Platform.select({ android: { includeFontPadding: false } }),
@@ -874,7 +983,6 @@ const styles = StyleSheet.create({
   optionTextSelected: {
     color: '#8B5CF6',
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   selectionCircle: {
     width: 24,
@@ -912,72 +1020,80 @@ const styles = StyleSheet.create({
   milestoneText: {
     fontSize: 28,
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
     color: '#FFFFFF',
     textAlign: 'center',
     ...Platform.select({ android: { includeFontPadding: false } }),
   },
+  loadingLogo: {
+    width: 64,
+    height: 64,
+    marginBottom: 20,
+  },
   loadingText: {
-    fontSize: 15,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '500',
-    color: onboardingColors.textSecondary,
-    marginTop: spacing.sm,
+    fontSize: 16,
+    fontFamily: 'Poppins_600SemiBold',
+    color: '#666666',
+    marginTop: 16,
     ...Platform.select({ android: { includeFontPadding: false } }),
   },
   celebrationContent: {
     alignItems: 'center',
     paddingHorizontal: spacing.xl,
   },
-  celebrationEmoji: {
-    fontSize: 48,
-    marginBottom: spacing.md,
+  analysisLogo: {
+    width: 72,
+    height: 72,
+    marginBottom: 24,
   },
   celebrationTitle: {
-    fontSize: 28,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
-    color: onboardingColors.text,
+    fontSize: 22,
+    fontFamily: 'Poppins_800ExtraBold',
+    color: '#1A1A2E',
     textAlign: 'center',
     marginBottom: spacing.sm,
     ...Platform.select({ android: { includeFontPadding: false } }),
   },
   celebrationSubtitle: {
-    fontSize: 16,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '500',
-    color: onboardingColors.textSecondary,
+    fontSize: 15,
+    fontFamily: 'Poppins_500Medium',
+    color: '#666666',
     textAlign: 'center',
-    lineHeight: 24,
+    lineHeight: 22,
     ...Platform.select({ android: { includeFontPadding: false } }),
   },
-  resultContainer: {
-    paddingHorizontal: spacing.lg,
+  analysisProgressWrap: {
+    width: 200,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: 'rgba(0,0,0,0.08)',
+    marginTop: 28,
+    overflow: 'hidden',
+  },
+  analysisProgressBar: {
+    width: '60%',
+    height: '100%',
+    borderRadius: 2,
+  },
+  resultScrollContent: {
+    paddingHorizontal: 24,
     paddingTop: Platform.OS === 'ios' ? 60 : 44,
+    paddingBottom: 40,
   },
   resultContent: {
-    flex: 1,
     alignItems: 'center',
-    paddingTop: spacing.lg,
-  },
-  resultEmoji: {
-    fontSize: 52,
-    marginBottom: spacing.md,
   },
   resultTitle: {
     fontSize: 26,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
-    color: onboardingColors.text,
+    fontFamily: 'Poppins_800ExtraBold',
+    color: '#1A1A2E',
     textAlign: 'center',
     marginBottom: spacing.sm,
     ...Platform.select({ android: { includeFontPadding: false } }),
   },
   resultSubtitle: {
     fontSize: 15,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '500',
-    color: onboardingColors.textSecondary,
+    fontFamily: 'Poppins_500Medium',
+    color: '#666666',
     textAlign: 'center',
     lineHeight: 22,
     marginBottom: spacing.lg,
@@ -995,7 +1111,6 @@ const styles = StyleSheet.create({
   halfwayTitle: {
     fontSize: 26,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: onboardingColors.text,
     textAlign: 'center',
     marginBottom: spacing.md,
@@ -1003,8 +1118,7 @@ const styles = StyleSheet.create({
   },
   halfwaySubtitle: {
     fontSize: 15,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '500',
+    fontFamily: 'Poppins_500Medium',
     color: onboardingColors.textSecondary,
     textAlign: 'center',
     lineHeight: 24,
@@ -1026,19 +1140,21 @@ const styles = StyleSheet.create({
   halfwaySecondaryText: {
     fontSize: 16,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: '#8B5CF6',
     textAlign: 'center',
     ...Platform.select({ android: { includeFontPadding: false } }),
   },
   resultSection: {
     width: '100%',
-    backgroundColor: onboardingColors.surface,
-    borderRadius: 16,
-    padding: spacing.md,
-    marginBottom: spacing.sm,
-    borderWidth: 1,
-    borderColor: onboardingColors.surfaceBorder,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 12,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
   },
   resultSectionHeader: {
     flexDirection: 'row',
@@ -1047,23 +1163,34 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   resultSectionEmoji: {
-    fontSize: 20,
+    fontSize: 22,
   },
   resultSectionTitle: {
-    fontSize: 16,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
-    color: onboardingColors.text,
+    fontSize: 18,
+    fontFamily: 'Poppins_700Bold',
+    color: '#1A1A2E',
     ...Platform.select({ android: { includeFontPadding: false } }),
   },
   resultItem: {
     fontSize: 14,
+    fontFamily: 'Poppins_500Medium',
     lineHeight: 22,
-    color: onboardingColors.textSecondary,
+    color: '#555555',
     paddingLeft: 4,
     ...Platform.select({ android: { includeFontPadding: false } }),
   },
   resultFooter: {
-    paddingBottom: Platform.OS === 'ios' ? 36 : 24,
+    marginTop: 20,
+  },
+  resultButton: {
+    height: 56,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  resultButtonText: {
+    fontSize: 18,
+    fontFamily: 'Poppins_700Bold',
+    color: '#FFFFFF',
   },
 });

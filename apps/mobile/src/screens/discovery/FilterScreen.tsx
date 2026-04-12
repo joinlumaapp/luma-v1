@@ -810,13 +810,11 @@ const s = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
     color: colors.text,
   },
   resetText: {
     fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: colors.primary,
   },
 
@@ -833,7 +831,6 @@ const s = StyleSheet.create({
   sectionHeader: {
     fontSize: 20,
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
     color: colors.text,
     marginTop: spacing.lg,
     marginBottom: spacing.sm,
@@ -843,7 +840,6 @@ const s = StyleSheet.create({
   questionLabel: {
     fontSize: 14,
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
     color: colors.textSecondary,
     marginBottom: spacing.sm,
   },
@@ -867,7 +863,6 @@ const s = StyleSheet.create({
   cardValue: {
     fontSize: 16,
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
     color: colors.text,
     marginBottom: spacing.sm,
   },
@@ -892,7 +887,6 @@ const s = StyleSheet.create({
   lockedBadgeText: {
     fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: palette.gold[600],
   },
 
@@ -920,13 +914,11 @@ const s = StyleSheet.create({
   segmentText: {
     fontSize: 14,
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
     color: colors.textSecondary,
   },
   segmentTextActive: {
     color: colors.primary,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
 
   // ── Stepper row (age, height, weight) ──
@@ -953,7 +945,6 @@ const s = StyleSheet.create({
   stepValue: {
     fontSize: 18,
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
     color: colors.text,
     minWidth: 36,
     textAlign: 'center',
@@ -986,19 +977,16 @@ const s = StyleSheet.create({
   chipText: {
     fontSize: 14,
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
     color: colors.textSecondary,
   },
   chipTextActive: {
     color: colors.primary,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   selectedCount: {
     fontSize: 14,
     color: colors.primary,
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
     marginTop: spacing.sm,
   },
 
@@ -1018,13 +1006,11 @@ const s = StyleSheet.create({
   miniChipText: {
     fontSize: 14,
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
     color: colors.textSecondary,
   },
   miniChipTextActive: {
     color: colors.primary,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
 
   // ── Verified row ──
@@ -1037,7 +1023,6 @@ const s = StyleSheet.create({
     flex: 1,
     fontSize: 14,
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
     color: colors.text,
   },
 
@@ -1049,8 +1034,7 @@ const s = StyleSheet.create({
   },
   fallbackLabel: {
     fontSize: 14,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '500',
+    fontFamily: 'Poppins_500Medium',
     color: colors.textTertiary,
   },
 
@@ -1068,7 +1052,6 @@ const s = StyleSheet.create({
     flex: 1,
     fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: palette.gold[700],
   },
   upgradeBannerBtn: {
@@ -1082,7 +1065,6 @@ const s = StyleSheet.create({
   upgradeBannerBtnText: {
     fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: colors.text,
   },
 
@@ -1104,7 +1086,6 @@ const s = StyleSheet.create({
   applyBtnText: {
     fontSize: 16,
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
     color: '#FFFFFF',
   },
 });

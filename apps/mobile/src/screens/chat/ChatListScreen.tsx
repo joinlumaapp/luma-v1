@@ -139,7 +139,7 @@ const MemoizedConversationCard = memo<ConversationCardProps>(({ item, onPress, o
         </View>
         {!item.lastMessage && (
           <Text style={{ color: '#A78BFA', fontSize: 14, fontStyle: 'italic', marginTop: 2 }}>
-            Hen\u00FCz mesaj yok \u2014 selam ver! {'\uD83D\uDC4B'}
+            Henüz mesaj yok — selam ver! 👋
           </Text>
         )}
       </View>
@@ -228,9 +228,9 @@ export const ChatListScreen: React.FC = () => {
     }}>
       <Text style={{ fontSize: 18 }}>{'\uD83D\uDCAC'}</Text>
       <View style={{ flex: 1 }}>
-        <Text style={{ color: '#fff', fontSize: 14, fontWeight: '500' }}>E\u015Fle\u015Fmeden mesaj at!</Text>
+        <Text style={{ color: '#fff', fontSize: 14, fontFamily: 'Poppins_500Medium' }}>Eşleşmeden mesaj at!</Text>
         <Text style={{ color: 'rgba(255,255,255,0.35)', fontSize: 9, marginTop: 1 }}>
-          Tekli: 150{'\uD83D\uDCB0'} {'\u00B7'} 3{'\u2019'}l\u00FC paket: 350{'\uD83D\uDCB0'}
+          Tekli: 150💰 · 3'lü paket: 350💰
         </Text>
       </View>
       <TouchableOpacity
@@ -241,7 +241,7 @@ export const ChatListScreen: React.FC = () => {
           colors={[palette.gold[400], palette.gold[600]] as [string, string]}
           style={{ borderRadius: 8, paddingVertical: 4, paddingHorizontal: 8 }}
         >
-          <Text style={{ color: '#000', fontSize: 9, fontWeight: '700' }}>Al</Text>
+          <Text style={{ color: '#000', fontSize: 9, fontFamily: 'Poppins_700Bold' }}>Al</Text>
         </LinearGradient>
       </TouchableOpacity>
     </View>
@@ -419,7 +419,6 @@ const styles = StyleSheet.create({
   },
   contactNameUnread: {
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   timestamp: {
     ...typography.caption,
@@ -439,7 +438,6 @@ const styles = StyleSheet.create({
   lastMessageUnread: {
     color: colors.textSecondary,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   unreadBadge: {
     backgroundColor: colors.primary,
@@ -454,7 +452,6 @@ const styles = StyleSheet.create({
     ...typography.captionSmall,
     color: '#FFFFFF',
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   separator: {
     height: 1,

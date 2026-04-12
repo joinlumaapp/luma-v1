@@ -6,7 +6,7 @@ import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSecretAdmirerStore } from '../../stores/secretAdmirerStore';
 import { colors, palette } from '../../theme/colors';
-import { fontWeights } from '../../theme/typography';
+import {  } from '../../theme/typography';
 import { BrandedBackground } from '../../components/common/BrandedBackground';
 
 const SecretAdmirerScreen: React.FC = () => {
@@ -32,7 +32,7 @@ const SecretAdmirerScreen: React.FC = () => {
         ]);
       }
     } catch {
-      Alert.alert('Hata', 'Bir sorun olustu, tekrar dene.');
+      Alert.alert('Hata', 'Bir sorun oluştu, tekrar dene.');
     }
   };
 
@@ -114,7 +114,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12, gap: 12,
   },
   backButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.surface, justifyContent: 'center', alignItems: 'center' },
-  headerTitle: { color: colors.text, fontSize: 20, fontWeight: fontWeights.bold },
+  headerTitle: { color: colors.text, fontSize: 20, fontFamily: 'Poppins_800ExtraBold' },
   card: {
     backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.surfaceBorder,
     borderRadius: 16, padding: 16, marginBottom: 12,
@@ -125,13 +125,13 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary + '26',
     justifyContent: 'center', alignItems: 'center',
   },
-  cardTitle: { color: colors.text, fontSize: 15, fontWeight: fontWeights.semibold },
+  cardTitle: { color: colors.text, fontSize: 15, fontFamily: 'Poppins_700Bold' },
   cardSubtitle: { color: colors.textSecondary, fontSize: 14, marginTop: 2 },
   guessBadge: {
     backgroundColor: colors.primary + '26', borderRadius: 8,
     paddingHorizontal: 8, paddingVertical: 4,
   },
-  guessText: { color: palette.purple[400], fontSize: 14, fontWeight: fontWeights.semibold },
+  guessText: { color: palette.purple[400], fontSize: 14, fontFamily: 'Poppins_700Bold' },
   candidatesRow: { flexDirection: 'row', gap: 12, justifyContent: 'center' },
   candidateCard: {
     flex: 1, alignItems: 'center', padding: 12,
@@ -142,13 +142,13 @@ const styles = StyleSheet.create({
     width: 56, height: 56, borderRadius: 28, backgroundColor: colors.primary + '33',
     justifyContent: 'center', alignItems: 'center', marginBottom: 8,
   },
-  candidateAvatarText: { color: palette.purple[400], fontSize: 24, fontWeight: fontWeights.bold },
+  candidateAvatarText: { color: palette.purple[400], fontSize: 24, fontFamily: 'Poppins_800ExtraBold' },
   candidateLabel: { color: colors.textSecondary, fontSize: 12 },
   expiryText: {
     color: colors.textTertiary, fontSize: 14, textAlign: 'center', marginTop: 12,
   },
   emptyState: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 8 },
-  emptyTitle: { color: colors.text, fontSize: 16, fontWeight: fontWeights.semibold },
+  emptyTitle: { color: colors.text, fontSize: 16, fontFamily: 'Poppins_700Bold' },
   emptySubtitle: { color: colors.textTertiary, fontSize: 14, textAlign: 'center', paddingHorizontal: 40 },
 });
 

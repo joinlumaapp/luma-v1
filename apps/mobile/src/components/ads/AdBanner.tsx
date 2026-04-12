@@ -132,7 +132,7 @@ export const AdBanner: React.FC<AdBannerProps> = React.memo(({ index = 0 }) => {
             style={adStyles.ctaButton}
             onPress={handleUpgrade}
             activeOpacity={0.8}
-            accessibilityLabel="Paketi yukselt"
+            accessibilityLabel="Paketi yükselt"
             accessibilityRole="button"
           >
             <LinearGradient

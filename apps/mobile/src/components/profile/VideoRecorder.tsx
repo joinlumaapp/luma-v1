@@ -18,7 +18,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, palette } from '../../theme/colors';
-import { fontWeights } from '../../theme/typography';
+import {  } from '../../theme/typography';
 import { spacing, borderRadius } from '../../theme/spacing';
 import { videoService, type VideoMetadata } from '../../services/videoService';
 
@@ -315,7 +315,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: fontWeights.semibold,
+    fontFamily: 'Poppins_700Bold',
     color: colors.text,
     includeFontPadding: false,
   },
@@ -334,14 +334,14 @@ const styles = StyleSheet.create({
   },
   descriptionTitle: {
     fontSize: 22,
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
     color: colors.text,
     textAlign: 'center',
     includeFontPadding: false,
   },
   descriptionText: {
     fontSize: 14,
-    fontWeight: fontWeights.regular,
+    fontFamily: 'Poppins_700Bold',
     color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 22,
@@ -371,7 +371,7 @@ const styles = StyleSheet.create({
   },
   recordLabel: {
     fontSize: 14,
-    fontWeight: fontWeights.semibold,
+    fontFamily: 'Poppins_700Bold',
     color: palette.gold[600],
     includeFontPadding: false,
   },
@@ -388,7 +388,7 @@ const styles = StyleSheet.create({
   },
   dividerText: {
     fontSize: 14,
-    fontWeight: fontWeights.medium,
+    fontFamily: 'Poppins_700Bold',
     color: colors.textTertiary,
     includeFontPadding: false,
   },
@@ -405,7 +405,7 @@ const styles = StyleSheet.create({
   },
   galleryButtonText: {
     fontSize: 16,
-    fontWeight: fontWeights.semibold,
+    fontFamily: 'Poppins_700Bold',
     color: palette.gold[600],
     includeFontPadding: false,
   },
@@ -421,7 +421,7 @@ const styles = StyleSheet.create({
   },
   specText: {
     fontSize: 14,
-    fontWeight: fontWeights.medium,
+    fontFamily: 'Poppins_700Bold',
     color: colors.textTertiary,
     includeFontPadding: false,
   },
@@ -450,7 +450,7 @@ const styles = StyleSheet.create({
   },
   videoInfoText: {
     fontSize: 14,
-    fontWeight: fontWeights.medium,
+    fontFamily: 'Poppins_700Bold',
     color: colors.textSecondary,
     includeFontPadding: false,
   },
@@ -475,7 +475,7 @@ const styles = StyleSheet.create({
   },
   retryButtonText: {
     fontSize: 15,
-    fontWeight: fontWeights.semibold,
+    fontFamily: 'Poppins_700Bold',
     color: colors.text,
     includeFontPadding: false,
   },
@@ -499,7 +499,7 @@ const styles = StyleSheet.create({
   },
   confirmButtonText: {
     fontSize: 16,
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
     color: palette.white,
     includeFontPadding: false,
   },

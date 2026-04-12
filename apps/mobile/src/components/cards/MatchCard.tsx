@@ -116,7 +116,6 @@ const styles = StyleSheet.create({
     ...typography.bodyLarge,
     color: colors.text,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     flexShrink: 1,
   },
   newBadge: {
@@ -129,12 +128,10 @@ const styles = StyleSheet.create({
     ...typography.captionSmall,
     color: colors.text,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   compatibility: {
     ...typography.bodySmall,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   lastActivity: {
     ...typography.caption,

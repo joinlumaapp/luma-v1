@@ -214,7 +214,7 @@ export const CallScreen: React.FC = () => {
             accessibilityRole="button"
             style={styles.premiumBackButton}
           >
-            <Text style={styles.premiumBackText}>Geri Don</Text>
+            <Text style={styles.premiumBackText}>Geri dön</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -402,7 +402,6 @@ const styles = StyleSheet.create({
     fontSize: 24,
     color: palette.white,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   topBarCenter: {
     flex: 1,
@@ -412,7 +411,6 @@ const styles = StyleSheet.create({
     ...typography.bodySmall,
     color: 'rgba(255, 255, 255, 0.6)',
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
   },
   // ── Center area ────────────────────────────────────────────
   centerArea: {
@@ -451,14 +449,12 @@ const styles = StyleSheet.create({
   avatarText: {
     fontSize: 48,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: palette.white,
   },
   displayName: {
     ...typography.h4,
     color: palette.white,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     marginBottom: spacing.xs,
   },
   statusLabel: {
@@ -479,7 +475,6 @@ const styles = StyleSheet.create({
   videoAvatarInitial: {
     fontSize: 96,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: palette.purple[400],
     opacity: 0.15,
     position: 'absolute',
@@ -493,14 +488,12 @@ const styles = StyleSheet.create({
     ...typography.h4,
     color: palette.white,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     marginBottom: spacing.xs,
   },
   videoOverlayStatus: {
     ...typography.body,
     color: 'rgba(255, 255, 255, 0.5)',
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
     textAlign: 'center',
   },
   videoUnavailableIcon: {
@@ -552,7 +545,6 @@ const styles = StyleSheet.create({
   },
   controlIcon: {
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   controlLabel: {
     ...typography.caption,
@@ -590,7 +582,6 @@ const styles = StyleSheet.create({
     ...typography.h4,
     color: palette.white,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     marginBottom: spacing.sm,
     textAlign: 'center',
   },
@@ -615,7 +606,6 @@ const styles = StyleSheet.create({
     ...typography.button,
     color: '#1A1A1A',
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   premiumBackButton: {
     paddingVertical: spacing.sm,

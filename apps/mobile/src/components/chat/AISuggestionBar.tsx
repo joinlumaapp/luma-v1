@@ -96,7 +96,6 @@ const styles = StyleSheet.create({
   headerText: {
     fontSize: 14,
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
     color: palette.purple[400],
     flex: 1,
   },
@@ -114,8 +113,7 @@ const styles = StyleSheet.create({
   },
   chipText: {
     fontSize: 14,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '500',
+    fontFamily: 'Poppins_500Medium',
     color: colors.text,
   },
 });

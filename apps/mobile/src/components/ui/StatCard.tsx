@@ -42,7 +42,7 @@ import Animated, {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, palette } from '../../theme/colors';
-import { typography, poppinsFonts, fontWeights } from '../../theme/typography';
+import { typography } from '../../theme/typography';
 import { spacing, borderRadius, shadows } from '../../theme/spacing';
 
 // ─── Types ────────────────────────────────────────────────────
@@ -216,8 +216,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
   },
   value: {
-    fontFamily: poppinsFonts.bold,
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
     fontSize: 28,
     color: colors.text,
     includeFontPadding: false,

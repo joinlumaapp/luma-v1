@@ -238,7 +238,6 @@ const styles = StyleSheet.create({
   label: {
     ...typography.button,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     letterSpacing: 0.5,
   },
 });

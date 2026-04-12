@@ -142,14 +142,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: onboardingColors.text,
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 15,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '500',
+    fontFamily: 'Poppins_500Medium',
     lineHeight: 22,
     color: onboardingColors.textSecondary,
     marginBottom: 24,
@@ -170,13 +168,11 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 17,
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
     color: onboardingColors.text,
   },
   popularLabel: {
     fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: onboardingColors.textSecondary,
     marginBottom: 12,
   },
@@ -201,7 +197,6 @@ const styles = StyleSheet.create({
   cityChipText: {
     fontSize: 15,
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
     color: onboardingColors.text,
   },
   cityChipTextSelected: {

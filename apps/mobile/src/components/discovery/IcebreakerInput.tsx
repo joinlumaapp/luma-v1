@@ -20,7 +20,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { colors, palette, glassmorphism } from '../../theme/colors';
-import { fontWeights } from '../../theme/typography';
+import {  } from '../../theme/typography';
 import { spacing, borderRadius } from '../../theme/spacing';
 import type { IcebreakerTargetType } from '@luma/shared';
 
@@ -303,12 +303,12 @@ const styles = StyleSheet.create({
   },
   targetLabel: {
     fontSize: 14,
-    fontWeight: fontWeights.semibold,
+    fontFamily: 'Poppins_700Bold',
     color: colors.text,
   },
   targetAnswer: {
     fontSize: 14,
-    fontWeight: fontWeights.regular,
+    fontFamily: 'Poppins_700Bold',
     color: colors.textSecondary,
   },
   closeButton: {
@@ -334,7 +334,7 @@ const styles = StyleSheet.create({
     paddingTop: spacing.sm + 2,
     paddingBottom: spacing.sm + 2,
     fontSize: 15,
-    fontWeight: fontWeights.regular,
+    fontFamily: 'Poppins_700Bold',
     color: colors.text,
     maxHeight: 100,
     minHeight: 44,
@@ -374,12 +374,12 @@ const styles = StyleSheet.create({
   },
   hintText: {
     fontSize: 14,
-    fontWeight: fontWeights.regular,
+    fontFamily: 'Poppins_700Bold',
     color: colors.textTertiary,
   },
   charCounter: {
     fontSize: 14,
-    fontWeight: fontWeights.medium,
+    fontFamily: 'Poppins_700Bold',
     color: colors.textTertiary,
   },
   charCounterOver: {

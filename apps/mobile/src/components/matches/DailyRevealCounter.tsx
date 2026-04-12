@@ -5,7 +5,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { colors, palette } from '../../theme/colors';
-import { fontWeights } from '../../theme/typography';
+import {  } from '../../theme/typography';
 
 // ─── Types ──────────────────────────────────────────────────────
 
@@ -100,7 +100,7 @@ const styles = StyleSheet.create({
   count: {
     color: palette.purple[400],
     fontSize: 14,
-    fontWeight: fontWeights.semibold,
+    fontFamily: 'Poppins_700Bold',
   },
   buyButton: {
     borderRadius: 8,
@@ -110,6 +110,6 @@ const styles = StyleSheet.create({
   buyText: {
     color: colors.textInverse,
     fontSize: 14,
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
   },
 });

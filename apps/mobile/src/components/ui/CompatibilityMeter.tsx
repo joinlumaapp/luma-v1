@@ -30,7 +30,6 @@ import Animated, {
   type SharedValue,
 } from 'react-native-reanimated';
 // palette import removed — single RING_GOLD constant used for all scores
-import { poppinsFonts, fontWeights } from '../../theme/typography';
 
 // ─── Types ────────────────────────────────────────────────────
 
@@ -271,8 +270,7 @@ const localStyles = StyleSheet.create({
     alignItems: 'center',
   },
   scoreText: {
-    fontFamily: poppinsFonts.bold,
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
     includeFontPadding: false,
   },
 });

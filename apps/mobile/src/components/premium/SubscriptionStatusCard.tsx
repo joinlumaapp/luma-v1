@@ -259,7 +259,6 @@ const styles = StyleSheet.create({
   tierName: {
     ...typography.bodyLarge,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   tierBadge: {
     borderRadius: borderRadius.full,
@@ -270,7 +269,6 @@ const styles = StyleSheet.create({
   tierBadgeText: {
     ...typography.captionSmall,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   goldMini: {
     flexDirection: 'row',
@@ -285,13 +283,11 @@ const styles = StyleSheet.create({
     ...typography.caption,
     color: palette.gold[500],
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   goldMiniText: {
     ...typography.caption,
     color: palette.gold[500],
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
 
   // Paid user details
@@ -311,7 +307,6 @@ const styles = StyleSheet.create({
     ...typography.bodySmall,
     color: colors.text,
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
   },
   warningBanner: {
     backgroundColor: colors.warning + '15',
@@ -324,7 +319,6 @@ const styles = StyleSheet.create({
     ...typography.caption,
     color: colors.warning,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   cancelledBanner: {
     backgroundColor: colors.error + '10',
@@ -365,6 +359,5 @@ const styles = StyleSheet.create({
     ...typography.button,
     color: colors.textInverse,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
 });

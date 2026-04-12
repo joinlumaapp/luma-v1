@@ -72,6 +72,5 @@ const styles = StyleSheet.create({
   },
   icon: {
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
 });

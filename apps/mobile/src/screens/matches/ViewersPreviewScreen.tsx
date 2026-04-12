@@ -25,7 +25,7 @@ import { JETON_COSTS } from '@luma/shared';
 import { useViewersStore } from '../../stores/viewersStore';
 import { useAuthStore, type PackageTier } from '../../stores/authStore';
 import { colors, palette } from '../../theme/colors';
-import { fontWeights } from '../../theme/typography';
+import {  } from '../../theme/typography';
 import { spacing, shadows } from '../../theme/spacing';
 import { BrandedBackground } from '../../components/common/BrandedBackground';
 import { useScreenTracking } from '../../hooks/useAnalytics';
@@ -504,14 +504,12 @@ const gridStyles = StyleSheet.create({
   teaseTitle: {
     fontSize: 18,
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
     color: colors.text,
     textAlign: 'center',
   },
   teaseSubtitle: {
     fontSize: 14,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '500',
+    fontFamily: 'Poppins_500Medium',
     color: colors.textSecondary,
     textAlign: 'center',
   },
@@ -562,7 +560,6 @@ const gridStyles = StyleSheet.create({
   badgeText: {
     fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: '#fff',
   },
   cardBottom: {
@@ -576,7 +573,6 @@ const gridStyles = StyleSheet.create({
   hintText: {
     fontSize: 14,
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
     color: 'rgba(255,255,255,0.85)',
   },
   ctaSection: {
@@ -596,13 +592,11 @@ const gridStyles = StyleSheet.create({
   ctaText: {
     fontSize: 16,
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
     color: '#fff',
   },
   ctaSub: {
     fontSize: 14,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '500',
+    fontFamily: 'Poppins_500Medium',
     color: colors.textTertiary,
   },
 });
@@ -933,15 +927,13 @@ const sheetStyles = StyleSheet.create({
   name: {
     fontSize: 22,
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
     color: colors.text,
     textAlign: 'center',
     marginBottom: 4,
   },
   activity: {
     fontSize: 14,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '500',
+    fontFamily: 'Poppins_500Medium',
     color: colors.textSecondary,
     textAlign: 'center',
     marginBottom: 8,
@@ -959,7 +951,6 @@ const sheetStyles = StyleSheet.create({
   repeatText: {
     fontSize: 14,
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
     color: palette.pink[400],
   },
   interestsRow: {
@@ -980,7 +971,6 @@ const sheetStyles = StyleSheet.create({
   interestText: {
     fontSize: 14,
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
     color: colors.primary,
   },
   ctaContainer: {
@@ -999,7 +989,6 @@ const sheetStyles = StyleSheet.create({
   primaryCTAText: {
     fontSize: 16,
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
     color: '#fff',
   },
   secondaryCTA: {
@@ -1016,7 +1005,6 @@ const sheetStyles = StyleSheet.create({
   secondaryCTAText: {
     fontSize: 15,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: colors.primary,
   },
   jetonBadge: {
@@ -1028,7 +1016,6 @@ const sheetStyles = StyleSheet.create({
   jetonText: {
     fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: palette.gold[500],
   },
   teaserPhoto: {
@@ -1049,15 +1036,13 @@ const sheetStyles = StyleSheet.create({
   teaserTitle: {
     fontSize: 18,
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
     color: colors.text,
     textAlign: 'center',
     marginBottom: 4,
   },
   teaserSubtitle: {
     fontSize: 14,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '500',
+    fontFamily: 'Poppins_500Medium',
     color: colors.textSecondary,
     textAlign: 'center',
     marginBottom: 20,
@@ -1069,7 +1054,6 @@ const sheetStyles = StyleSheet.create({
   teaserDismissText: {
     fontSize: 14,
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
     color: colors.textTertiary,
     textAlign: 'center',
   },
@@ -1243,14 +1227,12 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 22,
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
     color: colors.text,
     letterSpacing: -0.5,
   },
   headerSub: {
     fontSize: 14,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '500',
+    fontFamily: 'Poppins_500Medium',
     color: colors.textTertiary,
     marginTop: 1,
   },
@@ -1268,7 +1250,7 @@ const styles = StyleSheet.create({
   headerBadgeText: {
     color: colors.primary,
     fontSize: 14,
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
   },
 
   scrollContent: {
@@ -1295,7 +1277,6 @@ const styles = StyleSheet.create({
   summaryText: {
     fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: colors.text,
   },
 
@@ -1303,7 +1284,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: colors.text,
     marginBottom: spacing.md,
   },
@@ -1403,13 +1383,11 @@ const styles = StyleSheet.create({
   cardActivityText: {
     fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: colors.text,
   },
   cardTime: {
     fontSize: 14,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '500',
+    fontFamily: 'Poppins_500Medium',
     color: colors.textTertiary,
   },
   repeatRow: {
@@ -1421,7 +1399,6 @@ const styles = StyleSheet.create({
   repeatText: {
     fontSize: 14,
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
     color: palette.pink[400],
   },
 
@@ -1465,15 +1442,13 @@ const styles = StyleSheet.create({
   premiumTitle: {
     fontSize: 18,
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
     color: colors.text,
     textAlign: 'center',
     marginBottom: 6,
   },
   premiumSubtitle: {
     fontSize: 14,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '500',
+    fontFamily: 'Poppins_500Medium',
     color: colors.textSecondary,
     textAlign: 'center',
     marginBottom: 20,
@@ -1490,7 +1465,6 @@ const styles = StyleSheet.create({
   premiumCTAText: {
     fontSize: 16,
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
     color: '#fff',
   },
 
@@ -1561,15 +1535,13 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 24,
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
     color: colors.text,
     textAlign: 'center',
     marginBottom: 6,
   },
   emptySubtitle: {
     fontSize: 14,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '500',
+    fontFamily: 'Poppins_500Medium',
     color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 21,
@@ -1595,13 +1567,11 @@ const styles = StyleSheet.create({
   emptyStatNumber: {
     fontSize: 20,
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
     color: colors.text,
   },
   emptyStatLabel: {
     fontSize: 14,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '500',
+    fontFamily: 'Poppins_500Medium',
     color: colors.textTertiary,
     textAlign: 'center',
   },
@@ -1623,13 +1593,11 @@ const styles = StyleSheet.create({
   emptyCTAText: {
     fontSize: 16,
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
     color: '#fff',
   },
   emptyCTASub: {
     fontSize: 14,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '500',
+    fontFamily: 'Poppins_500Medium',
     color: colors.textTertiary,
     marginTop: 2,
   },
@@ -1648,7 +1616,6 @@ const styles = StyleSheet.create({
   emptyBoostPillText: {
     fontSize: 14,
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
     color: palette.purple[600],
   },
 });

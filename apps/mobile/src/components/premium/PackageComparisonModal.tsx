@@ -348,7 +348,6 @@ const styles = StyleSheet.create({
     ...typography.h4,
     color: colors.text,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   closeButton: {
     width: 32,
@@ -362,7 +361,6 @@ const styles = StyleSheet.create({
     ...typography.body,
     color: colors.textSecondary,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   subtitle: {
     ...typography.bodySmall,
@@ -393,7 +391,6 @@ const styles = StyleSheet.create({
     ...typography.captionSmall,
     color: colors.textTertiary,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     includeFontPadding: false,
   },
   tierHeaderCell: {
@@ -422,13 +419,11 @@ const styles = StyleSheet.create({
     ...typography.captionSmall,
     color: colors.text,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     fontSize: 8,
   },
   tierHeaderName: {
     ...typography.captionSmall,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     textAlign: 'center',
     marginTop: spacing.xs,
   },
@@ -473,19 +468,16 @@ const styles = StyleSheet.create({
   valueTextCheck: {
     color: colors.success,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     fontSize: 16,
   },
   valueTextCross: {
     color: colors.error + '80',
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     fontSize: 16,
   },
   valueTextCustom: {
     color: colors.text,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
 
   // Upgrade buttons row
@@ -512,7 +504,6 @@ const styles = StyleSheet.create({
     ...typography.captionSmall,
     color: colors.text,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     textAlign: 'center',
     lineHeight: 13,
   },
@@ -527,7 +518,6 @@ const styles = StyleSheet.create({
   currentBadgeText: {
     ...typography.captionSmall,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   emptyBtnPlaceholder: {
     height: 28,

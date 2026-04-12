@@ -23,7 +23,6 @@
 import React from 'react';
 import { View, Text, Image, StyleSheet, type ViewStyle } from 'react-native';
 import { palette, colors } from '../../theme/colors';
-import { poppinsFonts, fontWeights } from '../../theme/typography';
 
 // ─── Types ────────────────────────────────────────────────────
 
@@ -183,8 +182,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   initial: {
-    fontFamily: poppinsFonts.bold,
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
     color: palette.purple[400],
   },
   overflowBadge: {
@@ -195,8 +193,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   overflowText: {
-    fontFamily: poppinsFonts.semibold,
-    fontWeight: fontWeights.semibold,
+    fontFamily: 'Poppins_700Bold',
     color: palette.purple[400],
   },
 });

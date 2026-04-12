@@ -36,7 +36,7 @@ const styles = StyleSheet.create({
     borderColor: inputStyle.borderColor,
     paddingHorizontal: inputStyle.paddingHorizontal,
     fontSize: inputStyle.fontSize,
-    fontWeight: inputStyle.fontWeight,
+    fontFamily: inputStyle.fontFamily,
     color: '#FFFFFF',
   },
   inputLight: {

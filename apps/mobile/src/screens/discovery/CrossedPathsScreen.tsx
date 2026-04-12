@@ -273,7 +273,7 @@ const cardStyles = StyleSheet.create({
   verifiedIcon: {
     fontSize: 14,
     color: '#FFFFFF',
-    fontWeight: '600',
+    fontFamily: 'Poppins_600SemiBold',
   },
   info: {
     flex: 1,
@@ -288,7 +288,6 @@ const cardStyles = StyleSheet.create({
     ...typography.bodyLarge,
     color: colors.text,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     flex: 1,
   },
   compatBadge: {
@@ -302,7 +301,6 @@ const cardStyles = StyleSheet.create({
     ...typography.caption,
     color: colors.primary,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   locationRow: {
     flexDirection: 'row',
@@ -337,7 +335,6 @@ const cardStyles = StyleSheet.create({
     ...typography.captionSmall,
     color: colors.primaryLight,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   actions: {
     flexDirection: 'row',
@@ -741,7 +738,6 @@ const styles = StyleSheet.create({
     ...typography.bodyLarge,
     color: colors.text,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   headerSpacer: {
     width: 40,

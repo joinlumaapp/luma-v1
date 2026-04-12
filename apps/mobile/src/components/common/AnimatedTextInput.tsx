@@ -220,14 +220,12 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 14,
     backgroundColor: 'transparent',
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '500',
+    fontFamily: 'Poppins_500Medium',
     zIndex: 1,
   },
   input: {
     fontSize: 15,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '500',
+    fontFamily: 'Poppins_500Medium',
     color: colors.text || '#FFFFFF',
     padding: 0,
     margin: 0,
@@ -246,8 +244,7 @@ const styles = StyleSheet.create({
   errorText: {
     marginTop: 4,
     fontSize: 14,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '500',
+    fontFamily: 'Poppins_500Medium',
     color: palette.error || '#EF4444',
   },
 });

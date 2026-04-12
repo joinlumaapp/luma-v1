@@ -20,7 +20,7 @@ import { onboardingColors } from '../../components/onboarding/OnboardingLayout';
 import { BrandedBackground } from '../../components/common/BrandedBackground';
 import { palette } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/spacing';
-import { fontWeights } from '../../theme/typography';
+import {  } from '../../theme/typography';
 import { Ionicons } from '@expo/vector-icons';
 
 type NavProp = NativeStackNavigationProp<AuthStackParamList, 'PasswordCreation'>;
@@ -217,8 +217,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 28,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
     color: onboardingColors.text,
     marginBottom: 8,
   },
@@ -248,8 +247,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 17,
     color: onboardingColors.text,
-    fontFamily: 'Poppins_500Medium',
-    fontWeight: fontWeights.medium,
+    fontFamily: 'Poppins_700Bold',
   },
   toggleButton: {
     paddingHorizontal: 8,
@@ -258,8 +256,7 @@ const styles = StyleSheet.create({
   toggleText: {
     fontSize: 14,
     color: onboardingColors.textSecondary,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: fontWeights.semibold,
+    fontFamily: 'Poppins_700Bold',
   },
   rulesContainer: {
     marginTop: 12,
@@ -308,8 +305,7 @@ const styles = StyleSheet.create({
   },
   continueText: {
     fontSize: 17,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: fontWeights.semibold,
+    fontFamily: 'Poppins_700Bold',
     color: onboardingColors.background,
   },
   continueTextDisabled: {

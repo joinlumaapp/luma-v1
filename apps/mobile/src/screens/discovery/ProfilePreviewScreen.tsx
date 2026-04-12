@@ -557,7 +557,7 @@ export const ProfilePreviewScreen: React.FC = () => {
                 paddingVertical: 6,
                 borderRadius: 20,
               }}>
-                <Text style={{ fontSize: 14, fontFamily: 'Poppins_500Medium', fontWeight: '500', color: palette.purple[500] }}>
+                <Text style={{ fontSize: 14, fontFamily: 'Poppins_500Medium', color: palette.purple[500] }}>
                   {translateIntentionTag(profile.intentionTag)}
                 </Text>
               </View>
@@ -626,7 +626,6 @@ export const ProfilePreviewScreen: React.FC = () => {
               <Text style={{
                 fontSize: 14,
                 fontFamily: 'Poppins_500Medium',
-                fontWeight: '500',
                 color: colors.textTertiary,
                 marginBottom: 2,
               }}>
@@ -635,7 +634,6 @@ export const ProfilePreviewScreen: React.FC = () => {
               <Text style={{
                 fontSize: 15,
                 fontFamily: 'Poppins_500Medium',
-                fontWeight: '500',
                 color: colors.text,
               }}>
                 {item.value}
@@ -790,16 +788,16 @@ export const ProfilePreviewScreen: React.FC = () => {
         return canViewStats ? (
           <View style={{ flexDirection: 'row', gap: 10, marginTop: 12 }}>
             <View style={{ flex: 1, backgroundColor: colors.surface, borderRadius: 16, paddingVertical: 16, alignItems: 'center', borderWidth: 1, borderColor: colors.surfaceBorder }}>
-              <Text style={{ fontSize: 22, fontWeight: '600', color: palette.purple[600], paddingHorizontal: 4, textAlign: 'center', width: '100%' }}>{(profile as unknown as { postCount?: number }).postCount ?? 0}</Text>
-              <Text style={{ fontSize: 9, fontWeight: '600', color: colors.textTertiary, marginTop: 4, letterSpacing: 1, textTransform: 'uppercase' }}>Gönderi</Text>
+              <Text style={{ fontSize: 22, fontFamily: 'Poppins_600SemiBold', color: palette.purple[600], paddingHorizontal: 4, textAlign: 'center', width: '100%' }}>{(profile as unknown as { postCount?: number }).postCount ?? 0}</Text>
+              <Text style={{ fontSize: 9, fontFamily: 'Poppins_600SemiBold', color: colors.textTertiary, marginTop: 4, letterSpacing: 1, textTransform: 'uppercase' }}>Gönderi</Text>
             </View>
             <View style={{ flex: 1, backgroundColor: colors.surface, borderRadius: 16, paddingVertical: 16, alignItems: 'center', borderWidth: 1, borderColor: colors.surfaceBorder }}>
-              <Text style={{ fontSize: 22, fontWeight: '600', color: palette.purple[600], paddingHorizontal: 4, textAlign: 'center', width: '100%' }}>{(profile as unknown as { followerCount?: number }).followerCount ?? 0}</Text>
-              <Text style={{ fontSize: 9, fontWeight: '600', color: colors.textTertiary, marginTop: 4, letterSpacing: 1, textTransform: 'uppercase' }}>Takipçi</Text>
+              <Text style={{ fontSize: 22, fontFamily: 'Poppins_600SemiBold', color: palette.purple[600], paddingHorizontal: 4, textAlign: 'center', width: '100%' }}>{(profile as unknown as { followerCount?: number }).followerCount ?? 0}</Text>
+              <Text style={{ fontSize: 9, fontFamily: 'Poppins_600SemiBold', color: colors.textTertiary, marginTop: 4, letterSpacing: 1, textTransform: 'uppercase' }}>Takipçi</Text>
             </View>
             <View style={{ flex: 1, backgroundColor: colors.surface, borderRadius: 16, paddingVertical: 16, alignItems: 'center', borderWidth: 1, borderColor: colors.surfaceBorder }}>
-              <Text style={{ fontSize: 22, fontWeight: '600', color: palette.purple[600], paddingHorizontal: 4, textAlign: 'center', width: '100%' }}>{(profile as unknown as { followingCount?: number }).followingCount ?? 0}</Text>
-              <Text style={{ fontSize: 9, fontWeight: '600', color: colors.textTertiary, marginTop: 4, letterSpacing: 1, textTransform: 'uppercase' }}>Takip</Text>
+              <Text style={{ fontSize: 22, fontFamily: 'Poppins_600SemiBold', color: palette.purple[600], paddingHorizontal: 4, textAlign: 'center', width: '100%' }}>{(profile as unknown as { followingCount?: number }).followingCount ?? 0}</Text>
+              <Text style={{ fontSize: 9, fontFamily: 'Poppins_600SemiBold', color: colors.textTertiary, marginTop: 4, letterSpacing: 1, textTransform: 'uppercase' }}>Takip</Text>
             </View>
           </View>
         ) : (
@@ -983,7 +981,6 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 28,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: colors.text,
     letterSpacing: 0,
   },
@@ -1036,7 +1033,6 @@ const styles = StyleSheet.create({
     fontSize: 26,
     lineHeight: 38,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: colors.text,
     letterSpacing: 0,
     flexShrink: 1,
@@ -1046,14 +1042,12 @@ const styles = StyleSheet.create({
   jobTitle: {
     fontSize: 15,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: palette.purple[600],
     letterSpacing: 0.1,
   },
   cityText: {
     fontSize: 14,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '500',
+    fontFamily: 'Poppins_500Medium',
     color: colors.textSecondary,
   },
   metaRow: {
@@ -1075,7 +1069,6 @@ const styles = StyleSheet.create({
   intentionText: {
     fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: colors.primary,
     letterSpacing: 0.2,
   },
@@ -1094,12 +1087,10 @@ const styles = StyleSheet.create({
   compatInlineText: {
     fontSize: 17,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   compatSuperLabel: {
     fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: colors.accent,
     backgroundColor: colors.accent + '18',
     borderRadius: borderRadius.full,
@@ -1126,7 +1117,6 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 20,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: colors.text,
     textAlign: 'center',
     includeFontPadding: false,
@@ -1134,7 +1124,6 @@ const styles = StyleSheet.create({
   statLabel: {
     fontSize: 14,
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
     color: colors.textTertiary,
     marginTop: 3,
     textAlign: 'center',
@@ -1155,7 +1144,6 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontSize: 18,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: colors.text,
     includeFontPadding: false,
     marginBottom: spacing.md,
@@ -1185,16 +1173,14 @@ const styles = StyleSheet.create({
   },
   promptQuestion: {
     fontSize: 14,
-    fontFamily: 'Poppins_500Medium',
-    fontWeight: '500' as const,
+    fontFamily: 'Poppins_500Medium' as const,
     color: colors.textSecondary,
     textAlign: 'center' as const,
     marginBottom: spacing.sm,
   },
   promptAnswer: {
     fontSize: 22,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600' as const,
+    fontFamily: 'Poppins_600SemiBold' as const,
     color: colors.text,
     textAlign: 'center' as const,
     lineHeight: 30,
@@ -1216,7 +1202,6 @@ const styles = StyleSheet.create({
   lifestyleValue: {
     fontSize: 14,
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
     color: colors.text,
   },
 
@@ -1257,7 +1242,6 @@ const styles = StyleSheet.create({
   tagText: {
     fontSize: 14,
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
     color: colors.primary,
   },
 
@@ -1299,7 +1283,6 @@ const styles = StyleSheet.create({
   messageCtaText: {
     fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: '#FFFFFF',
     letterSpacing: 0.2,
   },

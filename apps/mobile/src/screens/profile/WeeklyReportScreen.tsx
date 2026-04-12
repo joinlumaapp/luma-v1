@@ -107,12 +107,12 @@ const LockedOverlay: React.FC<LockedOverlayProps> = ({ onUpgrade }) => (
     style={styles.lockedOverlay}
     activeOpacity={0.9}
     onPress={onUpgrade}
-    accessibilityLabel="Premium ile tam raporu gor"
+    accessibilityLabel="Premium ile tam raporu gör"
     accessibilityRole="button"
   >
     <View style={styles.lockedContent}>
       <Ionicons name="lock-closed" size={28} color="#A78BFA" />
-      <Text style={styles.lockedText}>Premium ile tam raporu gor</Text>
+      <Text style={styles.lockedText}>Premium ile tam raporu gör</Text>
       <LinearGradient
         colors={['#8B5CF6', '#A78BFA'] as [string, string]}
         start={{ x: 0, y: 0 }}
@@ -176,8 +176,8 @@ export const WeeklyReportScreen: React.FC = () => {
     return (
       <View style={[styles.container, styles.centered, { paddingTop: insets.top }]}>
         <Text style={styles.errorIcon}>📊</Text>
-        <Text style={styles.errorTitle}>Rapor yuklenemedi</Text>
-        <Text style={styles.errorSubtitle}>Lutfen tekrar dene</Text>
+        <Text style={styles.errorTitle}>Rapor yüklenemedi</Text>
+        <Text style={styles.errorSubtitle}>Lütfen tekrar dene</Text>
         <TouchableOpacity style={styles.retryButton} onPress={fetchReport}>
           <Text style={styles.retryButtonText}>Tekrar Dene</Text>
         </TouchableOpacity>
@@ -311,7 +311,7 @@ export const WeeklyReportScreen: React.FC = () => {
                   <View style={styles.insightRow}>
                     <Text style={styles.insightBullet}>💎</Text>
                     <Text style={styles.insightText}>
-                      Profilini guncelleyerek uyum oranini artirabilirsin
+                      Profilini güncelleyerek uyum oranını artırabilirsin
                     </Text>
                   </View>
                   <View style={styles.insightRow}>

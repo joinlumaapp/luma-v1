@@ -209,14 +209,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.text,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     textAlign: 'center',
     lineHeight: 24,
     marginBottom: spacing.xs,
   },
   titleName: {
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
     color: '#FF6B00',
   },
   subtitle: {
@@ -240,7 +238,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: palette.purple[400],
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   flirtButton: {
     flexDirection: 'row',
@@ -263,7 +260,6 @@ const styles = StyleSheet.create({
     fontSize: 17,
     color: '#FFFFFF',
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
   },
   dismissButton: {
     paddingVertical: spacing.sm,
@@ -272,6 +268,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.textTertiary,
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
   },
 });

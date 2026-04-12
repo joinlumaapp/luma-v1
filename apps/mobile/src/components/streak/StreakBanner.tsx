@@ -192,12 +192,10 @@ const styles = StyleSheet.create({
     ...typography.bodySmall,
     color: colors.text,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   streakTextMilestone: {
     ...typography.body,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   milestoneLabel: {
     ...typography.captionSmall,
@@ -213,6 +211,5 @@ const styles = StyleSheet.create({
     ...typography.buttonSmall,
     color: colors.text,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
 });

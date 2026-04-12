@@ -201,7 +201,7 @@ const cardStyles = StyleSheet.create({
     marginBottom: 2,
   },
   senderName: {
-    fontWeight: '600',
+    fontFamily: 'Poppins_600SemiBold',
   },
   time: {
     ...typography.caption,
@@ -225,7 +225,7 @@ const cardStyles = StyleSheet.create({
   ignoreBtnText: {
     ...typography.captionSmall,
     color: colors.textSecondary,
-    fontWeight: '600',
+    fontFamily: 'Poppins_600SemiBold',
   },
   respondBtn: {
     paddingHorizontal: spacing.lg,
@@ -237,7 +237,7 @@ const cardStyles = StyleSheet.create({
   respondBtnText: {
     ...typography.captionSmall,
     color: colors.text,
-    fontWeight: '600',
+    fontFamily: 'Poppins_600SemiBold',
   },
   statusRow: {
     flexDirection: 'row',
@@ -260,7 +260,7 @@ const cardStyles = StyleSheet.create({
   },
   statusText: {
     ...typography.captionSmall,
-    fontWeight: '600',
+    fontFamily: 'Poppins_600SemiBold',
   },
   statusTextAccepted: {
     color: colors.success,
@@ -458,7 +458,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     ...typography.bodyLarge,
     color: colors.text,
-    fontWeight: '600',
+    fontFamily: 'Poppins_600SemiBold',
   },
   headerSpacer: {
     width: 40,

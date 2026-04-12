@@ -593,7 +593,6 @@ const styles = StyleSheet.create({
     ...typography.caption,
     color: colors.text,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     fontVariant: ['tabular-nums'],
   },
 
@@ -682,7 +681,6 @@ const styles = StyleSheet.create({
   compatBadgeText: {
     fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
 
   // ── Intention badge ──
@@ -701,7 +699,6 @@ const styles = StyleSheet.create({
     ...typography.captionSmall,
     color: colors.text,
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
   },
 
   // ── Card info section ──
@@ -713,7 +710,6 @@ const styles = StyleSheet.create({
     ...typography.bodySmall,
     color: colors.text,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   cardCity: {
     ...typography.captionSmall,
@@ -787,7 +783,6 @@ const styles = StyleSheet.create({
     ...typography.bodyLarge,
     color: colors.text,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     textAlign: 'center',
     marginBottom: spacing.md,
   },
@@ -810,7 +805,6 @@ const styles = StyleSheet.create({
     ...typography.bodySmall,
     color: colors.primary,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     fontVariant: ['tabular-nums'],
   },
 
@@ -867,7 +861,6 @@ const styles = StyleSheet.create({
     ...typography.bodySmall,
     color: colors.primary,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     fontVariant: ['tabular-nums'],
   },
 

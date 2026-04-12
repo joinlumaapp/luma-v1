@@ -20,7 +20,7 @@ import { useCoinStore } from '../../stores/coinStore';
 import { BOOST_PACKS as BOOST_PACKS_CONFIG } from '../../constants/config';
 import { palette } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/spacing';
-import { fontWeights } from '../../theme/typography';
+import {  } from '../../theme/typography';
 import { useScreenTracking } from '../../hooks/useAnalytics';
 
 // ── Boost Packs ──
@@ -87,14 +87,12 @@ const cardStyles = StyleSheet.create({
   },
   count: {
     fontSize: 28,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
     color: '#1F2937',
   },
   label: {
     fontSize: 14,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: fontWeights.regular,
+    fontFamily: 'Poppins_700Bold',
     color: '#6B7280',
   },
   discountBadge: {
@@ -106,14 +104,12 @@ const cardStyles = StyleSheet.create({
   },
   discountText: {
     fontSize: 14,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
     color: palette.purple[700],
   },
   price: {
     fontSize: 17,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
     color: '#1F2937',
     marginTop: 4,
   },
@@ -127,8 +123,7 @@ const cardStyles = StyleSheet.create({
   },
   popularText: {
     fontSize: 9,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
     color: '#FFFFFF',
     letterSpacing: 0.5,
   },
@@ -316,8 +311,7 @@ const s = StyleSheet.create({
   },
   balanceText: {
     fontSize: 14,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
     color: '#FFFFFF',
   },
   iconCircle: {
@@ -344,16 +338,14 @@ const s = StyleSheet.create({
   },
   heroTitle: {
     fontSize: 26,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
     color: '#FFFFFF',
     fontStyle: 'italic',
     marginBottom: 8,
   },
   heroSubtitle: {
     fontSize: 14,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: fontWeights.regular,
+    fontFamily: 'Poppins_700Bold',
     color: 'rgba(255,255,255,0.85)',
     textAlign: 'center',
     lineHeight: 20,
@@ -388,8 +380,7 @@ const s = StyleSheet.create({
   },
   ctaText: {
     fontSize: 18,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
     color: '#FFFFFF',
   },
 });

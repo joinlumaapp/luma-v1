@@ -368,21 +368,18 @@ const itemStyles = StyleSheet.create({
     fontSize: 14,
     color: '#FFFFFF',
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     letterSpacing: 0.1,
   },
   artist: {
     fontSize: 14,
     color: 'rgba(255,255,255,0.55)',
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '500',
+    fontFamily: 'Poppins_500Medium',
     marginTop: 2,
   },
   duration: {
     fontSize: 14,
     color: 'rgba(255,255,255,0.4)',
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '500',
+    fontFamily: 'Poppins_500Medium',
     marginLeft: spacing.sm,
   },
 });
@@ -409,15 +406,13 @@ const emptyStyles = StyleSheet.create({
     fontSize: 15,
     color: 'rgba(255,255,255,0.7)',
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
     textAlign: 'center',
     marginBottom: spacing.xs,
   },
   subText: {
     fontSize: 14,
     color: 'rgba(255,255,255,0.35)',
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '500',
+    fontFamily: 'Poppins_500Medium',
     textAlign: 'center',
   },
 });
@@ -466,8 +461,7 @@ const pickerStyles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     color: '#FFFFFF',
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_700Bold',
     letterSpacing: 0.3,
   },
   closeButton: {
@@ -502,8 +496,7 @@ const pickerStyles = StyleSheet.create({
     flex: 1,
     fontSize: 14,
     color: '#FFFFFF',
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '500',
+    fontFamily: 'Poppins_500Medium',
     paddingVertical: 0,
   },
   sectionHeader: {
@@ -515,7 +508,6 @@ const pickerStyles = StyleSheet.create({
     fontSize: 14,
     color: 'rgba(255,255,255,0.45)',
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     letterSpacing: 0.8,
     textTransform: 'uppercase',
   },

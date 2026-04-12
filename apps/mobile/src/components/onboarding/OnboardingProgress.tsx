@@ -62,7 +62,6 @@ const styles = StyleSheet.create({
   stepText: {
     fontSize: 14,
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
     color: palette.gray[400],
     textAlign: 'right',
     marginBottom: 6,

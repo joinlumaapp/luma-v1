@@ -13,7 +13,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useCoinStore, DM_COST } from '../../stores/coinStore';
-import { typography, fontWeights } from '../../theme/typography';
+import { typography } from '../../theme/typography';
 import { spacing, borderRadius, shadows } from '../../theme/spacing';
 import { glassmorphism, palette, colors } from '../../theme/colors';
 
@@ -314,13 +314,13 @@ const styles = StyleSheet.create({
   },
   miniCoinText: {
     fontSize: 9,
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
     color: '#FFFFFF',
   },
   costAmount: {
     ...typography.body,
     color: '#2C1810',
-    fontWeight: fontWeights.semibold,
+    fontFamily: 'Poppins_700Bold',
   },
   costAmountInsufficient: {
     color: colors.error,
@@ -340,7 +340,7 @@ const styles = StyleSheet.create({
   warningText: {
     ...typography.bodySmall,
     color: colors.error,
-    fontWeight: fontWeights.semibold,
+    fontFamily: 'Poppins_700Bold',
   },
   // Actions
   actions: {
@@ -362,7 +362,7 @@ const styles = StyleSheet.create({
   primaryButtonText: {
     ...typography.button,
     color: '#FFFFFF',
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
   },
   secondaryButton: {
     height: 48,
@@ -378,6 +378,6 @@ const styles = StyleSheet.create({
   secondaryButtonText: {
     ...typography.buttonSmall,
     color: palette.purple[600],
-    fontWeight: fontWeights.semibold,
+    fontFamily: 'Poppins_700Bold',
   },
 });

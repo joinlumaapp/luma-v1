@@ -117,7 +117,6 @@ const styles = StyleSheet.create({
     ...typography.bodySmall,
     color: palette.white,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     flex: 1,
     fontVariant: ['tabular-nums'],
   },

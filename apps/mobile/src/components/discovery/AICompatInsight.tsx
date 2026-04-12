@@ -11,7 +11,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { generateSmartMatchExplanation } from '../../services/aiService';
 import { colors, palette } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/spacing';
-import { fontWeights } from '../../theme/typography';
+import {  } from '../../theme/typography';
 
 interface AICompatInsightProps {
   targetName: string;
@@ -95,14 +95,12 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 16,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: fontWeights.semibold,
+    fontFamily: 'Poppins_700Bold',
     color: colors.text,
   },
   summary: {
     fontSize: 14,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: fontWeights.regular,
+    fontFamily: 'Poppins_700Bold',
     color: colors.textSecondary,
     lineHeight: 22,
   },
@@ -117,8 +115,7 @@ const styles = StyleSheet.create({
   strengthText: {
     flex: 1,
     fontSize: 14,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: fontWeights.regular,
+    fontFamily: 'Poppins_700Bold',
     color: colors.text,
     lineHeight: 20,
   },
@@ -130,8 +127,7 @@ const styles = StyleSheet.create({
   },
   talkingTitle: {
     fontSize: 14,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: fontWeights.semibold,
+    fontFamily: 'Poppins_700Bold',
     color: palette.purple[600],
     marginBottom: 2,
   },
@@ -143,8 +139,7 @@ const styles = StyleSheet.create({
   talkingText: {
     flex: 1,
     fontSize: 14,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: fontWeights.regular,
+    fontFamily: 'Poppins_700Bold',
     color: colors.text,
     lineHeight: 19,
   },

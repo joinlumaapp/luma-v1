@@ -11,7 +11,6 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/spacing';
-import { poppinsFonts, fontWeights } from '../../theme/typography';
 
 // ─── Types ────────────────────────────────────────────────────
 
@@ -64,10 +63,9 @@ const styles = StyleSheet.create({
     padding: spacing.lg - 4, // 20
   },
   title: {
-    fontFamily: poppinsFonts.bold,
     fontSize: 18,
     lineHeight: 26,
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
     color: colors.text,
     marginBottom: spacing.md,
     ...Platform.select({
@@ -90,9 +88,8 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.xl,
   },
   interestText: {
-    fontFamily: poppinsFonts.medium,
     fontSize: 14,
-    fontWeight: fontWeights.medium,
+    fontFamily: 'Poppins_700Bold',
     color: '#059669',
     ...Platform.select({
       android: { includeFontPadding: false },
@@ -109,9 +106,8 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.xl,
   },
   compatText: {
-    fontFamily: poppinsFonts.medium,
     fontSize: 14,
-    fontWeight: fontWeights.medium,
+    fontFamily: 'Poppins_700Bold',
     color: '#B8860B',
     ...Platform.select({
       android: { includeFontPadding: false },

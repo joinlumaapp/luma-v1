@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { colors, palette } from '../../theme/colors';
-import { fontWeights } from '../../theme/typography';
+import {  } from '../../theme/typography';
 
 // ─── Types ──────────────────────────────────────────────────────
 
@@ -129,7 +129,7 @@ export const ActivityStrip: React.FC<ActivityStripProps> = ({
         <Text style={styles.headerTitle}>
           {'\uD83D\uDD25'} Canlı Aktivite
         </Text>
-        <Text style={styles.headerMore}>Hepsini gor {'\u2192'}</Text>
+        <Text style={styles.headerMore}>Hepsini gör {'\u2192'}</Text>
       </View>
       <ScrollView
         horizontal
@@ -164,7 +164,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     color: palette.gold[400],
     fontSize: 14,
-    fontWeight: fontWeights.semibold,
+    fontFamily: 'Poppins_700Bold',
   },
   headerMore: {
     color: colors.textTertiary,
@@ -216,7 +216,7 @@ const styles = StyleSheet.create({
   },
   ringLabel: {
     fontSize: 9,
-    fontWeight: fontWeights.semibold,
+    fontFamily: 'Poppins_700Bold',
     marginTop: 4,
   },
   ringName: {

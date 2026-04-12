@@ -117,7 +117,6 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: palette.gold[600],
   },
   labelUrgent: {
@@ -126,7 +125,6 @@ const styles = StyleSheet.create({
   time: {
     fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: palette.gold[500],
   },
   timeUrgent: {
@@ -135,7 +133,6 @@ const styles = StyleSheet.create({
   urgencyBadge: {
     fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: '#FF3D00',
   },
 });

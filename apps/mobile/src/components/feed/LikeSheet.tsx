@@ -1,5 +1,5 @@
 // LikeSheet — bottom sheet modal displaying users who liked a feed post
-// Dark theme (#1a1a2e), 60% height, avatar + name + "Profili Gor" link
+// Dark theme (#1a1a2e), 60% height, avatar + name + "Profili gör" link
 
 import React, { useState, useCallback, useEffect } from 'react';
 import {
@@ -67,7 +67,7 @@ const LikerItem: React.FC<LikerItemProps> = React.memo(
           onPress={handleProfilePress}
           activeOpacity={0.7}
         >
-          <Text style={styles.profileLinkText}>Profili Gor</Text>
+          <Text style={styles.profileLinkText}>Profili gör</Text>
         </TouchableOpacity>
       </View>
     );
@@ -279,7 +279,6 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 16,
-    fontWeight: '600',
     color: '#FFFFFF',
     fontFamily: 'Poppins_600SemiBold',
   },
@@ -323,7 +322,7 @@ const styles = StyleSheet.create({
   },
   avatarInitial: {
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: 'Poppins_600SemiBold',
     color: '#FFFFFF',
   },
   likerContent: {
@@ -332,7 +331,6 @@ const styles = StyleSheet.create({
   },
   likerName: {
     fontSize: 14,
-    fontWeight: '700',
     color: '#FFFFFF',
     fontFamily: 'Poppins_600SemiBold',
   },
@@ -344,7 +342,6 @@ const styles = StyleSheet.create({
   },
   profileLinkText: {
     fontSize: 14,
-    fontWeight: '600',
     color: '#8B5CF6',
     fontFamily: 'Poppins_600SemiBold',
   },

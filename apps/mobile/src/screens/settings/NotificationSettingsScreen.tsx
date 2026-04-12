@@ -333,7 +333,6 @@ const styles = StyleSheet.create({
     ...typography.bodyLarge,
     color: colors.text,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   headerRight: {
     width: 40,
@@ -393,7 +392,6 @@ const styles = StyleSheet.create({
     ...typography.body,
     color: colors.error,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     marginBottom: 2,
   },
 
@@ -419,7 +417,6 @@ const styles = StyleSheet.create({
     ...typography.body,
     color: colors.text,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     marginBottom: 2,
   },
   settingDescription: {

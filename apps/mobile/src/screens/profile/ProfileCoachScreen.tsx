@@ -287,8 +287,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'baseline',
     justifyContent: 'space-between', marginBottom: spacing.sm,
   },
-  strengthPercent: { ...typography.h2, fontWeight: '600' },
-  strengthStatus: { ...typography.bodyLarge, fontWeight: '600' },
+  strengthPercent: { ...typography.h2, fontFamily: 'Poppins_600SemiBold' },
+  strengthStatus: { ...typography.bodyLarge, fontFamily: 'Poppins_600SemiBold' },
   strengthBarBg: {
     height: 8, borderRadius: 4,
     backgroundColor: colors.surfaceBorder,
@@ -306,8 +306,7 @@ const styles = StyleSheet.create({
   section: { marginBottom: spacing.lg },
   sectionTitle: {
     ...typography.bodyLarge, color: colors.text,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600', marginBottom: spacing.sm,
+    fontFamily: 'Poppins_600SemiBold', marginBottom: spacing.sm,
   },
   // Tip card
   tipCard: {
@@ -325,7 +324,7 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.sm,
     paddingHorizontal: spacing.sm, paddingVertical: 2,
   },
-  priorityText: { fontSize: 14, fontWeight: '600' },
+  priorityText: { fontSize: 14, fontFamily: 'Poppins_600SemiBold' },
   // Empty
   emptyContainer: {
     alignItems: 'center', paddingTop: 60,

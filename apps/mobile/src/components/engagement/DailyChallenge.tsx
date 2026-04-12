@@ -264,7 +264,6 @@ const styles = StyleSheet.create({
     ...typography.caption,
     color: palette.white,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
 
   // Card variant
@@ -303,7 +302,6 @@ const styles = StyleSheet.create({
     ...typography.label,
     color: colors.text,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   cardDescription: {
     ...typography.caption,
@@ -323,7 +321,6 @@ const styles = StyleSheet.create({
     ...typography.caption,
     color: palette.gold[600],
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
 
   // Progress
@@ -349,7 +346,6 @@ const styles = StyleSheet.create({
     ...typography.captionSmall,
     color: colors.textSecondary,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     minWidth: 28,
     textAlign: 'right',
   },
@@ -368,7 +364,6 @@ const styles = StyleSheet.create({
     ...typography.buttonSmall,
     color: palette.white,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   claimedRow: {
     flexDirection: 'row',
@@ -379,7 +374,6 @@ const styles = StyleSheet.create({
     ...typography.caption,
     color: palette.success,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   timerRow: {
     flexDirection: 'row',

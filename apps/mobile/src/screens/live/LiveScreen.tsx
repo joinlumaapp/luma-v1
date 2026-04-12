@@ -694,7 +694,7 @@ export const LiveScreen: React.FC = () => {
           </View>
 
           <Text style={searchStyles.searchingText}>
-            Uyumlu biri aran{'\u0131'}yor{searchDots}
+            Uyumlu biri aranıyor{searchDots}
           </Text>
           <Text style={searchStyles.timer}>{formatTime(searchSeconds)}</Text>
 
@@ -872,13 +872,11 @@ const fallbackStyles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: '#FFFFFF',
   },
   subtitle: {
     fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: 'rgba(255,255,255,0.6)',
     textAlign: 'center',
     paddingHorizontal: 40,
@@ -895,7 +893,6 @@ const fallbackStyles = StyleSheet.create({
   buttonText: {
     fontSize: 15,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: '#FFFFFF',
   },
 });
@@ -923,7 +920,6 @@ const controlStyles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: 'rgba(255,255,255,0.6)',
   },
 });
@@ -986,7 +982,6 @@ const s = StyleSheet.create({
   title: {
     fontSize: 26,
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
     color: '#FFFFFF',
   },
   balancePill: {
@@ -1001,7 +996,6 @@ const s = StyleSheet.create({
   balanceText: {
     fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: '#FFFFFF',
   },
   bottomSection: {
@@ -1016,7 +1010,6 @@ const s = StyleSheet.create({
   tagline: {
     fontSize: 24,
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
     color: '#FFFFFF',
     textAlign: 'center',
     lineHeight: 34,
@@ -1046,7 +1039,6 @@ const s = StyleSheet.create({
   ctaText: {
     fontSize: 20,
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
     color: '#FFFFFF',
   },
 });
@@ -1092,7 +1084,6 @@ const searchStyles = StyleSheet.create({
   searchingText: {
     fontSize: 18,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: '#FFFFFF',
     textAlign: 'center',
     minWidth: 220,
@@ -1100,7 +1091,6 @@ const searchStyles = StyleSheet.create({
   timer: {
     fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: 'rgba(255,255,255,0.3)',
     marginTop: spacing.sm,
   },
@@ -1117,7 +1107,6 @@ const searchStyles = StyleSheet.create({
   cancelText: {
     fontSize: 15,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: 'rgba(255,255,255,0.7)',
   },
 });
@@ -1151,7 +1140,6 @@ const connStyles = StyleSheet.create({
   remoteVideoSubLabel: {
     fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: 'rgba(255,255,255,0.4)',
   },
   // Top overlay — timer only
@@ -1183,21 +1171,18 @@ const connStyles = StyleSheet.create({
   durationText: {
     fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: '#FFFFFF',
     fontVariant: ['tabular-nums'],
   },
   rateText: {
     fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: 'rgba(255,255,255,0.6)',
     marginLeft: 4,
   },
   freeText: {
     fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: '#34D399',
     marginLeft: 4,
   },
@@ -1214,7 +1199,6 @@ const connStyles = StyleSheet.create({
   rateNoticeText: {
     fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: '#FBBF24',
   },
   // Bottom controls
@@ -1262,13 +1246,11 @@ const endedStyles = StyleSheet.create({
   text: {
     fontSize: 20,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: '#FFFFFF',
   },
   subText: {
     fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: 'rgba(255,255,255,0.4)',
   },
 });

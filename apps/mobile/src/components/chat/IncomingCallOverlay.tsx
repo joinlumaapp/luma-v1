@@ -193,7 +193,6 @@ const styles = StyleSheet.create({
     ...typography.bodySmall,
     color: 'rgba(255, 255, 255, 0.5)',
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
     marginBottom: spacing.xxl,
     textTransform: 'uppercase',
     letterSpacing: 1.5,
@@ -224,14 +223,12 @@ const styles = StyleSheet.create({
   avatarText: {
     fontSize: 48,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: palette.white,
   },
   callerName: {
     ...typography.h3,
     color: palette.white,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     marginBottom: spacing.xs,
   },
   callerSubtext: {
@@ -269,6 +266,5 @@ const styles = StyleSheet.create({
     ...typography.caption,
     color: 'rgba(255, 255, 255, 0.7)',
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
   },
 });

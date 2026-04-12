@@ -1349,7 +1349,7 @@ export const DiscoveryScreen: React.FC = () => {
                 accessibilityRole="button"
                 testID="discovery-comment-skip-btn"
               >
-                <Text style={styles.commentModalSkipText}>Sadece Beğen</Text>
+                <Text style={styles.commentModalSkipText}>Sadece beğen</Text>
               </Pressable>
               <Pressable
                 onPress={handleLikeWithComment}
@@ -1362,7 +1362,7 @@ export const DiscoveryScreen: React.FC = () => {
                 accessibilityRole="button"
                 testID="discovery-comment-send-btn"
               >
-                <Text style={styles.commentModalSendText}>Notlu Beğen</Text>
+                <Text style={styles.commentModalSendText}>Notlu beğen</Text>
               </Pressable>
             </View>
           </View>
@@ -1492,7 +1492,6 @@ const styles = StyleSheet.create({
   boostTimerText: {
     fontSize: 14,
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
     color: palette.gold[600],
   },
   instantConnectButton: {
@@ -1517,7 +1516,6 @@ const styles = StyleSheet.create({
   streakBadgeCount: {
     fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: '#FF9500',
     letterSpacing: 0.2,
   },
@@ -1541,7 +1539,6 @@ const styles = StyleSheet.create({
   streakTooltipText: {
     fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: '#FFFFFF',
     textAlign: 'center',
   },
@@ -1588,7 +1585,6 @@ const styles = StyleSheet.create({
   washIconText: {
     fontSize: 60,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: '#FFFFFF',
     textShadowColor: 'rgba(0, 0, 0, 0.3)',
     textShadowOffset: { width: 0, height: 2 },
@@ -1597,7 +1593,6 @@ const styles = StyleSheet.create({
   washLabelText: {
     fontSize: 22,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: '#FFFFFF',
     includeFontPadding: false,
     textShadowColor: 'rgba(0, 0, 0, 0.3)',
@@ -1647,7 +1642,6 @@ const styles = StyleSheet.create({
   undoGoldText: {
     fontSize: 9,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: '#fff',
   },
   undoLockBadge: {
@@ -1681,7 +1675,6 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 22,
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
     color: colors.text,
     textAlign: 'center',
     marginBottom: 8,
@@ -1689,7 +1682,6 @@ const styles = StyleSheet.create({
   emptySubtitle: {
     fontSize: 16,
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
     color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 24,
@@ -1708,7 +1700,6 @@ const styles = StyleSheet.create({
   refreshButtonText: {
     fontSize: 17,
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
     color: '#FFFFFF',
   },
   emptyRetryLink: {
@@ -1718,7 +1709,6 @@ const styles = StyleSheet.create({
   emptyRetryText: {
     fontSize: 16,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: palette.purple[500],
   },
   // ── Like-with-comment modal ──
@@ -1752,7 +1742,6 @@ const styles = StyleSheet.create({
     ...typography.bodyLarge,
     color: colors.text,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     flex: 1,
   },
   commentModalInput: {
@@ -1829,8 +1818,7 @@ const styles = StyleSheet.create({
   },
   dailyLimitBadgeText: {
     ...typography.captionSmall,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600' as const,
+    fontFamily: 'Poppins_600SemiBold' as const,
     color: colors.textSecondary,
   },
   dailyLimitBadgeTextWarning: {

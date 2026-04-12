@@ -361,13 +361,11 @@ const styles = StyleSheet.create({
     ...typography.body,
     color: colors.text,
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
   },
   priceValue: {
     ...typography.h3,
     color: colors.primary,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   confirmButton: {
     alignSelf: 'stretch',
@@ -382,6 +380,5 @@ const styles = StyleSheet.create({
     ...typography.button,
     color: colors.text,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
 });

@@ -187,7 +187,6 @@ const chipStyles = StyleSheet.create({
   text: {
     ...typography.captionSmall,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
 });
 
@@ -374,7 +373,6 @@ const styles = StyleSheet.create({
   scoreText: {
     ...typography.h3,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   scoreLabel: {
     ...typography.captionSmall,
@@ -390,7 +388,6 @@ const styles = StyleSheet.create({
     ...typography.captionSmall,
     color: colors.textTertiary,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     marginBottom: spacing.xs,
     includeFontPadding: false,
   },
@@ -426,7 +423,6 @@ const styles = StyleSheet.create({
     ...typography.captionSmall,
     color: colors.primary,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
 
   // Insight
@@ -441,6 +437,5 @@ const styles = StyleSheet.create({
   insightText: {
     ...typography.captionSmall,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
 });

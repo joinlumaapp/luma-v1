@@ -223,7 +223,6 @@ const s = StyleSheet.create({
     fontSize: 14,
     color: colors.text,
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
     textAlign: 'center',
   },
   labelSeen: {

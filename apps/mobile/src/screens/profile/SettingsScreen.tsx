@@ -1010,7 +1010,6 @@ function createDynamicStyles(c: ThemeColors) {
       ...typography.bodyLarge,
       color: c.text,
       fontFamily: 'Poppins_600SemiBold',
-      fontWeight: '600',
     },
 
     // Section header
@@ -1030,7 +1029,6 @@ function createDynamicStyles(c: ThemeColors) {
       color: c.textTertiary,
       includeFontPadding: false,
       fontFamily: 'Poppins_600SemiBold',
-      fontWeight: '600',
     },
     sectionTitleSupreme: {
       color: SUPREME_GOLD,
@@ -1083,7 +1081,6 @@ function createDynamicStyles(c: ThemeColors) {
     settingLabelDestructive: {
       color: c.error,
       fontFamily: 'Poppins_600SemiBold',
-      fontWeight: '600',
     },
 
     // Display-only row
@@ -1109,7 +1106,6 @@ function createDynamicStyles(c: ThemeColors) {
       ...typography.captionSmall,
       color: SUPREME_GOLD,
       fontFamily: 'Poppins_600SemiBold',
-      fontWeight: '600',
       letterSpacing: 0.3,
     },
 

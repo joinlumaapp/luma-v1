@@ -62,11 +62,9 @@ const styles = StyleSheet.create({
   label: {
     ...typography.caption,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   labelSmall: {
     ...typography.captionSmall,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
 });

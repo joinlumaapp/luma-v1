@@ -296,7 +296,6 @@ const pickerStyles = StyleSheet.create({
     ...typography.caption,
     color: colors.textSecondary,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     marginBottom: spacing.sm,
     includeFontPadding: false,
   },
@@ -320,12 +319,10 @@ const pickerStyles = StyleSheet.create({
     ...typography.bodySmall,
     color: colors.textSecondary,
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
   },
   dayChipTextActive: {
     color: '#FFFFFF',
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   timeRow: {
     flexDirection: 'row',
@@ -355,18 +352,15 @@ const pickerStyles = StyleSheet.create({
     ...typography.body,
     color: colors.textSecondary,
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
   },
   timeChipTextActive: {
     color: '#FFFFFF',
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   timeSeparator: {
     ...typography.h3,
     color: colors.textSecondary,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   minuteRow: {
     flexDirection: 'row',
@@ -405,7 +399,7 @@ function GlassInput({ value, onChangeText, placeholder, maxLength, multiline, ic
             <Ionicons name={icon} size={18} color={colors.textSecondary} style={glassStyles.icon} />
           )}
           <TextInput
-            style={[glassStyles.input, multiline && glassStyles.multiline]}
+            style={[glassStyles.input, multiline && glassStyles.multiline, { fontFamily: 'Poppins_500Medium' }]}
             value={value}
             onChangeText={onChangeText}
             placeholder={placeholder}
@@ -530,7 +524,7 @@ const ActivityCard: React.FC<{
     <View style={[styles.activityIconCircle, { backgroundColor: `${preset.color}20` }]}>
       <Ionicons name={preset.icon} size={22} color={preset.color} />
     </View>
-    <Text style={[styles.activityLabel, isSelected && { color: preset.color, fontWeight: '600' }]}>
+    <Text style={[styles.activityLabel, isSelected && { color: preset.color, fontFamily: 'Poppins_600SemiBold' }]}>
       {preset.label}
     </Text>
   </Pressable>
@@ -1043,7 +1037,6 @@ const styles = StyleSheet.create({
     ...typography.bodyLarge,
     color: colors.text,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   headerSubtitle: {
     ...typography.caption,
@@ -1061,7 +1054,6 @@ const styles = StyleSheet.create({
   superBadgeText: {
     fontSize: 9,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: palette.gold[400],
     letterSpacing: 1,
   },
@@ -1079,7 +1071,6 @@ const styles = StyleSheet.create({
     ...typography.caption,
     color: colors.textSecondary,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     includeFontPadding: false,
     marginBottom: spacing.sm,
   },
@@ -1111,7 +1102,6 @@ const styles = StyleSheet.create({
     ...typography.caption,
     color: colors.text,
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
     textAlign: 'center',
   },
 
@@ -1129,7 +1119,6 @@ const styles = StyleSheet.create({
     ...typography.caption,
     color: palette.gold[400],
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     includeFontPadding: false,
   },
   suggestionsRow: {
@@ -1157,7 +1146,6 @@ const styles = StyleSheet.create({
   suggestionTextActive: {
     color: '#FFFFFF',
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
 
   // Date picker trigger
@@ -1184,7 +1172,6 @@ const styles = StyleSheet.create({
     color: colors.text,
     flex: 1,
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
   },
 
   // Create button
@@ -1205,7 +1192,6 @@ const styles = StyleSheet.create({
     ...typography.button,
     color: '#FFFFFF',
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     fontSize: 16,
   },
 
@@ -1258,7 +1244,6 @@ const styles = StyleSheet.create({
     ...typography.bodyLarge,
     color: colors.text,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     flex: 1,
   },
   statusBadge: {
@@ -1269,7 +1254,6 @@ const styles = StyleSheet.create({
   statusText: {
     fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   planDetail: {
     flexDirection: 'row',

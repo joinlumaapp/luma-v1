@@ -112,14 +112,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: 20, paddingVertical: 14,
   },
-  headerTitle: { fontSize: 18, fontFamily: 'Poppins_700Bold', fontWeight: '700', color: colors.text },
+  headerTitle: { fontSize: 18, fontFamily: 'Poppins_700Bold', color: colors.text },
   scroll: { flex: 1 },
   scrollContent: { paddingHorizontal: 16, paddingTop: 8 },
   categoryCard: {
     backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.surfaceBorder,
     borderRadius: 16, padding: 16, marginBottom: 12,
   },
-  categoryTitle: { fontSize: 18, fontFamily: 'Poppins_700Bold', fontWeight: '700', color: colors.text, marginBottom: 12 },
+  categoryTitle: { fontSize: 18, fontFamily: 'Poppins_700Bold', color: colors.text, marginBottom: 12 },
   chipsWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
@@ -129,10 +129,10 @@ const styles = StyleSheet.create({
   },
   chipSelected: { backgroundColor: 'rgba(139,92,246,0.15)', borderColor: '#93C5FD' },
   chipEmoji: { fontSize: 16 },
-  chipText: { fontSize: 14, fontFamily: 'Poppins_500Medium', fontWeight: '500', color: colors.text },
+  chipText: { fontSize: 14, fontFamily: 'Poppins_500Medium', color: colors.text },
   chipTextSelected: { color: '#1E40AF' },
   showMoreBtn: { alignItems: 'center', marginTop: 12 },
-  showMoreText: { fontSize: 14, fontFamily: 'Poppins_600SemiBold', fontWeight: '600', color: colors.text },
+  showMoreText: { fontSize: 14, fontFamily: 'Poppins_600SemiBold', color: colors.text },
   bottomBar: {
     position: 'absolute', bottom: 0, left: 0, right: 0,
     paddingHorizontal: 20, paddingTop: 12,
@@ -142,5 +142,5 @@ const styles = StyleSheet.create({
     backgroundColor: '#B8E4F0', borderRadius: 16,
     paddingVertical: 16, alignItems: 'center',
   },
-  saveText: { fontSize: 16, fontFamily: 'Poppins_700Bold', fontWeight: '700', color: colors.text },
+  saveText: { fontSize: 16, fontFamily: 'Poppins_700Bold', color: colors.text },
 });

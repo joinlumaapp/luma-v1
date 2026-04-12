@@ -211,11 +211,10 @@ export const PromptPickerSheet: React.FC<PromptPickerSheetProps> = ({
             >
               <Text style={{
                 fontSize: 14,
-                fontFamily: 'Poppins_600SemiBold',
-                fontWeight: selectedCategory === null ? '600' : '500',
+                fontFamily: selectedCategory === null ? 'Poppins_600SemiBold' : 'Poppins_500Medium',
                 color: selectedCategory === null ? colors.primary : colors.textSecondary,
               }}>
-                Tumunu Goster
+                Tümünü göster
               </Text>
             </TouchableOpacity>
             {PROMPT_CATEGORIES.map((cat) => {
@@ -236,8 +235,7 @@ export const PromptPickerSheet: React.FC<PromptPickerSheetProps> = ({
                 >
                   <Text style={{
                     fontSize: 14,
-                    fontFamily: 'Poppins_600SemiBold',
-                    fontWeight: isActive ? '600' : '500',
+                    fontFamily: isActive ? 'Poppins_600SemiBold' : 'Poppins_500Medium',
                     color: isActive ? colors.primary : colors.textSecondary,
                   }}>
                     {cat.label}
@@ -338,13 +336,11 @@ const styles = StyleSheet.create({
   categoryChipText: {
     fontSize: 15,
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
     color: colors.textSecondary,
   },
   categoryChipTextActive: {
     color: colors.primary,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   promptList: {
     paddingHorizontal: spacing.lg,
@@ -377,7 +373,6 @@ const styles = StyleSheet.create({
     ...typography.captionSmall,
     color: colors.primary,
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
   },
   emptyState: {
     flex: 1,

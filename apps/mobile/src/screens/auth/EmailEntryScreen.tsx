@@ -136,7 +136,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: onboardingColors.text,
     marginBottom: 8,
   },
@@ -161,7 +160,6 @@ const styles = StyleSheet.create({
     fontSize: 17,
     color: onboardingColors.text,
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
   },
   errorText: {
     fontSize: 14,
@@ -185,7 +183,6 @@ const styles = StyleSheet.create({
   continueText: {
     fontSize: 18,
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
     color: '#FFFFFF',
   },
   continueTextDisabled: {

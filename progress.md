@@ -6,6 +6,81 @@
 
 ## Recent Updates (2026-04-12)
 
+### Session 11 — Uyum sistemi yeniden tasarım, font sistemi, UI küçültme, bug fixes (2026-04-12)
+
+#### 1. Uyum Analizi 20 Soru Yeniden Yazıldı ✅
+- Eski yüzeysel sorular (hafta sonu planı, evcil hayvan, sabah rutini) → 8 psikolojik boyutta derin karakter soruları
+- Boyutlar: İletişim Tarzı (%15), Çatışma Çözümü (%15), Duygusal Derinlik (%15), Sosyal Enerji (%10), Yaşam Temposu (%10), Uzun Vadeli Vizyon (%15), İlişki Beklentisi (%10), Yaşam Tarzı Uyumu (%10)
+- Sorular samimi ve tek okuyuşta anlaşılır hale getirildi
+- Dosyalar: QuestionsScreen.tsx (CORE_QUESTIONS + QUESTION_CATEGORIES + OPTION_EMOJIS)
+
+#### 2. Backend Uyum Skoru İyileştirmeleri ✅
+- Yaşam tarzı bonus skoru eklendi (sigara/alkol/diyet/uyku/çalışma/seyahat/iletişim eşleşmesi → max +7 puan)
+- Deal-breaker ceza mantığı: çocuk max mismatch -5, sigara -3, alkol -2
+- GET /compatibility/progress + POST /compatibility/calculate endpoint'leri eklendi
+- Uyum soruları yarıda bırakılınca cevaplar kaybolan bug düzeltildi (AsyncStorage backup + API save per answer)
+- Dosyalar: compatibility.service.ts, compatibility.controller.ts
+
+#### 3. Profil Kaydetme Bug Fix ✅
+- 9 yeni lifestyle alanı backend'de yoktu (DTO + schema + service'e eklendi)
+- ProfileScreen'e useFocusEffect eklendi (EditProfile'dan dönünce veri yenilenir)
+- Dosyalar: schema.prisma, update-profile.dto.ts, profiles.service.ts, ProfileScreen.tsx
+
+#### 4. Poppins Font Sistemi ✅
+- Global Text/TextInput defaultProps: fontFamily 'Poppins_500Medium'
+- 807 fontWeight → fontFamily değişimi (128 dosya)
+- Android'de fontWeight custom font aktive etmediği için fontFamily zorunlu
+- fontSizes küçültüldü: xs:12, sm:13, md:14, base:15, lg:17, xl:20 (başlıklar korundu)
+- Gövde fontları hafifletildi: body/caption Poppins_500Medium, bodyLarge Poppins_600SemiBold
+
+#### 5. Profil Ekranı UI Küçültme ✅
+- Stats (Gönderi/Takipçi): 26→20px, etiket 17→11px
+- Düzenle/Premium butonları: 19→15px, h46→h42
+- Profil Gücü: 19→15px
+- Boost: 19→15px, kart yüksekliği 48→52 (kesilme fix)
+- Mood chip: 18→14px
+
+#### 6. Akış Ekranı UI Küçültme ✅
+- Tüm gövde yazıları 17-20px → 13-16px
+- Başlıklar korundu (Akış 28px, Haftanın Yıldızları 22px)
+- FeedCard paylaş butonu kaldırıldı
+- FeedCard'a meslek + uyum yüzdesi bilgisi eklendi
+- "Akış" başlığının "ş" kesilmesi düzeltildi (lineHeight + includeFontPadding)
+
+#### 7. Tab Bar Fix ✅
+- Uyum Analizi ekranından çıkınca tab bar stili bozulan bug (useLayoutEffect → useFocusEffect)
+- Tab bar boyutları: height 64→70, ikon 26→22, yazı 11→10
+- Restore'da undefined yerine orijinal stil objesi
+
+#### 8. Türkçe Karakter + Gramer Düzeltmeleri ✅
+- 12 dosyada Unicode escape → gerçek Türkçe karakter (\u015F → ş, \u00FC → ü vb.)
+- 22 Türkçe gramer düzeltmesi (büyük harf, eksik karakter)
+- Buton etiketleri: "Devam Et" → "Devam et", "Geri Dön" → "Geri dön"
+
+#### 9. Auth Ekranları Tema Güncellemesi ✅
+- PhoneEntryScreen: pembe gradient → krem (#F5F0E8) + BrandedBackground
+- EmotionalIntroScreen: eski pembe gradient korundu (kullanıcı isteği)
+- OTP ekranı: "Tekrar gönder" yazısı buton arkasında kalma bug fix (marginBottom 20→80)
+
+#### 10. Profilini Zenginleştir Ekranı Yeniden Tasarım ✅
+- 5→3 kategori (Kişilik, Yaşam Tarzı, Hayaller), 47→15 soru
+- Kişilik soruları samimileştirildi
+- Expand-to-answer → inline TextInput, FlatList, KeyboardAvoidingView
+
+#### 11. Kişilik Testi + Nargile Kaldırıldı ✅
+- Kişilik Testi (5 soru) tamamen kaldırıldı — EditProfileScreen, navigation, profil tamamlanma skoru
+- Nargile alanı kaldırıldı — ProfileScreen, EditProfileScreen, compatibility bonus/penalty
+
+#### 12. MembershipPlans Ekranı Font Fix ✅
+- Tüm typography preset referansları → explicit fontSize (14-22px arası)
+- SocialProofBanner görünürlük fix
+
+#### 13. Profil Ziyaretçi Kartı Yeniden Tasarım ✅
+- Beyaz kart, borderRadius 22, gradient placeholder avatarları
+- Haftalık trend + premium upsell (sonra sadeleştirildi)
+
+---
+
 ### Session 10 — Profile polish + 9 new lifestyle fields + status bar fix (2026-04-12)
 
 **Context:** Kullanıcı Profil + Profili Düzenle ekranlarında çok sayıda UI/UX iyileştirmesi istedi. Status bar (Android 15 edge-to-edge), transition pembe sızıntısı ve mood chip fonksiyonu kök sebep seviyesinde çözüldü. "Hakkımda Daha Fazlası"na 9 yeni lifestyle alanı eklendi (shared types dahil).

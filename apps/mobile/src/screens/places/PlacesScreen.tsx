@@ -173,7 +173,7 @@ const emptyHintStyles = StyleSheet.create({
   iconLetter: {
     fontSize: 38,
     color: colors.primary,
-    fontWeight: '600',
+    fontFamily: 'Poppins_600SemiBold',
   },
   title: {
     ...typography.h3,
@@ -410,7 +410,7 @@ const mapStyles = StyleSheet.create({
   },
   pinLabel: {
     ...typography.captionSmall,
-    fontWeight: '600',
+    fontFamily: 'Poppins_600SemiBold',
     textAlign: 'center',
     marginTop: 2,
     maxWidth: 56,
@@ -878,7 +878,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     ...typography.bodyLarge,
     color: colors.text,
-    fontWeight: '600',
+    fontFamily: 'Poppins_600SemiBold',
   },
   loadingContainer: {
     flex: 1,
@@ -919,7 +919,7 @@ const styles = StyleSheet.create({
   placeName: {
     ...typography.bodyLarge,
     color: colors.text,
-    fontWeight: '600',
+    fontFamily: 'Poppins_600SemiBold',
     marginBottom: 2,
   },
   placeDate: {
@@ -973,7 +973,7 @@ const styles = StyleSheet.create({
   emptyIconBrandedLetter: {
     fontSize: 32,
     color: colors.primary,
-    fontWeight: '600',
+    fontFamily: 'Poppins_600SemiBold',
   },
   emptyTitle: {
     ...typography.h4,
@@ -1033,7 +1033,7 @@ const styles = StyleSheet.create({
   fabIcon: {
     fontSize: 20,
     color: colors.text,
-    fontWeight: '600',
+    fontFamily: 'Poppins_600SemiBold',
   },
   fabText: {
     ...typography.button,
@@ -1118,7 +1118,7 @@ const styles = StyleSheet.create({
   inputLabel: {
     ...typography.bodySmall,
     color: colors.textSecondary,
-    fontWeight: '600',
+    fontFamily: 'Poppins_600SemiBold',
     marginBottom: spacing.xs,
     marginTop: spacing.sm,
   },
@@ -1174,7 +1174,7 @@ const styles = StyleSheet.create({
   viewModeTabText: {
     ...typography.bodySmall,
     color: colors.textSecondary,
-    fontWeight: '600',
+    fontFamily: 'Poppins_600SemiBold',
   },
   viewModeTabTextActive: {
     color: colors.text,

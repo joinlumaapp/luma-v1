@@ -62,15 +62,15 @@ export const NameScreen: React.FC = () => {
         showBack={false}
         footer={
           <FullWidthButton
-            label="Devam Et"
+            label="Devam et"
             onPress={handleContinue}
             disabled={!isValid}
           />
         }
       >
-        <Text style={styles.title}>Ad{'\u0131'}n</Text>
+        <Text style={styles.title}>Adın</Text>
         <Text style={styles.subtitle}>
-          Profilinde g{'\u00F6'}r{'\u00FC'}necek ad{'\u0131'}n ve soyad{'\u0131'}n
+          Profilinde görünecek adın ve soyadın
         </Text>
 
         <View style={styles.row}>
@@ -114,7 +114,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 32,
     fontFamily: 'Poppins_800ExtraBold',
-    fontWeight: '800',
     color: onboardingColors.text,
     letterSpacing: -0.5,
     marginBottom: 8,
@@ -122,7 +121,6 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 17,
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
     color: onboardingColors.textSecondary,
     marginBottom: 28,
     lineHeight: 24,
@@ -138,7 +136,6 @@ const styles = StyleSheet.create({
     height: 56,
     fontSize: 18,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: onboardingColors.text,
     borderWidth: 2,
     borderColor: onboardingColors.surfaceBorder,

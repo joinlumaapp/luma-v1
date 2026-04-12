@@ -376,7 +376,6 @@ const styles = StyleSheet.create({
     ...typography.bodySmall,
     color: colors.textSecondary,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     marginBottom: 4,
   },
   durationLabelSelected: {
@@ -394,7 +393,6 @@ const styles = StyleSheet.create({
     ...typography.caption,
     color: colors.textTertiary,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   durationCostSelected: {
     color: colors.accent,
@@ -420,13 +418,11 @@ const styles = StyleSheet.create({
     ...typography.bodyLarge,
     color: colors.success,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   countdownText: {
     ...typography.h2,
     color: colors.accent,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     marginBottom: spacing.sm,
   },
   activeDescription: {
@@ -449,7 +445,6 @@ const styles = StyleSheet.create({
     ...typography.bodySmall,
     color: colors.text,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   balanceInsufficient: {
     color: colors.error,

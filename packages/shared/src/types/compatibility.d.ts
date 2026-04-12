@@ -35,10 +35,10 @@ export declare enum CompatibilityLevel {
     SUPER = "SUPER"
 }
 export declare enum CompatibilityLevelLabel {
-    YUKSEK_UYUM = "Y\u00FCksek Uyum",// 80%+
-    IYI_UYUM = "\u0130yi Uyum",// 60-79%
+    YUKSEK_UYUM = "Yüksek Uyum",// 80%+
+    IYI_UYUM = "İyi Uyum",// 60-79%
     ORTA_UYUM = "Orta Uyum",// 40-59%
-    DUSUK_UYUM = "D\u00FC\u015F\u00FCk Uyum"
+    DUSUK_UYUM = "Düşük Uyum"
 }
 export interface CompatibilityResult {
     userId: string;

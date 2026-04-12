@@ -43,7 +43,7 @@ import Animated, {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, palette } from '../../theme/colors';
-import { typography, poppinsFonts, fontWeights } from '../../theme/typography';
+import { typography } from '../../theme/typography';
 import { spacing, borderRadius, shadows } from '../../theme/spacing';
 import { CachedImage } from '../common/CachedImage';
 
@@ -405,8 +405,7 @@ const styles = StyleSheet.create({
   },
   photoInitial: {
     fontSize: 72,
-    fontFamily: poppinsFonts.bold,
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
     color: palette.purple[400],
     opacity: 0.6,
   },
@@ -435,8 +434,7 @@ const styles = StyleSheet.create({
     marginRight: 1,
   },
   compatText: {
-    fontFamily: poppinsFonts.bold,
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
     fontSize: 14,
   },
   verifiedBadge: {
@@ -496,8 +494,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
   },
   intentionText: {
-    fontFamily: poppinsFonts.semibold,
-    fontWeight: fontWeights.semibold,
+    fontFamily: 'Poppins_700Bold',
     fontSize: 14,
   },
 });

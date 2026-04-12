@@ -216,7 +216,6 @@ const styles = StyleSheet.create({
     fontSize: 17,
     color: colors.text,
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
     flexShrink: 1,
   },
   metaRow: {
@@ -238,7 +237,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.textSecondary,
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
   },
   intentionEmoji: {
     fontSize: 14,
@@ -269,7 +267,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: palette.purple[400],
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
   },
   compatInfo: {
     flex: 1,
@@ -279,14 +276,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.text,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     marginBottom: 2,
   },
   compatSubtitle: {
     fontSize: 14,
     color: colors.textSecondary,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '500',
+    fontFamily: 'Poppins_500Medium',
   },
 
   // Actions
@@ -310,7 +305,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#FFFFFF',
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
   },
 
   // Full profile link
@@ -325,6 +319,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.textSecondary,
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
   },
 });

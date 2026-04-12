@@ -17,7 +17,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import { useCoinStore, COIN_PACKS, type CoinPack } from '../../stores/coinStore';
-import { fontWeights } from '../../theme/typography';
+import {  } from '../../theme/typography';
 import { spacing, borderRadius } from '../../theme/spacing';
 import { palette, colors } from '../../theme/colors';
 import { useScreenTracking } from '../../hooks/useAnalytics';
@@ -75,20 +75,17 @@ const cardStyles = StyleSheet.create({
   },
   count: {
     fontSize: 28,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
     color: '#1F2937',
   },
   label: {
     fontSize: 14,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: fontWeights.regular,
+    fontFamily: 'Poppins_700Bold',
     color: '#6B7280',
   },
   price: {
     fontSize: 17,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
     color: palette.purple[700],
     marginTop: 4,
   },
@@ -102,8 +99,7 @@ const cardStyles = StyleSheet.create({
   },
   bestText: {
     fontSize: 9,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
     color: '#FFFFFF',
     letterSpacing: 0.5,
   },
@@ -365,13 +361,12 @@ const s = StyleSheet.create({
   },
   balanceCoinText: {
     fontSize: 14,
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
     color: palette.purple[500],
   },
   balanceNumber: {
     fontSize: 15,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
     color: '#FFFFFF',
   },
   iconCircle: {
@@ -397,21 +392,19 @@ const s = StyleSheet.create({
   },
   iconText: {
     fontSize: 32,
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
     color: palette.purple[500],
   },
   heroTitle: {
     fontSize: 26,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
     color: '#FFFFFF',
     fontStyle: 'italic',
     marginBottom: 8,
   },
   heroSubtitle: {
     fontSize: 14,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: fontWeights.regular,
+    fontFamily: 'Poppins_700Bold',
     color: 'rgba(255,255,255,0.85)',
     textAlign: 'center',
     lineHeight: 20,
@@ -449,7 +442,6 @@ const s = StyleSheet.create({
   },
   adTitle: {
     fontSize: 17,
-    fontWeight: fontWeights.bold,
     fontFamily: 'Poppins_700Bold',
     color: colors.text,
   },
@@ -472,7 +464,7 @@ const s = StyleSheet.create({
   adButtonText: {
     fontSize: 15,
     color: '#FFFFFF',
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
   },
   cooldownContainer: {
     flexDirection: 'row',
@@ -485,7 +477,7 @@ const s = StyleSheet.create({
   },
   cooldownText: {
     fontSize: 14,
-    fontWeight: fontWeights.medium,
+    fontFamily: 'Poppins_700Bold',
     color: colors.textSecondary,
   },
   // CTA
@@ -506,8 +498,7 @@ const s = StyleSheet.create({
   },
   ctaText: {
     fontSize: 18,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
     color: '#FFFFFF',
   },
 });

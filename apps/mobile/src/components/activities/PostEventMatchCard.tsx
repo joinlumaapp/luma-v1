@@ -13,7 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { CachedAvatar } from '../common/CachedAvatar';
 import { colors, palette } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/spacing';
-import { fontWeights } from '../../theme/typography';
+import {  } from '../../theme/typography';
 
 interface Attendee {
   userId: string;
@@ -122,20 +122,17 @@ const styles = StyleSheet.create({
   headerEmoji: { fontSize: 24 },
   headerTitle: {
     fontSize: 15,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: fontWeights.semibold,
+    fontFamily: 'Poppins_700Bold',
     color: colors.text,
   },
   headerSubtitle: {
     fontSize: 14,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: fontWeights.regular,
+    fontFamily: 'Poppins_700Bold',
     color: colors.textSecondary,
   },
   prompt: {
     fontSize: 14,
-    fontFamily: 'Poppins_500Medium',
-    fontWeight: fontWeights.medium,
+    fontFamily: 'Poppins_700Bold',
     color: colors.text,
   },
   attendeeRow: {
@@ -151,8 +148,7 @@ const styles = StyleSheet.create({
   },
   attendeeName: {
     fontSize: 15,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: fontWeights.semibold,
+    fontFamily: 'Poppins_700Bold',
     color: colors.text,
   },
   chatBtn: {

@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, palette, glassmorphism } from '../../theme/colors';
-import { fontWeights } from '../../theme/typography';
+import {  } from '../../theme/typography';
 import { spacing, borderRadius } from '../../theme/spacing';
 
 export interface ProfilePromptData {
@@ -102,7 +102,7 @@ const styles = StyleSheet.create({
   },
   question: {
     fontSize: 14,
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
     color: palette.gold[700],
     textTransform: 'uppercase',
     letterSpacing: 0.8,
@@ -111,7 +111,7 @@ const styles = StyleSheet.create({
   },
   answer: {
     fontSize: 18,
-    fontWeight: fontWeights.semibold,
+    fontFamily: 'Poppins_700Bold',
     color: colors.text,
     lineHeight: 26,
     marginBottom: spacing.md,
@@ -125,7 +125,7 @@ const styles = StyleSheet.create({
   },
   commentHintText: {
     fontSize: 14,
-    fontWeight: fontWeights.medium,
+    fontFamily: 'Poppins_700Bold',
     color: palette.gold[600],
   },
 
@@ -140,7 +140,7 @@ const styles = StyleSheet.create({
   },
   compactQuestion: {
     fontSize: 14,
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
     color: palette.gold[700],
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -149,7 +149,7 @@ const styles = StyleSheet.create({
   },
   compactAnswer: {
     fontSize: 14,
-    fontWeight: fontWeights.medium,
+    fontFamily: 'Poppins_700Bold',
     color: colors.text,
     lineHeight: 16,
     marginBottom: 4,
@@ -163,7 +163,7 @@ const styles = StyleSheet.create({
   },
   compactHintText: {
     fontSize: 9,
-    fontWeight: fontWeights.medium,
+    fontFamily: 'Poppins_700Bold',
     color: palette.gold[600],
   },
 });

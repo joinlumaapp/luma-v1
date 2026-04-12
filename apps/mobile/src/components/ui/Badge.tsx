@@ -28,7 +28,6 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { palette } from '../../theme/colors';
-import { poppinsFonts, fontWeights } from '../../theme/typography';
 import { borderRadius, spacing } from '../../theme/spacing';
 
 // ─── Types ────────────────────────────────────────────────────
@@ -250,7 +249,6 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.full,
   },
   label: {
-    fontFamily: poppinsFonts.semibold,
-    fontWeight: fontWeights.semibold,
+    fontFamily: 'Poppins_700Bold',
   },
 });

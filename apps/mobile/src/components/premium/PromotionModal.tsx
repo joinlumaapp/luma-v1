@@ -263,14 +263,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: palette.gray[900],
     textAlign: 'center',
   },
   subtitle: {
     fontSize: 14,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '500',
+    fontFamily: 'Poppins_500Medium',
     color: palette.gray[500],
     textAlign: 'center',
     marginTop: 4,
@@ -288,8 +286,7 @@ const styles = StyleSheet.create({
   },
   featureText: {
     fontSize: 15,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '500',
+    fontFamily: 'Poppins_500Medium',
     color: palette.gray[800],
   },
   buttonWrapper: {
@@ -308,13 +305,11 @@ const styles = StyleSheet.create({
   upgradeButtonText: {
     fontSize: 17,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: palette.white,
   },
   dismissText: {
     fontSize: 14,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '500',
+    fontFamily: 'Poppins_500Medium',
     color: palette.gray[400],
   },
 });

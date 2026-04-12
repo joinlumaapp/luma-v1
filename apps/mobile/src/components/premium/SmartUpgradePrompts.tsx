@@ -18,7 +18,7 @@ import { CachedAvatar } from '../common/CachedAvatar';
 import { JETON_COSTS } from '@luma/shared';
 import { colors, palette } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/spacing';
-import { fontWeights } from '../../theme/typography';
+import {  } from '../../theme/typography';
 
 // ─── 1. "Birisi seni begendi" teaser ────────────────────────────
 
@@ -98,11 +98,11 @@ const teaserStyles = StyleSheet.create({
   },
   textCol: { flex: 1 },
   title: {
-    fontSize: 14, fontFamily: 'Poppins_600SemiBold', fontWeight: fontWeights.semibold,
+    fontSize: 14, fontFamily: 'Poppins_700Bold',
     color: colors.text,
   },
   subtitle: {
-    fontSize: 14, fontFamily: 'Poppins_400Regular', fontWeight: fontWeights.regular,
+    fontSize: 14, fontFamily: 'Poppins_700Bold',
     color: colors.textSecondary,
   },
   arrow: {
@@ -211,24 +211,24 @@ const boostStyles = StyleSheet.create({
     paddingHorizontal: 10, paddingVertical: 3,
   },
   urgencyText: {
-    fontSize: 14, fontFamily: 'Poppins_600SemiBold', fontWeight: fontWeights.semibold,
+    fontSize: 14, fontFamily: 'Poppins_700Bold',
     color: palette.gold[600],
   },
   content: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   textCol: { flex: 1 },
   title: {
-    fontSize: 16, fontFamily: 'Poppins_600SemiBold', fontWeight: fontWeights.semibold,
+    fontSize: 16, fontFamily: 'Poppins_700Bold',
     color: colors.text,
   },
   subtitle: {
-    fontSize: 14, fontFamily: 'Poppins_400Regular', fontWeight: fontWeights.regular,
+    fontSize: 14, fontFamily: 'Poppins_700Bold',
     color: colors.textSecondary, lineHeight: 19,
   },
   acceptButton: {
     height: 44, borderRadius: 22, justifyContent: 'center', alignItems: 'center',
   },
   acceptText: {
-    fontSize: 15, fontFamily: 'Poppins_600SemiBold', fontWeight: fontWeights.semibold,
+    fontSize: 15, fontFamily: 'Poppins_700Bold',
     color: '#FFFFFF',
   },
 });
@@ -332,11 +332,11 @@ const nudgeStyles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
   textCol: { flex: 1 },
   title: {
-    fontSize: 15, fontFamily: 'Poppins_600SemiBold', fontWeight: fontWeights.semibold,
+    fontSize: 15, fontFamily: 'Poppins_700Bold',
     color: colors.text,
   },
   subtitle: {
-    fontSize: 14, fontFamily: 'Poppins_400Regular', fontWeight: fontWeights.regular,
+    fontSize: 14, fontFamily: 'Poppins_700Bold',
     color: colors.textSecondary, lineHeight: 19, marginTop: 2,
   },
   ctaButton: {
@@ -344,7 +344,7 @@ const nudgeStyles = StyleSheet.create({
     height: 44, borderRadius: 22, gap: 8,
   },
   ctaText: {
-    fontSize: 15, fontFamily: 'Poppins_600SemiBold', fontWeight: fontWeights.semibold,
+    fontSize: 15, fontFamily: 'Poppins_700Bold',
     color: '#FFFFFF',
   },
   costBadge: {
@@ -352,7 +352,7 @@ const nudgeStyles = StyleSheet.create({
     borderRadius: 10, paddingHorizontal: 8, paddingVertical: 2,
   },
   costText: {
-    fontSize: 14, fontFamily: 'Poppins_600SemiBold', fontWeight: fontWeights.semibold,
+    fontSize: 14, fontFamily: 'Poppins_700Bold',
     color: '#FFFFFF',
   },
 });
@@ -441,7 +441,7 @@ const weeklyStyles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', gap: 8,
   },
   headerTitle: {
-    fontSize: 16, fontFamily: 'Poppins_600SemiBold', fontWeight: fontWeights.semibold,
+    fontSize: 16, fontFamily: 'Poppins_700Bold',
     color: colors.text, flex: 1,
   },
   statsRow: {
@@ -450,25 +450,25 @@ const weeklyStyles = StyleSheet.create({
   },
   statItem: { flex: 1, alignItems: 'center' },
   statNumber: {
-    fontSize: 22, fontFamily: 'Poppins_600SemiBold', fontWeight: fontWeights.semibold,
+    fontSize: 22, fontFamily: 'Poppins_700Bold',
     color: palette.purple[600],
   },
   statLabel: {
-    fontSize: 14, fontFamily: 'Poppins_400Regular', fontWeight: fontWeights.regular,
+    fontSize: 14, fontFamily: 'Poppins_700Bold',
     color: colors.textTertiary, marginTop: 2,
   },
   statDivider: {
     width: 1, height: 28, backgroundColor: colors.surfaceBorder,
   },
   lossText: {
-    fontSize: 14, fontFamily: 'Poppins_400Regular', fontWeight: fontWeights.regular,
+    fontSize: 14, fontFamily: 'Poppins_700Bold',
     color: '#EF4444', lineHeight: 19,
   },
   upgradeButton: {
     height: 48, borderRadius: 24, justifyContent: 'center', alignItems: 'center',
   },
   upgradeText: {
-    fontSize: 15, fontFamily: 'Poppins_600SemiBold', fontWeight: fontWeights.semibold,
+    fontSize: 15, fontFamily: 'Poppins_700Bold',
     color: '#FFFFFF',
   },
 });
@@ -497,17 +497,17 @@ export const SocialProofBanner: React.FC<SocialProofBannerProps> = ({ recentUpgr
 const socialStyles = StyleSheet.create({
   container: {
     flexDirection: 'row', alignItems: 'center', gap: 8,
-    marginHorizontal: spacing.md,
-    backgroundColor: palette.purple[500] + '08',
+    backgroundColor: palette.purple[500] + '15',
     borderRadius: borderRadius.md, paddingHorizontal: spacing.md, paddingVertical: 10,
-    borderWidth: 1, borderColor: palette.purple[500] + '15',
+    borderWidth: 1, borderColor: palette.purple[500] + '25',
+    marginBottom: spacing.sm,
   },
   text: {
-    flex: 1, fontSize: 14, fontFamily: 'Poppins_400Regular', fontWeight: fontWeights.regular,
+    flex: 1, fontSize: 14, fontFamily: 'Poppins_700Bold',
     color: colors.textSecondary,
   },
   bold: {
-    fontFamily: 'Poppins_600SemiBold', fontWeight: fontWeights.semibold, color: colors.text,
+    fontFamily: 'Poppins_700Bold', color: colors.text,
   },
 });
 
@@ -592,14 +592,12 @@ const supremeStyles = StyleSheet.create({
   },
   title: {
     fontSize: 15,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
     color: '#FFFFFF',
   },
   subtitle: {
     fontSize: 14,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: fontWeights.regular,
+    fontFamily: 'Poppins_700Bold',
     color: 'rgba(255,255,255,0.85)',
     marginTop: 2,
   },

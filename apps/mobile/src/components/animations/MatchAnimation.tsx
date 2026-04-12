@@ -292,7 +292,6 @@ const scoreStyles = StyleSheet.create({
   scoreNumber: {
     fontSize: 62,
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
     includeFontPadding: false,
     letterSpacing: -1,
     color: '#FFFFFF',
@@ -304,7 +303,6 @@ const scoreStyles = StyleSheet.create({
   uyumLabel: {
     fontSize: 15,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     includeFontPadding: false,
     letterSpacing: 3,
     color: 'rgba(244, 114, 182, 0.7)',
@@ -820,7 +818,7 @@ export const MatchAnimation: React.FC<MatchAnimationProps> = ({
             </Animated.View>
 
             {/* Suggestion chips — 3 quick-start options */}
-            <Text style={styles.suggestionLabel}>{'Ya da hemen bir mesaj g\u00F6nder'}</Text>
+            <Text style={styles.suggestionLabel}>{'Ya da hemen bir mesaj gönder'}</Text>
             <View style={styles.suggestionRow}>
               {suggestions.map((text, i) => (
                 <TouchableOpacity
@@ -962,14 +960,12 @@ const styles = StyleSheet.create({
   avatarInitials: {
     fontSize: 26,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     includeFontPadding: false,
   },
   avatarName: {
     ...typography.captionSmall,
     color: 'rgba(255,255,255,0.75)',
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     maxWidth: AVATAR_CONTAINER,
     textAlign: 'center',
   },
@@ -1063,8 +1059,7 @@ const styles = StyleSheet.create({
   suggestionText: {
     ...typography.bodySmall,
     color: 'rgba(196, 181, 253, 0.75)',
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '500',
+    fontFamily: 'Poppins_500Medium',
     textAlign: 'center',
     letterSpacing: 0.1,
   },

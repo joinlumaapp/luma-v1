@@ -147,7 +147,6 @@ const styles = StyleSheet.create({
   label: {
     ...typography.h2,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     letterSpacing: 3,
     includeFontPadding: false,
   },

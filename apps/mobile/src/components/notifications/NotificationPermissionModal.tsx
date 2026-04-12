@@ -121,7 +121,6 @@ const styles = StyleSheet.create({
   },
   title: {
     fontFamily: 'Poppins_800ExtraBold',
-    fontWeight: '800',
     fontSize: 22,
     color: '#1A1A2E',
     textAlign: 'center',
@@ -129,7 +128,6 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     fontSize: 14,
     color: '#4A4A6A',
     textAlign: 'center',
@@ -154,7 +152,6 @@ const styles = StyleSheet.create({
   },
   benefitText: {
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     fontSize: 14,
     color: '#1A1A2E',
     flex: 1,
@@ -179,7 +176,6 @@ const styles = StyleSheet.create({
   },
   allowButtonText: {
     fontFamily: 'Poppins_800ExtraBold',
-    fontWeight: '800',
     fontSize: 16,
     color: palette.white,
     letterSpacing: 0.3,
@@ -190,7 +186,6 @@ const styles = StyleSheet.create({
   },
   dismissButtonText: {
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     fontSize: 14,
     color: '#6B6B85',
   },

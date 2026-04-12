@@ -94,7 +94,6 @@ const styles = StyleSheet.create({
   balanceText: {
     color: TEXT_BLACK,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     includeFontPadding: false,
     textAlignVertical: 'center',
   },

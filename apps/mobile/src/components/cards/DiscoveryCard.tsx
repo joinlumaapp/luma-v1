@@ -22,7 +22,7 @@ import Reanimated, {
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { palette } from '../../theme/colors';
-import { fontWeights, poppinsFonts } from '../../theme/typography';
+import { poppinsFonts } from '../../theme/typography';
 import { spacing, borderRadius } from '../../theme/spacing';
 import { INTEREST_OPTIONS, INTEREST_CATEGORIES } from '../../constants/config';
 import { formatActivityStatus, formatDistanceTurkish } from '../../utils/formatters';
@@ -170,10 +170,10 @@ const INTENTION_CONFIG: Record<string, { label: string; color: string; bg: strin
 
 // ─── Mood display config (Anlık Ruh Hali) ───────────────────
 const MOOD_DISPLAY: Record<string, { label: string; emoji: string; color: string }> = {
-  sohbete_acigim: { label: 'Sohbete a\u00E7\u0131\u011F\u0131m', emoji: '\uD83D\uDCAC', color: '#22C55E' },
-  bugun_sessizim: { label: 'Bug\u00FCn sessizim', emoji: '\uD83E\uDD2B', color: '#6B7280' },
-  bulusmaya_varim: { label: 'Bulu\u015Fmaya var\u0131m', emoji: '\u2615', color: '#F59E0B' },
-  kafede_takiliyorum: { label: 'Kafede tak\u0131l\u0131yorum', emoji: '\uD83C\uDFEA', color: '#3B82F6' },
+  sohbete_acigim: { label: 'Sohbete açığım', emoji: '💬', color: '#22C55E' },
+  bugun_sessizim: { label: 'Bugün sessizim', emoji: '🤫', color: '#6B7280' },
+  bulusmaya_varim: { label: 'Buluşmaya varım', emoji: '☕', color: '#F59E0B' },
+  kafede_takiliyorum: { label: 'Kafede takılıyorum', emoji: '🏪', color: '#3B82F6' },
 };
 
 // ─── Component ────────────────────────────────────────────────
@@ -551,7 +551,6 @@ const styles = StyleSheet.create({
   },
   photoInitial: {
     fontSize: 64,
-    fontWeight: fontWeights.bold,
     fontFamily: poppinsFonts.bold,
     color: palette.purple[300],
     opacity: 0.4,
@@ -606,7 +605,6 @@ const styles = StyleSheet.create({
   },
   nameText: {
     fontSize: 24,
-    fontWeight: fontWeights.bold,
     fontFamily: poppinsFonts.semibold,
     color: '#FFFFFF',
     includeFontPadding: false,
@@ -624,7 +622,6 @@ const styles = StyleSheet.create({
   },
   eliteLabel: {
     fontSize: 14,
-    fontWeight: fontWeights.semibold,
     fontFamily: poppinsFonts.semibold,
     color: '#D4AF37',
     includeFontPadding: false,
@@ -648,7 +645,6 @@ const styles = StyleSheet.create({
   },
   compatScore: {
     fontSize: 14,
-    fontWeight: fontWeights.bold,
     fontFamily: poppinsFonts.semibold,
     color: '#F9A8D4',
     includeFontPadding: false,
@@ -658,7 +654,6 @@ const styles = StyleSheet.create({
   },
   compatLabel: {
     fontSize: 14,
-    fontWeight: fontWeights.regular,
     fontFamily: poppinsFonts.regular,
     color: '#F9A8D4',
     includeFontPadding: false,
@@ -686,7 +681,6 @@ const styles = StyleSheet.create({
   },
   metaText: {
     fontSize: 14,
-    fontWeight: fontWeights.medium,
     fontFamily: poppinsFonts.medium,
     color: 'rgba(255,255,255,0.85)',
     includeFontPadding: false,
@@ -696,7 +690,6 @@ const styles = StyleSheet.create({
   },
   metaTextOnline: {
     color: '#4ADE80',
-    fontWeight: fontWeights.semibold,
     fontFamily: poppinsFonts.semibold,
   },
 
@@ -729,7 +722,6 @@ const styles = StyleSheet.create({
   },
   moodBadgeLabel: {
     fontSize: 14,
-    fontWeight: fontWeights.medium,
     fontFamily: poppinsFonts.medium,
     includeFontPadding: false,
     letterSpacing: 0.2,
@@ -744,7 +736,6 @@ const styles = StyleSheet.create({
   },
   intentionText: {
     fontSize: 14,
-    fontWeight: fontWeights.medium,
     fontFamily: poppinsFonts.medium,
     includeFontPadding: false,
     letterSpacing: 0.2,
@@ -774,7 +765,6 @@ const styles = StyleSheet.create({
   },
   tagLabel: {
     fontSize: 14,
-    fontWeight: fontWeights.medium,
     fontFamily: poppinsFonts.medium,
     color: 'rgba(255,255,255,0.8)',
     includeFontPadding: false,
@@ -783,7 +773,6 @@ const styles = StyleSheet.create({
   // ── Bio ──
   bioText: {
     fontSize: 14,
-    fontWeight: fontWeights.regular,
     fontFamily: poppinsFonts.regular,
     color: 'rgba(255,255,255,0.65)',
     lineHeight: 18,
@@ -815,7 +804,6 @@ const styles = StyleSheet.create({
   },
   boostBadgeText: {
     fontSize: 14,
-    fontWeight: fontWeights.bold,
     fontFamily: poppinsFonts.bold,
     color: '#FFFFFF',
     includeFontPadding: false,
@@ -837,7 +825,6 @@ const styles = StyleSheet.create({
   },
   superCompatBadgeText: {
     fontSize: 13,
-    fontWeight: fontWeights.bold,
     fontFamily: poppinsFonts.bold,
     color: '#FFFFFF',
     includeFontPadding: false,

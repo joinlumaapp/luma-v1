@@ -429,6 +429,65 @@ export class CompatibilityService {
   }
 
   /**
+   * Get user's quiz progress — answered question numbers and last answered.
+   */
+  async getProgress(userId: string) {
+    const answers = await this.prisma.userAnswer.findMany({
+      where: { userId },
+      include: {
+        question: { select: { questionNumber: true } },
+      },
+      orderBy: { answeredAt: "asc" },
+    });
+
+    const completedQuestions = answers.map(
+      (a: { question: { questionNumber: number } }) => a.question.questionNumber,
+    );
+    const lastQuestion =
+      completedQuestions.length > 0
+        ? Math.max(...completedQuestions)
+        : 0;
+
+    return {
+      completedQuestions,
+      lastQuestion,
+      answeredCount: answers.length,
+      totalCount: QUESTION_COUNT,
+    };
+  }
+
+  /**
+   * Trigger compatibility score calculation after completing all 20 questions.
+   * Invalidates stale caches so next discovery queries get fresh scores.
+   */
+  async triggerCalculate(userId: string) {
+    const answeredCount = await this.prisma.userAnswer.count({
+      where: { userId },
+    });
+
+    if (answeredCount < QUESTION_COUNT) {
+      return {
+        calculated: false,
+        reason: `Henüz ${answeredCount}/${QUESTION_COUNT} soru cevaplanmış.`,
+        answeredCount,
+        totalCount: QUESTION_COUNT,
+      };
+    }
+
+    // Invalidate all cached scores so they're recalculated on next access
+    await this.invalidateUserCompatibilityCache(userId);
+
+    // Check and award completion badges
+    await this.badgesService.checkAndAwardBadges(userId, "answer");
+
+    return {
+      calculated: true,
+      answeredCount,
+      totalCount: QUESTION_COUNT,
+    };
+  }
+
+  /**
    * Check daily compatibility check limit for the user's tier.
    * Free=1/day, Premium=5/day, Supreme=unlimited
    */
@@ -676,15 +735,25 @@ export class CompatibilityService {
       totalMaxPoints += maxPossible;
     }
 
-    // Fetch both user profiles for bonus calculation
+    // Fetch both user profiles for bonus + lifestyle + deal-breaker calculation
     const [userAProfile, userBProfile] = await Promise.all([
       this.prisma.userProfile.findUnique({
         where: { userId: first },
-        select: { intentionTag: true, city: true },
+        select: {
+          intentionTag: true, city: true,
+          smoking: true, drinking: true, diet: true,
+          sleepSchedule: true, hookah: true, workStyle: true,
+          travelFrequency: true, communicationStyle: true,
+        },
       }),
       this.prisma.userProfile.findUnique({
         where: { userId: second },
-        select: { intentionTag: true, city: true },
+        select: {
+          intentionTag: true, city: true,
+          smoking: true, drinking: true, diet: true,
+          sleepSchedule: true, hookah: true, workStyle: true,
+          travelFrequency: true, communicationStyle: true,
+        },
       }),
     ]);
 
@@ -709,12 +778,62 @@ export class CompatibilityService {
 
     const totalBonus = intentionBonus + cityBonus;
 
+    // ── Lifestyle alignment bonus (max +8 points) ──
+    let lifestyleBonus = 0;
+    if (userAProfile && userBProfile) {
+      const exactMatch = (a: string | null, b: string | null): boolean =>
+        !!a && !!b && a.toLowerCase() === b.toLowerCase();
+      if (exactMatch(userAProfile.smoking, userBProfile.smoking)) lifestyleBonus++;
+      if (exactMatch(userAProfile.drinking, userBProfile.drinking)) lifestyleBonus++;
+      if (exactMatch(userAProfile.diet, userBProfile.diet)) lifestyleBonus++;
+      if (exactMatch(userAProfile.sleepSchedule, userBProfile.sleepSchedule)) lifestyleBonus++;
+      // hookah removed — sigara ile aynı sayılır
+      if (exactMatch(userAProfile.workStyle, userBProfile.workStyle)) lifestyleBonus++;
+      if (exactMatch(userAProfile.travelFrequency, userBProfile.travelFrequency)) lifestyleBonus++;
+      if (exactMatch(userAProfile.communicationStyle, userBProfile.communicationStyle)) lifestyleBonus++;
+    }
+    const lifestyleBonusPoints = (lifestyleBonus / 7) * 7; // max +7 (hookah removed)
+
+    // ── Deal-breaker penalties ──
+    let dealBreakerPenalty = 0;
+    // Children question (Q14) — max distance = strong mismatch
+    const childrenQuestionIds = commonQuestionIds.filter((qId) => {
+      const a = mapA.get(qId);
+      return a?.category === 'LONG_TERM_VISION';
+    });
+    for (const qId of childrenQuestionIds) {
+      const a = mapA.get(qId)!;
+      const b = mapB.get(qId)!;
+      if (Math.abs(a.optionOrder - b.optionOrder) === 3) {
+        dealBreakerPenalty += 5; // max distance on critical life question
+        break; // only penalize once for this dimension
+      }
+    }
+    // Smoking hard mismatch
+    if (userAProfile && userBProfile) {
+      const smokingA = (userAProfile.smoking ?? '').toLowerCase();
+      const smokingB = (userBProfile.smoking ?? '').toLowerCase();
+      if ((smokingA === 'iciyor' && smokingB === 'icmiyor') || (smokingA === 'icmiyor' && smokingB === 'iciyor')) {
+        dealBreakerPenalty += 3;
+      }
+      // hookah deal-breaker removed — sigara ile aynı sayılır
+      // Drinking hard mismatch
+      const drinkingA = (userAProfile.drinking ?? '').toLowerCase();
+      const drinkingB = (userBProfile.drinking ?? '').toLowerCase();
+      if ((drinkingA === 'iciyor' && drinkingB === 'icmiyor') || (drinkingA === 'icmiyor' && drinkingB === 'iciyor')) {
+        dealBreakerPenalty += 2;
+      }
+    }
+
     // Calculate raw percentage score (0-100 range)
     const rawScore =
       totalMaxPoints > 0 ? (totalWeightedPoints / totalMaxPoints) * 100 : 0;
 
-    // Apply bonuses and clamp to display range [47-97]
-    const rawScoreWithBonuses = Math.min(100, rawScore + totalBonus);
+    // Apply bonuses, lifestyle bonus, and deal-breaker penalties, then clamp
+    const rawScoreWithBonuses = Math.min(
+      100,
+      rawScore + totalBonus + lifestyleBonusPoints - dealBreakerPenalty,
+    );
 
     const clampScore = (raw: number): number =>
       Math.round(Math.max(MIN_DISPLAY_SCORE, Math.min(MAX_DISPLAY_SCORE, raw)));

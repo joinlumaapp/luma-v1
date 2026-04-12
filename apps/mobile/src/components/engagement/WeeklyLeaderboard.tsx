@@ -203,10 +203,10 @@ export const WeeklyLeaderboard: React.FC<WeeklyLeaderboardProps> = ({
           >
             <Ionicons name="person" size={14} color={palette.purple[500]} />
             <Text style={styles.userRankText}>
-              Sen {userRank}. siradasin
+              Sen {userRank}. sıradasın
             </Text>
             <Text style={styles.userRankHint}>
-              Profilini gelistirerek yuksel!
+              Profilini geliştirerek yüksel!
             </Text>
           </LinearGradient>
         </View>
@@ -274,12 +274,10 @@ const styles = StyleSheet.create({
     ...typography.captionSmall,
     color: colors.textTertiary,
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
   },
   tabTextActive: {
     color: palette.purple[600],
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
 
   // List
@@ -306,13 +304,11 @@ const styles = StyleSheet.create({
   rankBadgeText: {
     ...typography.captionSmall,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   rankText: {
     ...typography.caption,
     color: colors.textTertiary,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     width: 24,
     textAlign: 'center',
   },
@@ -329,7 +325,6 @@ const styles = StyleSheet.create({
     ...typography.bodySmall,
     color: colors.text,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   entryScore: {
     ...typography.captionSmall,
@@ -364,7 +359,6 @@ const styles = StyleSheet.create({
     ...typography.bodySmall,
     color: palette.purple[600],
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   userRankHint: {
     ...typography.captionSmall,

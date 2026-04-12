@@ -384,7 +384,6 @@ const styles = StyleSheet.create({
     ...typography.h4,
     color: colors.text,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     textAlign: 'center',
     marginBottom: spacing.sm,
   },
@@ -407,7 +406,6 @@ const styles = StyleSheet.create({
     ...typography.bodySmall,
     color: colors.primary,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   upgradeButton: {
     width: '100%',
@@ -428,7 +426,6 @@ const styles = StyleSheet.create({
     ...typography.button,
     color: colors.text,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     zIndex: 1,
   },
   shimmerOverlay: {
@@ -457,7 +454,6 @@ const styles = StyleSheet.create({
     ...typography.button,
     color: colors.primary,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   secondaryButtonTextDisabled: {
     color: colors.textTertiary,

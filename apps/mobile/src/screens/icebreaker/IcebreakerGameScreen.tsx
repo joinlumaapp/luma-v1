@@ -16,7 +16,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../theme/colors';
-import { fontWeights } from '../../theme/typography';
+import {  } from '../../theme/typography';
 import { spacing, borderRadius } from '../../theme/spacing';
 import type { MatchesStackParamList } from '../../navigation/types';
 
@@ -158,12 +158,12 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
     color: colors.text,
   },
   headerSubtitle: {
     fontSize: 14,
-    fontWeight: fontWeights.regular,
+    fontFamily: 'Poppins_700Bold',
     color: colors.textSecondary,
     marginTop: 2,
   },
@@ -173,7 +173,7 @@ const styles = StyleSheet.create({
   },
   sectionLabel: {
     fontSize: 15,
-    fontWeight: fontWeights.medium,
+    fontFamily: 'Poppins_700Bold',
     color: colors.textSecondary,
     textAlign: 'center',
     marginBottom: spacing.sm,
@@ -196,12 +196,12 @@ const styles = StyleSheet.create({
   },
   gameTitle: {
     fontSize: 18,
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
     color: '#FFFFFF',
   },
   gameDesc: {
     fontSize: 14,
-    fontWeight: fontWeights.regular,
+    fontFamily: 'Poppins_700Bold',
     color: 'rgba(255,255,255,0.85)',
     marginTop: 4,
     lineHeight: 18,
@@ -214,7 +214,7 @@ const styles = StyleSheet.create({
   },
   gameDuration: {
     fontSize: 14,
-    fontWeight: fontWeights.medium,
+    fontFamily: 'Poppins_700Bold',
     color: 'rgba(255,255,255,0.7)',
   },
 });

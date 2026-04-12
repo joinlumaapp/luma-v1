@@ -1,4 +1,4 @@
-// Phone number entry screen — cream/beige theme, clean design
+// Phone number entry screen — pink gradient + Luma watermark branding
 
 import React, { useState, useEffect } from 'react';
 import {
@@ -31,9 +31,10 @@ import type { AuthStackParamList } from '../../navigation/types';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { onboardingColors } from '../../components/onboarding/OnboardingLayout';
 import { surfaces } from '../../theme/colors';
-import { spacing, borderRadius, layout } from '../../theme/spacing';
-import { fontWeights } from '../../theme/typography';
+import { spacing, layout } from '../../theme/spacing';
+import {  } from '../../theme/typography';
 import { analyticsService, ANALYTICS_EVENTS } from '../../services/analyticsService';
+import { BrandedBackground } from '../../components/common/BrandedBackground';
 
 type PhoneEntryNavigationProp = NativeStackNavigationProp<AuthStackParamList, 'PhoneEntry'>;
 
@@ -78,7 +79,6 @@ export const PhoneEntryScreen: React.FC = () => {
 
   const handleSendCode = async () => {
     if (!isValid) return;
-    // Track signup_started event when user initiates phone verification
     analyticsService.track(ANALYTICS_EVENTS.SIGNUP_STARTED, {
       country_code: selectedCountry.code,
     });
@@ -128,16 +128,15 @@ export const PhoneEntryScreen: React.FC = () => {
   };
 
   return (
-    <LinearGradient
-      colors={['#D4687A', '#E8959E', '#F2C0C6', '#F5ECDF', '#F5F0E8']}
-      locations={[0, 0.25, 0.5, 0.8, 1]}
-      style={styles.container}
-    >
+    <View style={styles.container}>
+      {/* Luma watermark logos */}
+      <BrandedBackground />
+
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        {/* Header */}
+        {/* Back button — top left */}
         <View style={[styles.header, { paddingTop: insets.top + spacing.md }]}>
           <TouchableOpacity
             onPress={handleBack}
@@ -145,15 +144,15 @@ export const PhoneEntryScreen: React.FC = () => {
             accessibilityLabel="Geri"
             accessibilityRole="button"
           >
-            <Ionicons name="chevron-back" size={24} color={onboardingColors.text} />
+            <Ionicons name="chevron-back" size={24} color="#3D2B1F" />
           </TouchableOpacity>
         </View>
 
-        {/* Content */}
+        {/* Content — starts from top ~30%, not vertically centered */}
         <Animated.View style={[styles.content, contentAnimatedStyle]}>
           <Text style={styles.title}>Telefon Numaranı Gir</Text>
           <Text style={styles.subtitle}>
-            Sana bir doğrulama kodu göndereceğiz. Sadece bir dakika!
+            Sana bir doğrulama kodu göndereceğiz.{'\n'}Sadece bir dakika!
           </Text>
 
           {/* Phone input row */}
@@ -215,46 +214,53 @@ export const PhoneEntryScreen: React.FC = () => {
               ))}
             </View>
           )}
+
+          {/* Submit button — gradient, full width */}
+          <View style={styles.submitArea}>
+            <AnimatedTouchable
+              onPress={handleSendCode}
+              disabled={!isValid || isSubmitting}
+              activeOpacity={0.9}
+              style={buttonAnimatedStyle}
+              accessibilityLabel="Doğrulama kodu gönder"
+              accessibilityRole="button"
+            >
+              <LinearGradient
+                colors={isValid && !isSubmitting
+                  ? ['#EC4899', '#EE5A24'] as [string, string]
+                  : ['#D1D5DB', '#D1D5DB'] as [string, string]
+                }
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.submitButton}
+              >
+                {isSubmitting ? (
+                  <ActivityIndicator color="#FFFFFF" />
+                ) : (
+                  <Text style={[
+                    styles.submitButtonText,
+                    (!isValid || isSubmitting) && styles.submitButtonTextDisabled,
+                  ]}>
+                    Doğrulama kodu gönder
+                  </Text>
+                )}
+              </LinearGradient>
+            </AnimatedTouchable>
+
+            <Text style={styles.securityNote}>
+              Numaranı kimseyle paylaşmıyoruz.
+            </Text>
+          </View>
         </Animated.View>
-
-        {/* Footer */}
-        <View style={styles.footer}>
-          <AnimatedTouchable
-            style={[
-              styles.submitButton,
-              (!isValid || isSubmitting) && styles.submitButtonDisabled,
-              buttonAnimatedStyle,
-            ]}
-            onPress={handleSendCode}
-            disabled={!isValid || isSubmitting}
-            activeOpacity={0.9}
-            accessibilityLabel="Devam et"
-            accessibilityRole="button"
-          >
-            {isSubmitting ? (
-              <ActivityIndicator color={onboardingColors.buttonText} />
-            ) : (
-              <Text style={[
-                styles.submitButtonText,
-                (!isValid || isSubmitting) && styles.submitButtonTextDisabled,
-              ]}>
-                Doğrulama Kodu Gönder
-              </Text>
-            )}
-          </AnimatedTouchable>
-
-          <Text style={styles.securityNote}>
-            Numaranı kimseyle paylaşmıyoruz.
-          </Text>
-        </View>
       </KeyboardAvoidingView>
-    </LinearGradient>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#F5F0E8',
   },
   flex: {
     flex: 1,
@@ -264,36 +270,32 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.md,
   },
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: onboardingColors.surface,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(0,0,0,0.06)',
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: onboardingColors.surfaceBorder,
   },
-  // backText removed — using Ionicons icon instead
   content: {
     flex: 1,
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.lg,
-    justifyContent: 'center',
+    paddingHorizontal: 24,
+    paddingTop: 24,
   },
   title: {
-    fontSize: 28,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: fontWeights.bold,
-    color: onboardingColors.text,
-    marginBottom: spacing.sm,
+    fontSize: 26,
+    fontFamily: 'Poppins_800ExtraBold',
+    color: '#1A1A2E',
+    textAlign: 'center',
+    marginBottom: 8,
   },
   subtitle: {
     fontSize: 15,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: fontWeights.regular,
-    color: onboardingColors.textSecondary,
-    marginBottom: spacing.xl,
+    fontFamily: 'Poppins_500Medium',
+    color: '#444444',
+    textAlign: 'center',
     lineHeight: 22,
+    marginBottom: 32,
   },
   phoneRow: {
     flexDirection: 'row',
@@ -302,22 +304,21 @@ const styles = StyleSheet.create({
   countrySelector: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: onboardingColors.surface,
-    borderRadius: borderRadius.md,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
     paddingHorizontal: spacing.md,
     height: layout.inputHeight,
     gap: 6,
     borderWidth: 1.5,
-    borderColor: onboardingColors.surfaceBorder,
+    borderColor: '#E8E0D8',
   },
   countryFlag: {
     fontSize: 20,
   },
   countryCode: {
     fontSize: 15,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: fontWeights.semibold,
-    color: onboardingColors.text,
+    fontFamily: 'Poppins_700Bold',
+    color: '#1A1A2E',
   },
   dropdownArrow: {
     fontSize: 14,
@@ -326,30 +327,29 @@ const styles = StyleSheet.create({
   },
   phoneInputWrapper: {
     flex: 1,
-    backgroundColor: onboardingColors.surface,
-    borderRadius: borderRadius.md,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
     height: layout.inputHeight,
     borderWidth: 1.5,
-    borderColor: onboardingColors.surfaceBorder,
+    borderColor: '#E8E0D8',
   },
   phoneInputFocused: {
-    borderColor: onboardingColors.text,
+    borderColor: '#EC4899',
   },
   phoneInput: {
     flex: 1,
     paddingHorizontal: spacing.md,
-    fontSize: 17,
-    fontFamily: 'Poppins_500Medium',
-    fontWeight: fontWeights.medium,
-    color: onboardingColors.text,
+    fontSize: 18,
+    fontFamily: 'Poppins_600SemiBold',
+    color: '#1A1A2E',
     letterSpacing: 1.5,
   },
   countryDropdown: {
-    backgroundColor: onboardingColors.surface,
-    borderRadius: borderRadius.md,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
     marginTop: spacing.sm,
-    borderWidth: 1,
-    borderColor: onboardingColors.surfaceBorder,
+    borderWidth: 1.5,
+    borderColor: '#E8E0D8',
     overflow: 'hidden',
   },
   countryOption: {
@@ -367,47 +367,43 @@ const styles = StyleSheet.create({
   },
   countryOptionText: {
     fontSize: 15,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: fontWeights.regular,
-    color: onboardingColors.text,
+    fontFamily: 'Poppins_700Bold',
+    color: '#1A1A2E',
     flex: 1,
   },
   checkmark: {
     fontSize: 16,
     color: onboardingColors.checkGreen,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: fontWeights.semibold,
+    fontFamily: 'Poppins_700Bold',
   },
-  footer: {
-    paddingHorizontal: spacing.lg,
-    paddingBottom: Platform.OS === 'ios' ? 48 : 36,
-    gap: spacing.md,
+  submitArea: {
+    marginTop: 32,
+    gap: 16,
   },
   submitButton: {
-    height: layout.buttonHeight,
-    borderRadius: 28,
-    backgroundColor: '#C4405A',
+    height: 56,
+    borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  submitButtonDisabled: {
-    backgroundColor: onboardingColors.surfaceBorder,
+    shadowColor: '#EC4899',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 4,
   },
   submitButtonText: {
     fontSize: 18,
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
     color: '#FFFFFF',
     letterSpacing: 0.3,
   },
   submitButtonTextDisabled: {
-    color: onboardingColors.textTertiary,
+    color: '#9CA3AF',
   },
   securityNote: {
-    fontSize: 14,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: fontWeights.regular,
-    color: onboardingColors.textTertiary,
+    fontSize: 13,
+    fontFamily: 'Poppins_500Medium',
+    color: '#999999',
     textAlign: 'center',
   },
 });

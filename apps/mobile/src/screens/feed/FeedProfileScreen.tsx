@@ -18,7 +18,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import type { FeedStackParamList } from '../../navigation/types';
 import { colors, palette } from '../../theme/colors';
-import { fontWeights } from '../../theme/typography';
+import {  } from '../../theme/typography';
 import { spacing, borderRadius } from '../../theme/spacing';
 import api from '../../services/api';
 import { socialFeedService, type FeedPost } from '../../services/socialFeedService';
@@ -129,7 +129,7 @@ const PremiumLock: React.FC<{ onPress: () => void }> = ({ onPress }) => (
     />
     <View style={lockStyles.badge}>
       <Ionicons name="lock-closed" size={16} color={colors.accent} />
-      <Text style={lockStyles.text}>Premium ile detaylari gor</Text>
+      <Text style={lockStyles.text}>Premium ile detayları gör</Text>
     </View>
   </TouchableOpacity>
 );
@@ -273,7 +273,7 @@ export const FeedProfileScreen: React.FC = () => {
             style={{ paddingHorizontal: 20, paddingVertical: 10, backgroundColor: colors.primary + '18', borderRadius: 20 }}
             activeOpacity={0.7}
           >
-            <Text style={{ fontSize: 14, color: colors.primary, fontWeight: '600' }}>{'Tekrar dene'}</Text>
+            <Text style={{ fontSize: 14, color: colors.primary, fontFamily: 'Poppins_600SemiBold' }}>{'Tekrar dene'}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -335,16 +335,16 @@ export const FeedProfileScreen: React.FC = () => {
         return canViewStats ? (
           <View style={{ flexDirection: 'row', gap: 10, marginTop: 12 }}>
             <View style={{ flex: 1, backgroundColor: colors.surface, borderRadius: 16, paddingVertical: 16, alignItems: 'center', borderWidth: 1, borderColor: colors.surfaceBorder }}>
-              <Text style={{ fontSize: 22, fontWeight: '600', color: palette.purple[600], paddingHorizontal: 4, textAlign: 'center', width: '100%' }}>{profile.postCount}</Text>
-              <Text style={{ fontSize: 9, fontWeight: '600', color: colors.textTertiary, marginTop: 4, letterSpacing: 1, textTransform: 'uppercase' }}>Gönderi</Text>
+              <Text style={{ fontSize: 22, fontFamily: 'Poppins_600SemiBold', color: palette.purple[600], paddingHorizontal: 4, textAlign: 'center', width: '100%' }}>{profile.postCount}</Text>
+              <Text style={{ fontSize: 9, fontFamily: 'Poppins_600SemiBold', color: colors.textTertiary, marginTop: 4, letterSpacing: 1, textTransform: 'uppercase' }}>Gönderi</Text>
             </View>
             <View style={{ flex: 1, backgroundColor: colors.surface, borderRadius: 16, paddingVertical: 16, alignItems: 'center', borderWidth: 1, borderColor: colors.surfaceBorder }}>
-              <Text style={{ fontSize: 22, fontWeight: '600', color: palette.purple[600], paddingHorizontal: 4, textAlign: 'center', width: '100%' }}>{profile.followerCount}</Text>
-              <Text style={{ fontSize: 9, fontWeight: '600', color: colors.textTertiary, marginTop: 4, letterSpacing: 1, textTransform: 'uppercase' }}>Takipçi</Text>
+              <Text style={{ fontSize: 22, fontFamily: 'Poppins_600SemiBold', color: palette.purple[600], paddingHorizontal: 4, textAlign: 'center', width: '100%' }}>{profile.followerCount}</Text>
+              <Text style={{ fontSize: 9, fontFamily: 'Poppins_600SemiBold', color: colors.textTertiary, marginTop: 4, letterSpacing: 1, textTransform: 'uppercase' }}>Takipçi</Text>
             </View>
             <View style={{ flex: 1, backgroundColor: colors.surface, borderRadius: 16, paddingVertical: 16, alignItems: 'center', borderWidth: 1, borderColor: colors.surfaceBorder }}>
-              <Text style={{ fontSize: 22, fontWeight: '600', color: palette.purple[600], paddingHorizontal: 4, textAlign: 'center', width: '100%' }}>{profile.followingCount}</Text>
-              <Text style={{ fontSize: 9, fontWeight: '600', color: colors.textTertiary, marginTop: 4, letterSpacing: 1, textTransform: 'uppercase' }}>Takip</Text>
+              <Text style={{ fontSize: 22, fontFamily: 'Poppins_600SemiBold', color: palette.purple[600], paddingHorizontal: 4, textAlign: 'center', width: '100%' }}>{profile.followingCount}</Text>
+              <Text style={{ fontSize: 9, fontFamily: 'Poppins_600SemiBold', color: colors.textTertiary, marginTop: 4, letterSpacing: 1, textTransform: 'uppercase' }}>Takip</Text>
             </View>
           </View>
         ) : (
@@ -381,7 +381,7 @@ export const FeedProfileScreen: React.FC = () => {
             style={styles.gradientButton}
           >
             <Ionicons name="person-add" size={16} color="#FFFFFF" />
-            <Text style={styles.gradientButtonText}>Takip Et</Text>
+            <Text style={styles.gradientButtonText}>Takip et</Text>
           </LinearGradient>
         )}
       </TouchableOpacity>
@@ -402,7 +402,7 @@ export const FeedProfileScreen: React.FC = () => {
             <Text style={styles.subsectionTitle}>Burada olma sebebi</Text>
             <View style={{ flexDirection: 'row' }}>
               <View style={{ backgroundColor: 'rgba(139,92,246,0.12)', paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20 }}>
-                <Text style={{ fontSize: 14, fontWeight: fontWeights.medium, color: '#8B5CF6' }}>
+                <Text style={{ fontSize: 14, fontFamily: 'Poppins_700Bold', color: '#8B5CF6' }}>
                   {translateIntentionTag(profile.intentionTag)}
                 </Text>
               </View>
@@ -573,7 +573,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 28,
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
     color: colors.text,
     letterSpacing: 0,
   },
@@ -598,8 +598,7 @@ const styles = StyleSheet.create({
   userName: {
     fontSize: 26,
     lineHeight: 38,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: fontWeights.semibold,
+    fontFamily: 'Poppins_700Bold',
     color: colors.text,
     letterSpacing: 0,
     flexShrink: 1,
@@ -608,13 +607,13 @@ const styles = StyleSheet.create({
   },
   jobTitle: {
     fontSize: 15,
-    fontWeight: fontWeights.semibold,
+    fontFamily: 'Poppins_700Bold',
     color: palette.purple[600],
     letterSpacing: 0.1,
   },
   cityText: {
     fontSize: 14,
-    fontWeight: fontWeights.regular,
+    fontFamily: 'Poppins_700Bold',
     color: colors.textSecondary,
   },
   intentionChip: {
@@ -626,7 +625,7 @@ const styles = StyleSheet.create({
   },
   intentionText: {
     fontSize: 14,
-    fontWeight: fontWeights.semibold,
+    fontFamily: 'Poppins_700Bold',
     color: colors.primary,
     letterSpacing: 0.2,
   },
@@ -644,11 +643,11 @@ const styles = StyleSheet.create({
   },
   compatInlineText: {
     fontSize: 17,
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
   },
   compatSuperLabel: {
     fontSize: 14,
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
     color: colors.accent,
     backgroundColor: colors.accent + '18',
     borderRadius: borderRadius.full,
@@ -675,14 +674,14 @@ const styles = StyleSheet.create({
   },
   statValue: {
     fontSize: 20,
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
     color: colors.text,
     textAlign: 'center',
     includeFontPadding: false,
   },
   statLabel: {
     fontSize: 14,
-    fontWeight: fontWeights.medium,
+    fontFamily: 'Poppins_700Bold',
     color: colors.textTertiary,
     marginTop: 3,
     textAlign: 'center',
@@ -710,7 +709,7 @@ const styles = StyleSheet.create({
   },
   gradientButtonText: {
     fontSize: 14,
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
     color: '#FFFFFF',
     letterSpacing: 0.3,
   },
@@ -727,7 +726,7 @@ const styles = StyleSheet.create({
   },
   outlinedButtonText: {
     fontSize: 14,
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
     color: palette.purple[600],
     letterSpacing: 0.3,
   },
@@ -745,8 +744,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: fontWeights.semibold,
+    fontFamily: 'Poppins_700Bold',
     color: colors.text,
     letterSpacing: 0,
     includeFontPadding: false,
@@ -754,13 +752,13 @@ const styles = StyleSheet.create({
   },
   bioText: {
     fontSize: 15,
-    fontWeight: fontWeights.regular,
+    fontFamily: 'Poppins_700Bold',
     color: colors.textSecondary,
     lineHeight: 24,
   },
   subsectionTitle: {
     fontSize: 14,
-    fontWeight: fontWeights.semibold,
+    fontFamily: 'Poppins_700Bold',
     color: colors.text,
     marginBottom: 8,
   },
@@ -789,14 +787,14 @@ const styles = StyleSheet.create({
   },
   aboutRowLabel: {
     fontSize: 14,
-    fontWeight: fontWeights.medium,
+    fontFamily: 'Poppins_700Bold',
     color: colors.textTertiary,
     marginBottom: 2,
     includeFontPadding: false,
   },
   aboutRowValue: {
     fontSize: 15,
-    fontWeight: fontWeights.medium,
+    fontFamily: 'Poppins_700Bold',
     color: colors.text,
   },
   aboutRowValueLocked: {
@@ -818,7 +816,7 @@ const styles = StyleSheet.create({
   },
   miniPostContent: {
     fontSize: 15,
-    fontWeight: fontWeights.regular,
+    fontFamily: 'Poppins_700Bold',
     color: colors.text,
     lineHeight: 22,
     marginBottom: spacing.xs,
@@ -829,7 +827,7 @@ const styles = StyleSheet.create({
   },
   miniPostStat: {
     fontSize: 14,
-    fontWeight: fontWeights.medium,
+    fontFamily: 'Poppins_700Bold',
     color: colors.textTertiary,
   },
 
@@ -849,7 +847,7 @@ const styles = StyleSheet.create({
   },
   hobbyChipText: {
     fontSize: 14,
-    fontWeight: fontWeights.medium,
+    fontFamily: 'Poppins_700Bold',
     color: palette.purple[600],
   },
   premiumChip: {
@@ -865,7 +863,7 @@ const styles = StyleSheet.create({
   },
   premiumChipText: {
     fontSize: 14,
-    fontWeight: fontWeights.semibold,
+    fontFamily: 'Poppins_700Bold',
     color: colors.accent,
   },
 
@@ -884,12 +882,12 @@ const styles = StyleSheet.create({
   premiumBannerTextCol: { flex: 1 },
   premiumBannerTitle: {
     fontSize: 15,
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
     color: '#FFFFFF',
   },
   premiumBannerSubtitle: {
     fontSize: 14,
-    fontWeight: fontWeights.regular,
+    fontFamily: 'Poppins_700Bold',
     color: 'rgba(255,255,255,0.7)',
     marginTop: 2,
   },
@@ -924,7 +922,7 @@ const lockStyles = StyleSheet.create({
   },
   text: {
     fontSize: 14,
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
     color: colors.accent,
   },
 });
@@ -950,7 +948,7 @@ const compatStyles = StyleSheet.create({
   },
   ringPercent: {
     fontSize: 15,
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
   },
   headerInfo: {
     flex: 1,
@@ -966,11 +964,11 @@ const compatStyles = StyleSheet.create({
   },
   label: {
     fontSize: 16,
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
   },
   description: {
     fontSize: 14,
-    fontWeight: fontWeights.regular,
+    fontFamily: 'Poppins_700Bold',
     color: colors.textSecondary,
     lineHeight: 18,
   },
@@ -989,7 +987,7 @@ const compatStyles = StyleSheet.create({
   },
   tierLabel: {
     fontSize: 14,
-    fontWeight: fontWeights.medium,
+    fontFamily: 'Poppins_700Bold',
     color: colors.textTertiary,
   },
 });

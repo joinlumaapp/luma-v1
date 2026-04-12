@@ -159,7 +159,7 @@ export function FavoriteSpotsEditor({
       {/* Section Title */}
       <Text style={styles.title}>Sevdiğin Mekanlar</Text>
       <Text style={styles.subtitle}>
-        Profilinde gorunecek favori mekanlarini ekle ({spots.length}/{maxSpots})
+        Profilinde görünecek favori mekanlarını ekle ({spots.length}/{maxSpots})
       </Text>
 
       {/* Existing Spots */}
@@ -337,10 +337,9 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   title: {
-    fontFamily: 'Poppins_800ExtraBold',
     fontSize: 22,
     lineHeight: 28,
-    fontWeight: '800',
+    fontFamily: 'Poppins_800ExtraBold',
     color: '#1A1A2E',
     marginBottom: 8,
     textAlign: 'center',

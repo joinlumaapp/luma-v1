@@ -326,7 +326,6 @@ const radarStyles = StyleSheet.create({
     ...typography.captionSmall,
     color: colors.primary,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     textAlign: 'center',
   },
   dimensionLabelLocked: {
@@ -453,7 +452,7 @@ export const CompatibilityInsightScreen: React.FC = () => {
           style={{ marginTop: 24 }}
           onPress={() => navigation.goBack()}
         >
-          <Text style={[styles.retryText, { color: colors.textSecondary }]}>Geri Dön</Text>
+          <Text style={[styles.retryText, { color: colors.textSecondary }]}>Geri dön</Text>
         </TouchableOpacity>
       </View>
     );
@@ -473,7 +472,7 @@ export const CompatibilityInsightScreen: React.FC = () => {
           style={[styles.retryButton, { marginTop: 12, backgroundColor: 'transparent' }]}
           onPress={() => navigation.goBack()}
         >
-          <Text style={[styles.retryText, { color: colors.textSecondary }]}>Geri Dön</Text>
+          <Text style={[styles.retryText, { color: colors.textSecondary }]}>Geri dön</Text>
         </TouchableOpacity>
       </View>
     );
@@ -777,7 +776,6 @@ const styles = StyleSheet.create({
     ...typography.bodyLarge,
     color: colors.text,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
 
   // Overall score section
@@ -805,7 +803,6 @@ const styles = StyleSheet.create({
   scoreValue: {
     ...typography.h1,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   scoreLabel: {
     ...typography.captionSmall,
@@ -825,7 +822,6 @@ const styles = StyleSheet.create({
   levelText: {
     ...typography.bodySmall,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
 
   // Radar section
@@ -879,7 +875,6 @@ const styles = StyleSheet.create({
     ...typography.body,
     color: colors.text,
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
   },
   dimensionScoreContainer: {
     flexDirection: 'row',
@@ -889,7 +884,6 @@ const styles = StyleSheet.create({
   dimensionScore: {
     ...typography.bodyLarge,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   expandIcon: {
     fontSize: 14,
@@ -927,7 +921,6 @@ const styles = StyleSheet.create({
     ...typography.captionSmall,
     color: colors.textTertiary,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
 
   // Explanation
@@ -941,7 +934,6 @@ const styles = StyleSheet.create({
     ...typography.bodySmall,
     color: colors.primary,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     marginBottom: spacing.xs,
   },
   explanationText: {
@@ -959,7 +951,6 @@ const styles = StyleSheet.create({
     ...typography.captionSmall,
     color: colors.success,
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
   },
 
   // Premium CTA

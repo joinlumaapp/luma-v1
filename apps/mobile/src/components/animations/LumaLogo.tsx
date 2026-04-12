@@ -246,7 +246,6 @@ const styles = StyleSheet.create({
     ...typography.h1,
     color: colors.text,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     textShadowColor: palette.purple[400],
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 20,

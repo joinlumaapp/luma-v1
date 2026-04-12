@@ -10,7 +10,7 @@ import { useWeeklyTopStore } from '../../stores/weeklyTopStore';
 import { colors, palette } from '../../theme/colors';
 import { WEEKLY_TOP_CONFIG } from '../../constants/config';
 import { useCoinStore } from '../../stores/coinStore';
-import { fontWeights } from '../../theme/typography';
+import {  } from '../../theme/typography';
 import { BrandedBackground } from '../../components/common/BrandedBackground';
 import type { MatchesStackParamList } from '../../navigation/types';
 
@@ -143,7 +143,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12, gap: 12,
   },
   backButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.surface, justifyContent: 'center', alignItems: 'center' },
-  headerTitle: { color: colors.text, fontSize: 20, fontWeight: fontWeights.bold },
+  headerTitle: { color: colors.text, fontSize: 20, fontFamily: 'Poppins_800ExtraBold' },
   headerSubtitle: { color: colors.textTertiary, fontSize: 14, marginTop: 2 },
   cardsContainer: { flex: 1, padding: 16, gap: 12 },
   matchCard: {
@@ -156,14 +156,14 @@ const styles = StyleSheet.create({
   photoPlaceholder: { width: '100%', height: '100%', backgroundColor: colors.surfaceLight, justifyContent: 'center', alignItems: 'center' },
   photoGradient: { position: 'absolute', bottom: 0, left: 0, right: 0, height: '50%' },
   photoInfo: { position: 'absolute', bottom: 12, left: 12 },
-  matchName: { color: colors.text, fontSize: 16, fontWeight: fontWeights.bold },
+  matchName: { color: colors.text, fontSize: 16, fontFamily: 'Poppins_800ExtraBold' },
   matchReason: { color: colors.textSecondary, fontSize: 14, marginTop: 2 },
   compatBadge: {
     position: 'absolute', top: 10, right: 10,
     backgroundColor: palette.gold[400] + 'E6', borderRadius: 8,
     paddingHorizontal: 8, paddingVertical: 4,
   },
-  compatText: { color: colors.textInverse, fontSize: 14, fontWeight: fontWeights.bold },
+  compatText: { color: colors.textInverse, fontSize: 14, fontFamily: 'Poppins_800ExtraBold' },
   lockedCard: {
     width: '100%', aspectRatio: 1.2, backgroundColor: colors.primary + '14',
     justifyContent: 'center', alignItems: 'center',

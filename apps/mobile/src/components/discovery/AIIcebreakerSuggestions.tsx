@@ -13,7 +13,7 @@ import * as Haptics from 'expo-haptics';
 import { generateIcebreakers, type AIIcebreaker, type IcebreakerTone } from '../../services/aiService';
 import { colors, palette } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/spacing';
-import { fontWeights } from '../../theme/typography';
+import {  } from '../../theme/typography';
 
 const TONE_LABELS: Record<IcebreakerTone, string> = {
   funny: 'Komik',
@@ -140,8 +140,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 14,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: fontWeights.semibold,
+    fontFamily: 'Poppins_700Bold',
     color: colors.text,
   },
   suggestionsContainer: {
@@ -175,13 +174,11 @@ const styles = StyleSheet.create({
   },
   toneLabel: {
     fontSize: 14,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: fontWeights.semibold,
+    fontFamily: 'Poppins_700Bold',
   },
   suggestionText: {
     fontSize: 14,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: fontWeights.regular,
+    fontFamily: 'Poppins_700Bold',
     color: colors.text,
     lineHeight: 20,
   },
@@ -194,8 +191,7 @@ const styles = StyleSheet.create({
   },
   refreshText: {
     fontSize: 14,
-    fontFamily: 'Poppins_500Medium',
-    fontWeight: fontWeights.medium,
+    fontFamily: 'Poppins_700Bold',
     color: palette.purple[500],
   },
 });

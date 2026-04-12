@@ -340,7 +340,6 @@ const timelineStyles = StyleSheet.create({
     ...typography.captionSmall,
     color: colors.primary,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   placeRow: {
     flexDirection: 'row',
@@ -364,7 +363,6 @@ const timelineStyles = StyleSheet.create({
     ...typography.body,
     color: colors.text,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     flex: 1,
   },
   noteText: {
@@ -400,7 +398,6 @@ const timelineStyles = StyleSheet.create({
     ...typography.bodySmall,
     color: colors.textTertiary,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     textTransform: 'capitalize',
   },
   // Empty state
@@ -463,7 +460,6 @@ const timelineStyles = StyleSheet.create({
     fontSize: 20,
     color: colors.text,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   fabText: {
     ...typography.button,

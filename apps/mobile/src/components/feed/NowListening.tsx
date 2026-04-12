@@ -141,8 +141,7 @@ const compactStyles = StyleSheet.create({
   },
   songText: {
     fontSize: 14,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '500',
+    fontFamily: 'Poppins_500Medium',
     fontStyle: 'italic',
     color: palette.purple[500],
     flexShrink: 1,
@@ -243,13 +242,11 @@ const fullStyles = StyleSheet.create({
   songTitle: {
     fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: colors.text,
   },
   artist: {
     fontSize: 14,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '500',
+    fontFamily: 'Poppins_500Medium',
     color: colors.textSecondary,
     marginTop: 1,
   },
@@ -259,7 +256,6 @@ const fullStyles = StyleSheet.create({
   sameSongText: {
     fontSize: 14,
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
     color: palette.gold[500],
     marginTop: 4,
     paddingLeft: 2,

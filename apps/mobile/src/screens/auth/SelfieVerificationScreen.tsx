@@ -484,7 +484,6 @@ const styles = StyleSheet.create({
     ...typography.bodySmall,
     color: colors.primary,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   faceGuide: {
     position: 'absolute',
@@ -513,7 +512,6 @@ const styles = StyleSheet.create({
     ...typography.body,
     color: '#1A1A2E',
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     flex: 1,
   },
   footer: {
@@ -558,6 +556,5 @@ const styles = StyleSheet.create({
     ...typography.bodySmall,
     color: colors.primary,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
 });

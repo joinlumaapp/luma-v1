@@ -148,7 +148,6 @@ const styles = StyleSheet.create({
   text: {
     fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: '#FFFFFF',
     letterSpacing: 0.2,
   },

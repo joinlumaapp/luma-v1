@@ -165,7 +165,7 @@ const engagementStyles = StyleSheet.create({
     zIndex: 20,
   },
   btn: { alignItems: 'center', gap: 2 },
-  count: { color: '#FFFFFF', fontSize: 14, fontWeight: '700' },
+  count: { color: '#FFFFFF', fontSize: 14, fontFamily: 'Poppins_700Bold' },
   label: { color: 'rgba(255,255,255,0.5)', fontSize: 11 },
 });
 

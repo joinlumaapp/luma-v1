@@ -328,7 +328,6 @@ const pickerStyles = StyleSheet.create({
     ...typography.bodyLarge,
     color: colors.text,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     ...(Platform.OS === 'android' ? { includeFontPadding: false } : {}),
   },
   closeButton: {
@@ -380,7 +379,6 @@ const pickerStyles = StyleSheet.create({
     ...typography.bodySmall,
     color: colors.text,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     ...(Platform.OS === 'android' ? { includeFontPadding: false } : {}),
   },
   emptyText: {

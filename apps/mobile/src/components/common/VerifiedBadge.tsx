@@ -85,7 +85,6 @@ const styles = StyleSheet.create({
   checkmark: {
     color: palette.white,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     marginTop: -1,
   },
 });

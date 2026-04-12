@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { colors, palette } from '../../theme/colors';
-import { fontWeights } from '../../theme/typography';
+import {  } from '../../theme/typography';
 
 interface XrayCategory {
   name: string;
@@ -64,19 +64,19 @@ const styles = StyleSheet.create({
   },
   header: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 },
   headerIcon: { fontSize: 18 },
-  headerTitle: { flex: 1, color: colors.text, fontSize: 14, fontWeight: fontWeights.semibold },
+  headerTitle: { flex: 1, color: colors.text, fontSize: 14, fontFamily: 'Poppins_700Bold' },
   overallBadge: {
     backgroundColor: palette.gold[400] + '26', borderRadius: 8,
     paddingHorizontal: 10, paddingVertical: 4,
   },
-  overallText: { color: palette.gold[400], fontSize: 14, fontWeight: fontWeights.bold },
+  overallText: { color: palette.gold[400], fontSize: 14, fontFamily: 'Poppins_800ExtraBold' },
   categoryRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 10, gap: 8 },
   categoryName: { color: colors.textSecondary, fontSize: 14, width: 90 },
   barContainer: {
     flex: 1, height: 6, backgroundColor: colors.surfaceBorder, borderRadius: 3,
   },
   barFill: { height: 6, borderRadius: 3 },
-  categoryScore: { fontSize: 14, fontWeight: fontWeights.semibold, width: 30, textAlign: 'right' },
+  categoryScore: { fontSize: 14, fontFamily: 'Poppins_700Bold', width: 30, textAlign: 'right' },
   highlightsSection: { marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: colors.surfaceBorder },
   highlightsTitle: { color: colors.textSecondary, fontSize: 14, marginBottom: 6 },
   highlightItem: { color: colors.textTertiary, fontSize: 14, marginBottom: 2 },

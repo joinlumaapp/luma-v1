@@ -80,7 +80,7 @@ const styles = StyleSheet.create({
   },
   text: {
     fontSize: 17,
-    fontWeight: '700',
+    fontFamily: 'Poppins_700Bold',
     color: '#FFFFFF',
     letterSpacing: 0.5,
   },

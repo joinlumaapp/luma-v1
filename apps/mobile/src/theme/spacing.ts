@@ -252,7 +252,7 @@ export const inputStyle = {
   borderColor: 'rgba(255,255,255,0.12)',
   paddingHorizontal: spacing.md,
   fontSize: 16,
-  fontWeight: '500' as const,
+  fontFamily: 'Poppins_500Medium' as const,
 } as const;
 
 /** Input placeholder color for dark theme */

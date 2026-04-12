@@ -81,6 +81,20 @@ export interface DetailedCompatibilityArea {
   description: string;
 }
 
+export interface ProgressResponse {
+  completedQuestions: number[];
+  lastQuestion: number;
+  answeredCount: number;
+  totalCount: number;
+}
+
+export interface CalculateResponse {
+  calculated: boolean;
+  reason?: string;
+  answeredCount: number;
+  totalCount: number;
+}
+
 export interface DetailedCompatibilityResponse {
   score: number;
   level: 'NORMAL' | 'SUPER';
@@ -135,6 +149,18 @@ export const compatibilityService = {
     const response = await api.get<DetailedCompatibilityResponse>(
       `/compatibility/detailed/${targetUserId}`,
     );
+    return response.data;
+  },
+
+  // Get quiz progress (completed questions + last question number)
+  getProgress: async (): Promise<ProgressResponse> => {
+    const response = await api.get<ProgressResponse>('/compatibility/progress');
+    return response.data;
+  },
+
+  // Trigger score calculation after completing all 20 questions
+  triggerCalculate: async (): Promise<CalculateResponse> => {
+    const response = await api.post<CalculateResponse>('/compatibility/calculate');
     return response.data;
   },
 

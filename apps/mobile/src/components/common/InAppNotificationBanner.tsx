@@ -431,14 +431,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: '#FFFFFF',
     marginBottom: 2,
   },
   body: {
     fontSize: 14,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '500',
+    fontFamily: 'Poppins_500Medium',
     color: 'rgba(255, 255, 255, 0.7)',
     lineHeight: 18,
   },

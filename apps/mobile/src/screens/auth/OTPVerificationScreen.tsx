@@ -25,7 +25,7 @@ import { onboardingColors } from '../../components/onboarding/OnboardingLayout';
 import { BrandedBackground } from '../../components/common/BrandedBackground';
 import { semanticColors } from '../../theme/colors';
 import { spacing, borderRadius, shadows } from '../../theme/spacing';
-import { fontWeights } from '../../theme/typography';
+import {  } from '../../theme/typography';
 import { analyticsService, ANALYTICS_EVENTS } from '../../services/analyticsService';
 
 type OTPNavigationProp = NativeStackNavigationProp<AuthStackParamList, 'OTPVerification'>;
@@ -395,7 +395,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 32,
     fontFamily: 'Poppins_800ExtraBold',
-    fontWeight: '800',
     color: onboardingColors.text,
     letterSpacing: -0.5,
     marginBottom: spacing.sm,
@@ -403,7 +402,6 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 17,
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
     color: 'rgba(0,0,0,0.6)',
     marginBottom: spacing.xl,
     lineHeight: 24,
@@ -418,8 +416,7 @@ const styles = StyleSheet.create({
   },
   warningText: {
     fontSize: 14,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: fontWeights.medium,
+    fontFamily: 'Poppins_700Bold',
     color: semanticColors.error.dark,
     textAlign: 'center',
   },
@@ -441,7 +438,6 @@ const styles = StyleSheet.create({
     fontSize: 32,
     lineHeight: 38,
     fontFamily: 'Poppins_800ExtraBold',
-    fontWeight: '800',
     color: '#2D1B4E',
     includeFontPadding: false,
     paddingVertical: 0,
@@ -458,19 +454,17 @@ const styles = StyleSheet.create({
   },
   resendContainer: {
     alignItems: 'center',
-    marginBottom: 20,
-    marginTop: 0,
+    marginBottom: 80,
+    marginTop: 8,
   },
   resendTimerText: {
     fontSize: 15,
-    fontFamily: 'Poppins_500Medium',
-    fontWeight: fontWeights.regular,
+    fontFamily: 'Poppins_700Bold',
     color: onboardingColors.textTertiary,
   },
   resendButton: {
     fontSize: 15,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '600',
+    fontFamily: 'Poppins_600SemiBold',
     color: '#8B5CF6',
     textAlign: 'center',
   },
@@ -480,8 +474,7 @@ const styles = StyleSheet.create({
   },
   verifyingText: {
     fontSize: 16,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: fontWeights.medium,
+    fontFamily: 'Poppins_700Bold',
     color: onboardingColors.textSecondary,
   },
   footer: {
@@ -505,7 +498,6 @@ const styles = StyleSheet.create({
   verifyButtonText: {
     fontSize: 18,
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
     color: '#FFFFFF',
     letterSpacing: 0.5,
   },

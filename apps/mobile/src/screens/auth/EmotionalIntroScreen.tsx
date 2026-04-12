@@ -45,7 +45,7 @@ import { storage } from '../../utils/storage';
 import { seedDevData } from '../../utils/devSeedData';
 import { palette, surfaces, semanticColors } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/spacing';
-import { fontWeights } from '../../theme/typography';
+import {  } from '../../theme/typography';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const LOGO_SIZE = SCREEN_WIDTH * 0.82;
@@ -304,7 +304,6 @@ const EmotionalIntroScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      {/* Full-screen gradient — deeper rose to warm cream */}
       <LinearGradient
         colors={['#D4687A', '#E8959E', '#F2C0C6', '#F5ECDF', '#F5F0E8']}
         locations={[0, 0.25, 0.5, 0.8, 1]}
@@ -498,8 +497,7 @@ const styles = StyleSheet.create({
   },
   devButtonText: {
     fontSize: 14,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
     color: palette.white,
     letterSpacing: 1.5,
   },
@@ -521,8 +519,7 @@ const styles = StyleSheet.create({
   },
   tagline: {
     fontSize: 18,
-    fontFamily: 'Poppins_300Light',
-    fontWeight: '500' as const,
+    fontFamily: 'Poppins_500Medium' as const,
     color: 'rgba(80, 40, 60, 0.7)',
     textAlign: 'center' as const,
     letterSpacing: 0.5,
@@ -574,8 +571,7 @@ const styles = StyleSheet.create({
   },
   googleButtonText: {
     fontSize: 16,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: fontWeights.semibold,
+    fontFamily: 'Poppins_700Bold',
     color: palette.gray[900],
   },
   // Telefon ile devam et button — gradient + glow
@@ -603,19 +599,16 @@ const styles = StyleSheet.create({
   otherButtonText: {
     fontSize: 18,
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
     color: '#FFFFFF',
   },
   // Login link — more visible for returning users
   loginText: {
     fontSize: 15,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: fontWeights.regular,
+    fontFamily: 'Poppins_700Bold',
     color: 'rgba(80, 40, 60, 0.7)',
   },
   loginLink: {
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
     color: '#C4405A',
     textDecorationLine: 'none',
   },
@@ -633,8 +626,7 @@ const styles = StyleSheet.create({
   },
   comingSoonBadge: {
     fontSize: 9,
-    fontFamily: 'Poppins_500Medium',
-    fontWeight: '500' as const,
+    fontFamily: 'Poppins_500Medium' as const,
     color: '#FFFFFF',
     letterSpacing: 0.3,
   },
@@ -670,15 +662,13 @@ const styles = StyleSheet.create({
   },
   testPanelTitle: {
     fontSize: 20,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
     color: palette.gray[900],
     textAlign: 'center',
   },
   testPanelSubtitle: {
     fontSize: 14,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: fontWeights.regular,
+    fontFamily: 'Poppins_700Bold',
     color: palette.gray[500],
     textAlign: 'center',
     marginBottom: spacing.sm,
@@ -702,20 +692,17 @@ const styles = StyleSheet.create({
   },
   testPanelButtonText: {
     fontSize: 15,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: fontWeights.semibold,
+    fontFamily: 'Poppins_700Bold',
     color: palette.white,
   },
   testPanelButtonDesc: {
     fontSize: 14,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: fontWeights.regular,
+    fontFamily: 'Poppins_700Bold',
     color: palette.gray[400],
   },
   testPanelCancel: {
     fontSize: 14,
-    fontFamily: 'Poppins_500Medium',
-    fontWeight: fontWeights.medium,
+    fontFamily: 'Poppins_700Bold',
     color: palette.gray[500],
     textAlign: 'center',
     marginTop: spacing.sm,

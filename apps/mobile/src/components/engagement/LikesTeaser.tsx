@@ -128,8 +128,8 @@ export const LikesTeaser: React.FC<LikesTeaserProps> = ({ onPressPremium, onPres
             </Text>
             <Text style={styles.subtitle}>
               {isPremium
-                ? 'Kimlerin begendini gor'
-                : 'Premium ile kimlerin begendini gor'}
+                ? 'Kimlerin beğendiğini gör'
+                : 'Premium ile kimlerin beğendiğini gör'}
             </Text>
           </View>
 
@@ -213,7 +213,6 @@ const styles = StyleSheet.create({
     ...typography.label,
     color: colors.text,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   subtitle: {
     ...typography.captionSmall,
@@ -234,6 +233,5 @@ const styles = StyleSheet.create({
     ...typography.caption,
     color: palette.white,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
 });

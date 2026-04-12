@@ -19,12 +19,12 @@ import Svg, { Circle, Defs, LinearGradient as SvgLinearGradient, Stop } from 're
 import { notificationAsync } from '../../utils/haptics';
 import { useStaggeredEntrance } from '../../hooks/useStaggeredEntrance';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { ProfileStackParamList } from '../../navigation/types';
 import { colors, palette } from '../../theme/colors';
-import { fontWeights } from '../../theme/typography';
+import {  } from '../../theme/typography';
 import { Ionicons } from '@expo/vector-icons';
 import { spacing, borderRadius, layout, shadows } from '../../theme/spacing';
 import { INTEREST_CATEGORIES } from '../../constants/config';
@@ -296,7 +296,7 @@ export const ProfileScreen: React.FC = () => {
     }
   }, [strengthAnim]);
 
-  // Fetch weekly view count + recent viewer list (for avatar thumbnails on the card)
+  // Fetch weekly view count + recent viewer list
   const fetchWeeklyViews = useCallback(async () => {
     try {
       const data = await profileService.getWeeklyViewCount();
@@ -460,6 +460,13 @@ export const ProfileScreen: React.FC = () => {
     fetchReferralInfo();
     fetchDiscountStatus();
   }, [fetchProfile, fetchStrength, fetchWeeklyViews, fetchBoostStatus, fetchMatches, fetchMyPosts, fetchFollowCounts, fetchMood, fetchReferralInfo, fetchDiscountStatus]);
+
+  // Re-fetch profile when screen gains focus (e.g. returning from EditProfile)
+  useFocusEffect(
+    useCallback(() => {
+      fetchProfile();
+    }, [fetchProfile]),
+  );
 
   // Shimmer for loading
   useEffect(() => {
@@ -715,7 +722,7 @@ export const ProfileScreen: React.FC = () => {
           >
             <Ionicons name="sparkles" size={15} color="#FFFFFF" />
             <Text style={styles.premiumActionButtonText}>
-              {packageTier === 'FREE' ? "Premium'a Geç" : packageTier === 'SUPREME' ? 'Supreme' : 'Premium Üye'}
+              {packageTier === 'FREE' ? 'Premium' : packageTier === 'SUPREME' ? 'Supreme' : 'Premium'}
             </Text>
           </LinearGradient>
         </TouchableOpacity>
@@ -801,52 +808,52 @@ export const ProfileScreen: React.FC = () => {
         </LinearGradient>
       </TouchableOpacity>
 
-      {/* ═══ 2. UYUM ANALİZİ — Friendly light card or completed badge ═══ */}
+      {/* ═══ 2. UYUM ANALİZİ — Premium gradient card ═══ */}
       {(() => {
         const answeredCount = profile.answers ? Object.keys(profile.answers).length : 0;
         const TOTAL_Q = 20;
         const isComplete = answeredCount >= TOTAL_Q;
 
-        if (isComplete) {
-          return (
-            <View style={styles.uyumCompleteBadge}>
-              <Ionicons name="checkmark-circle" size={16} color="#10B981" />
-              <Text style={styles.uyumCompleteBadgeText}>Uyum Analizi Tamamlandı</Text>
-            </View>
-          );
-        }
-
-        // Motivational copy tracks progress bucket so the message feels earned.
-        const motivation =
-          answeredCount === 0
-            ? 'Hadi başlayalım! ✨'
-            : answeredCount <= 10
-              ? 'Harika gidiyorsun! 💪'
-              : 'Neredeyse bitti! 🎉';
-
         // Circular progress — SVG stroke-dashoffset with gradient stroke
-        const size = 84;
+        const size = 100;
         const stroke = 7;
         const radius = (size - stroke) / 2;
         const circumference = 2 * Math.PI * radius;
         const progress = answeredCount / TOTAL_Q;
         const strokeOffset = circumference * (1 - progress);
 
+        // Dynamic button text
+        const buttonLabel =
+          isComplete
+            ? '✅ Tamamlandı — Tekrar çöz'
+            : answeredCount === 0
+              ? 'Hadi başlayalım! ✨'
+              : 'Devam et →';
+
+        const buttonColors: [string, string] = isComplete
+          ? ['#10B981', '#059669']
+          : ['#8B5CF6', '#EC4899'];
+
         return (
           <TouchableOpacity
             onPress={() => navigation.navigate('Questions', { editMode: true })}
             activeOpacity={0.85}
-            style={styles.uyumCardInner}
             accessibilityLabel={`Uyumunu keşfet, ${answeredCount} bölü ${TOTAL_Q} soru tamamlandı`}
             accessibilityRole="button"
             testID="profile-uyum-reminder"
           >
-            <Text style={styles.uyumCardTitle}>💜 Uyumunu Keşfet</Text>
-            <Text style={styles.uyumCardSubtitle}>
-              20 kısa soruyla sana en uyumlu kişileri bulalım. Sadece 2 dakika!
-            </Text>
+            <LinearGradient
+              colors={['#EDE4F7', '#FBE8F0', '#F5F0EB']}
+              locations={[0, 0.5, 1]}
+              style={styles.uyumCardInner}
+            >
+              <Text style={styles.uyumCardTitle}>💜 Uyumunu Keşfet</Text>
+              <Text style={styles.uyumCardSubtitle}>
+                20 kısa soruyla en uyumlu kişileri bul!
+              </Text>
+              <Text style={styles.uyumCardDuration}>⏱ Sadece 2 dakika</Text>
 
-            <View style={styles.uyumCardBody}>
+              {/* Circular progress — centered, 100x100 */}
               <View style={styles.uyumCircleWrap}>
                 <Svg width={size} height={size}>
                   <Defs>
@@ -859,7 +866,7 @@ export const ProfileScreen: React.FC = () => {
                     cx={size / 2}
                     cy={size / 2}
                     r={radius}
-                    stroke="rgba(0,0,0,0.08)"
+                    stroke="rgba(0,0,0,0.06)"
                     strokeWidth={stroke}
                     fill="none"
                   />
@@ -876,31 +883,28 @@ export const ProfileScreen: React.FC = () => {
                     transform={`rotate(-90 ${size / 2} ${size / 2})`}
                   />
                 </Svg>
+                {/* Counter — single row: "0 / 20" */}
                 <View style={styles.uyumCircleCenter}>
-                  <Text style={styles.uyumCircleCount}>{answeredCount}/{TOTAL_Q}</Text>
-                  <Text style={styles.uyumCircleLabel}>tamamlandı</Text>
+                  <Text style={styles.uyumCircleCount}>{answeredCount}</Text>
+                  <Text style={styles.uyumCircleSlash}>/</Text>
+                  <Text style={styles.uyumCircleTotal}>{TOTAL_Q}</Text>
                 </View>
               </View>
 
-              <View style={styles.uyumCardTextCol}>
-                <Text style={styles.uyumCardMotivation}>{motivation}</Text>
-              </View>
-            </View>
-
-            <LinearGradient
-              colors={['#8B5CF6', '#EC4899']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.uyumCardButton}
-            >
-              <Text style={styles.uyumCardButtonText}>Devam Et</Text>
-              <Ionicons name="arrow-forward" size={16} color="#FFFFFF" />
+              <LinearGradient
+                colors={buttonColors}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.uyumCardButton}
+              >
+                <Text style={styles.uyumCardButtonText}>{buttonLabel}</Text>
+              </LinearGradient>
             </LinearGradient>
           </TouchableOpacity>
         );
       })()}
 
-      {/* ═══ 3. PROFİL GÖRÜNTÜLENMESİ — Premium CTA card ═══ */}
+      {/* ═══ 3. PROFİL GÖRÜNTÜLENMESİ — Clean white card ═══ */}
       {weeklyViewCount !== null && weeklyViewCount > 0 && (
         <TouchableOpacity
           style={styles.viewersCard}
@@ -909,58 +913,45 @@ export const ProfileScreen: React.FC = () => {
             if (packageTier === 'FREE') {
               navigation.navigate('MembershipPlans');
             } else {
-              // ViewersPreview lives in Matches tab — switch tabs
               (navigation.getParent() as unknown as { navigate: (tab: string, params: { screen: string }) => void })?.navigate('MatchesTab', { screen: 'ViewersPreview' });
             }
           }}
           accessibilityLabel={`${weeklyViewCount} kişi profilini gördü`}
           accessibilityRole="button"
         >
-          <View style={styles.viewersCardBlur}>
-            <View style={styles.viewersCardRow}>
-              {/* Stacked recent-viewer avatars — real photos when available, grey fallback otherwise.
-                  FREE tier stays blurred via reduced opacity; Premium/Supreme see sharper previews. */}
-              <View style={styles.viewersAvatarsStack}>
-                {[0, 1, 2].map((slot) => {
-                  const url = recentViewerAvatars[slot];
-                  const placeholderBg =
-                    slot === 0 ? 'rgba(0,0,0,0.18)' : slot === 1 ? 'rgba(0,0,0,0.14)' : 'rgba(0,0,0,0.10)';
-                  const left = slot * 18;
-                  return url ? (
-                    <Image
-                      key={slot}
-                      source={{ uri: url }}
-                      style={[
-                        styles.viewersAvatarCircle,
-                        { left, opacity: packageTier === 'FREE' ? 0.7 : 1 },
-                      ]}
-                      blurRadius={packageTier === 'FREE' ? 8 : 0}
-                    />
-                  ) : (
-                    <View
-                      key={slot}
-                      style={[styles.viewersAvatarCircle, { backgroundColor: placeholderBg, left }]}
-                    />
-                  );
-                })}
-              </View>
-
-              {/* Text content */}
-              <View style={styles.viewersTextCol}>
-                <Text style={styles.viewersCountText}>
-                  {weeklyViewCount} kişi profilini gördü
-                </Text>
-                <Text style={styles.viewersSubText}>
-                  {packageTier === 'FREE'
-                    ? 'Premium ile kimlerin gördüğünü öğren ✨'
-                    : packageTier === 'SUPREME'
-                    ? 'Tümünü gör'
-                    : `İlk 5 kişi — tümünü gör`}
-                </Text>
-              </View>
-
-              <Ionicons name="chevron-forward" size={20} color="rgba(0,0,0,0.55)" />
+          <View style={styles.viewersCardRow}>
+            {/* 3 overlapping avatars */}
+            <View style={styles.viewersAvatarsStack}>
+              {[0, 1, 2].map((slot) => {
+                const url = recentViewerAvatars[slot];
+                const ml = slot === 0 ? 0 : -12;
+                return url ? (
+                  <Image
+                    key={slot}
+                    source={{ uri: url }}
+                    style={[styles.viewersAvatarCircle, { marginLeft: ml }]}
+                  />
+                ) : (
+                  <LinearGradient
+                    key={slot}
+                    colors={['#EC4899', '#8B5CF6']}
+                    style={[styles.viewersAvatarCircle, { marginLeft: ml }]}
+                  >
+                    <Ionicons name="person" size={18} color="rgba(255,255,255,0.7)" />
+                  </LinearGradient>
+                );
+              })}
             </View>
+
+            {/* Text */}
+            <View style={styles.viewersTextCol}>
+              <Text style={styles.viewersCountText}>
+                {weeklyViewCount} kişi profilini gördü
+              </Text>
+              <Text style={styles.viewersSubText}>Tümünü gör →</Text>
+            </View>
+
+            <Text style={styles.viewersArrow}>›</Text>
           </View>
         </TouchableOpacity>
       )}
@@ -1067,7 +1058,7 @@ export const ProfileScreen: React.FC = () => {
       { icon: '🌍', label: 'Seyahat', value: profile.travelFrequency ?? '' },
       { icon: '📏', label: 'Mesafe', value: profile.distancePreference ?? '' },
       { icon: '💬', label: 'İletişim', value: profile.communicationStyle ?? '' },
-      { icon: '🚬', label: 'Nargile', value: profile.hookah ?? '' },
+      // Nargile kaldırıldı — sigara ile aynı sayılır
     ];
     for (const field of extendedFields) {
       if (field.value && field.value.trim().length > 0) {
@@ -1405,7 +1396,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F5F0E8',
   },
 
-  // ═══ NEW: Hakkımda grid (3-column) ═══
+  // ═══ Hakkımda grid (3-column) ═══
   hakkimdaSection: {
     marginTop: 12,
     marginHorizontal: spacing.lg,
@@ -1413,7 +1404,6 @@ const styles = StyleSheet.create({
   hakkimdaTitle: {
     fontSize: 26,
     fontFamily: 'Poppins_800ExtraBold',
-    fontWeight: '800',
     color: '#1A1A2E',
     marginBottom: 12,
     textAlign: 'center',
@@ -1426,46 +1416,48 @@ const styles = StyleSheet.create({
   hakkimdaCell: {
     width: '31.8%',
     marginBottom: 8,
-    backgroundColor: 'rgba(0,0,0,0.04)',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.08)',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 18,
     paddingHorizontal: 8,
-    paddingVertical: 14,
+    paddingVertical: 16,
     alignItems: 'center',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2,
   },
   hakkimdaCellIcon: {
-    fontSize: 24,
+    fontSize: 26,
     marginBottom: 4,
     textAlign: 'center',
   },
   hakkimdaCellLabel: {
-    fontSize: 17,
+    fontSize: 11,
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
-    color: 'rgba(0,0,0,0.55)',
+    color: 'rgba(0,0,0,0.45)',
     textAlign: 'center',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   hakkimdaCellValue: {
-    fontSize: 19,
+    fontSize: 14,
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
     color: '#1A1A2E',
     textAlign: 'center',
   },
   hakkimdaCellEmpty: {
     fontSize: 17,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_700Bold',
     color: '#8B5CF6',
     textAlign: 'center',
   },
 
   // ═══ NEW: Boost button (compact) ═══
   boostButton: {
-    marginTop: 4,
-    height: 48,
-    borderRadius: 12,
+    marginTop: 8,
+    height: 52,
+    borderRadius: 14,
     overflow: 'hidden',
     shadowColor: '#F59E0B',
     shadowOffset: { width: 0, height: 4 },
@@ -1487,13 +1479,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   boostButtonIcon: {
-    fontSize: 22,
+    fontSize: 18,
   },
   // Boost button text on orange gradient — stay white
   boostButtonText: {
-    fontSize: 19,
-    fontFamily: 'Poppins_800ExtraBold',
-    fontWeight: '800',
+    fontSize: 15,
+    fontFamily: 'Poppins_700Bold',
     color: '#FFFFFF',
   },
   boostButtonRight: {
@@ -1503,9 +1494,8 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   boostButtonPrice: {
-    fontSize: 17,
+    fontSize: 14,
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
     color: '#FFFFFF',
   },
 
@@ -1543,13 +1533,11 @@ const styles = StyleSheet.create({
   inviteTitle: {
     fontSize: 19,
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
     color: '#1A1A2E',
   },
   inviteSubtitle: {
     fontSize: 17,
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
     color: 'rgba(0,0,0,0.6)',
     marginTop: 2,
   },
@@ -1562,7 +1550,6 @@ const styles = StyleSheet.create({
   inviteButtonText: {
     fontSize: 17,
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
     color: '#FFFFFF',
   },
 
@@ -1574,7 +1561,6 @@ const styles = StyleSheet.create({
   kasifSectionTitle: {
     fontSize: 26,
     fontFamily: 'Poppins_800ExtraBold',
-    fontWeight: '800',
     color: '#1A1A2E',
     marginBottom: 10,
     textAlign: 'center',
@@ -1607,7 +1593,6 @@ const styles = StyleSheet.create({
   kasifMissionText: {
     fontSize: 20,
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
     color: '#1A1A2E',
   },
   kasifProgressTrack: {
@@ -1624,8 +1609,7 @@ const styles = StyleSheet.create({
   },
   kasifProgressLabel: {
     fontSize: 17,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_700Bold',
     color: 'rgba(0,0,0,0.6)',
   },
   kasifReward: {
@@ -1639,13 +1623,11 @@ const styles = StyleSheet.create({
   kasifRewardText: {
     fontSize: 17,
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
     color: '#F59E0B',
   },
   kasifTimerText: {
     fontSize: 17,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_700Bold',
     color: 'rgba(0,0,0,0.65)',
     marginTop: 8,
     textAlign: 'center',
@@ -1664,8 +1646,7 @@ const styles = StyleSheet.create({
   },
   kasifCompleteText: {
     fontSize: 17,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_700Bold',
     color: '#10B981',
   },
 
@@ -1676,7 +1657,6 @@ const styles = StyleSheet.create({
   starsSectionTitle: {
     fontSize: 26,
     fontFamily: 'Poppins_800ExtraBold',
-    fontWeight: '800',
     color: '#1A1A2E',
     marginBottom: 10,
     marginHorizontal: spacing.lg,
@@ -1709,7 +1689,6 @@ const styles = StyleSheet.create({
   starCardCategory: {
     fontSize: 17,
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
     color: 'rgba(0,0,0,0.65)',
     textAlign: 'center',
   },
@@ -1724,20 +1703,17 @@ const styles = StyleSheet.create({
   starAvatarInitial: {
     fontSize: 24,
     fontFamily: 'Poppins_800ExtraBold',
-    fontWeight: '800',
     color: '#FFFFFF',
   },
   starCardName: {
     fontSize: 18,
     fontFamily: 'Poppins_800ExtraBold',
-    fontWeight: '800',
     color: '#1A1A2E',
     marginTop: 2,
   },
   starCardValue: {
     fontSize: 17,
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
     color: 'rgba(0,0,0,0.65)',
   },
   starsSeeAllButton: {
@@ -1751,8 +1727,7 @@ const styles = StyleSheet.create({
   },
   starsSeeAllText: {
     fontSize: 18,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_700Bold',
     color: '#8B5CF6',
   },
 
@@ -1773,15 +1748,13 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   pgLabel: {
-    fontSize: 19,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
+    fontSize: 15,
+    fontFamily: 'Poppins_600SemiBold',
     color: '#1A1A2E',
   },
   pgPercent: {
-    fontSize: 19,
+    fontSize: 15,
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
     color: '#1A1A2E',
   },
   pgBarTrack: {
@@ -1795,170 +1768,139 @@ const styles = StyleSheet.create({
     borderRadius: 3,
   },
   pgHint: {
-    marginTop: 8,
-    fontSize: 17,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '700',
-    color: 'rgba(0,0,0,0.6)',
+    marginTop: 6,
+    fontSize: 13,
+    fontFamily: 'Poppins_500Medium',
+    color: 'rgba(0,0,0,0.5)',
   },
   pgHintComplete: {
-    marginTop: 8,
-    fontSize: 17,
+    marginTop: 6,
+    fontSize: 13,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '700',
     color: '#10B981',
   },
 
-  // ═══ NEW: Uyum Analizi card — light theme, friendly redesign ═══
+  // ═══ Uyum Analizi — premium gradient card ═══
   uyumCardInner: {
     marginTop: 12,
-    backgroundColor: 'rgba(0,0,0,0.04)',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.08)',
-    padding: 16,
+    borderRadius: 28,
+    padding: 32,
   },
   uyumCardTitle: {
-    fontSize: 26,
+    fontSize: 24,
     fontFamily: 'Poppins_800ExtraBold',
-    fontWeight: '800',
     color: '#1A1A2E',
-    marginBottom: 6,
     textAlign: 'center',
+    marginBottom: 6,
   },
   uyumCardSubtitle: {
-    fontSize: 19,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
-    color: 'rgba(0,0,0,0.7)',
+    fontSize: 15,
+    fontFamily: 'Poppins_500Medium',
+    color: '#666666',
+    textAlign: 'center',
     lineHeight: 21,
-    marginBottom: 14,
+    marginBottom: 4,
   },
-  uyumCardBody: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
-    marginBottom: 14,
+  uyumCardDuration: {
+    fontSize: 13,
+    fontFamily: 'Poppins_700Bold',
+    color: '#8B5CF6',
+    textAlign: 'center',
+    marginBottom: 20,
   },
   uyumCircleWrap: {
-    width: 84,
-    height: 84,
+    width: 100,
+    height: 100,
+    alignSelf: 'center',
     justifyContent: 'center',
     alignItems: 'center',
+    marginBottom: 20,
   },
   uyumCircleCenter: {
     position: 'absolute',
-    justifyContent: 'center',
-    alignItems: 'center',
+    flexDirection: 'row',
+    alignItems: 'baseline',
   },
   uyumCircleCount: {
-    fontSize: 20,
-    fontFamily: 'Poppins_800ExtraBold',
-    fontWeight: '800',
+    fontSize: 32,
+    fontFamily: 'Poppins_900Black',
     color: '#1A1A2E',
-    lineHeight: 20,
   },
-  uyumCircleLabel: {
-    fontSize: 17,
+  uyumCircleSlash: {
+    fontSize: 18,
+    fontFamily: 'Poppins_600SemiBold',
+    color: '#BBBBBB',
+    marginHorizontal: 2,
+  },
+  uyumCircleTotal: {
+    fontSize: 18,
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
-    color: 'rgba(0,0,0,0.6)',
-    lineHeight: 16,
-  },
-  uyumCardTextCol: {
-    flex: 1,
-  },
-  uyumCardMotivation: {
-    fontSize: 17,
-    fontFamily: 'Poppins_800ExtraBold',
-    fontWeight: '800',
-    color: '#1A1A2E',
-    lineHeight: 23,
+    color: '#999999',
   },
   uyumCardButton: {
-    flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 6,
-    height: 44,
-    borderRadius: 22,
+    paddingVertical: 16,
+    borderRadius: 18,
   },
-  // Uyum card CTA on gradient — stay white
   uyumCardButtonText: {
-    fontSize: 19,
+    fontSize: 16,
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
     color: '#FFFFFF',
   },
-  uyumCompleteBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    alignSelf: 'flex-start',
-    marginTop: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    backgroundColor: 'rgba(16, 185, 129, 0.12)',
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(16, 185, 129, 0.3)',
-  },
-  uyumCompleteBadgeText: {
-    fontSize: 17,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '700',
-    color: '#10B981',
-  },
 
-  // ═══ NEW: Profile viewers CTA card — flat light theme, matches other cards ═══
+  // ═══ Profile viewers — clean white card ═══
   viewersCard: {
     marginTop: 12,
-    borderRadius: 16,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.08)',
-  },
-  viewersCardBlur: {
-    backgroundColor: 'rgba(0,0,0,0.04)',
-    paddingHorizontal: 16,
-    paddingVertical: 16,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 22,
+    padding: 18,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 10,
+    elevation: 2,
   },
   viewersCardRow: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   viewersAvatarsStack: {
-    width: 72,
-    height: 40,
-    position: 'relative',
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 14,
   },
   viewersAvatarCircle: {
-    position: 'absolute',
-    top: 4,
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    borderWidth: 2,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 3,
     borderColor: '#FFFFFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'hidden',
   },
   viewersTextCol: {
     flex: 1,
-    marginLeft: 4,
   },
   viewersCountText: {
-    fontSize: 24,
-    lineHeight: 26,
-    fontFamily: 'Poppins_800ExtraBold',
-    fontWeight: '800',
+    fontSize: 16,
+    lineHeight: 20,
+    fontFamily: 'Poppins_700Bold',
     color: '#1A1A2E',
-    marginBottom: 4,
   },
   viewersSubText: {
-    fontSize: 20,
-    lineHeight: 22,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
-    color: 'rgba(0,0,0,0.7)',
+    fontSize: 13,
+    lineHeight: 18,
+    fontFamily: 'Poppins_600SemiBold',
+    color: '#8B5CF6',
+    marginTop: 2,
+  },
+  viewersArrow: {
+    fontSize: 22,
+    color: '#D0D0D0',
+    fontFamily: 'Poppins_400Regular',
+    marginLeft: 4,
   },
 
   // ═══ NEW: Strength checklist modal ═══
@@ -1986,20 +1928,17 @@ const styles = StyleSheet.create({
   strengthModalTitle: {
     fontSize: 24,
     fontFamily: 'Poppins_800ExtraBold',
-    fontWeight: '800',
     color: '#1A1A2E',
   },
   strengthModalPercent: {
     fontSize: 42,
     fontFamily: 'Poppins_800ExtraBold',
-    fontWeight: '800',
     color: '#EC4899',
     marginTop: 4,
   },
   strengthModalSubtitle: {
     fontSize: 18,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_700Bold',
     color: 'rgba(0,0,0,0.6)',
     marginTop: 4,
     marginBottom: 18,
@@ -2029,8 +1968,7 @@ const styles = StyleSheet.create({
   strengthCheckLabel: {
     flex: 1,
     fontSize: 18,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_700Bold',
     color: '#1A1A2E',
   },
   strengthCheckLabelDone: {
@@ -2040,7 +1978,6 @@ const styles = StyleSheet.create({
   strengthCheckGain: {
     fontSize: 17,
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
     color: '#F59E0B',
   },
   strengthModalCta: {
@@ -2057,7 +1994,6 @@ const styles = StyleSheet.create({
   strengthModalCtaText: {
     fontSize: 20,
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
     color: '#FFFFFF',
   },
 
@@ -2078,10 +2014,9 @@ const styles = StyleSheet.create({
     flexShrink: 1,
   },
   headerTitle: {
-    fontSize: 32,
-    lineHeight: 38,
-    fontFamily: 'Poppins_800ExtraBold',
-    fontWeight: '800',
+    fontSize: 30,
+    lineHeight: 36,
+    fontFamily: 'Poppins_900Black',
     color: '#1A1A2E',
     letterSpacing: 0.2,
   },
@@ -2098,7 +2033,7 @@ const styles = StyleSheet.create({
   },
   supremeHeaderBadgeText: {
     fontSize: 18,
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
     color: '#D4AF37',
     letterSpacing: 1.5,
   },
@@ -2169,7 +2104,6 @@ const styles = StyleSheet.create({
     fontSize: 26,
     lineHeight: 32,
     fontFamily: 'Poppins_800ExtraBold',
-    fontWeight: '800',
     color: '#1A1A2E',
     paddingRight: 4,
     includeFontPadding: false,
@@ -2192,7 +2126,6 @@ const styles = StyleSheet.create({
     fontSize: 17,
     lineHeight: 16,
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
     color: '#FFFFFF',
     letterSpacing: 0.2,
     includeFontPadding: false,
@@ -2219,33 +2152,31 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(0,0,0,0.08)',
   },
   statsCellValue: {
-    fontSize: 26,
+    fontSize: 20,
     fontFamily: 'Poppins_800ExtraBold',
-    fontWeight: '800',
     color: '#1A1A2E',
     paddingHorizontal: 4,
     textAlign: 'center',
     width: '100%',
   },
   statsCellLabel: {
-    fontSize: 17,
-    fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
-    color: 'rgba(0,0,0,0.6)',
-    marginTop: 4,
+    fontSize: 11,
+    fontFamily: 'Poppins_600SemiBold',
+    color: 'rgba(0,0,0,0.5)',
+    marginTop: 2,
     letterSpacing: 0.8,
     textTransform: 'uppercase',
   },
   jobTitle: {
-    fontSize: 19,
-    fontWeight: fontWeights.semibold,
+    fontSize: 16,
+    fontFamily: 'Poppins_600SemiBold',
     color: palette.purple[600],
     letterSpacing: 0.1,
   },
   cityText: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: 'rgba(0,0,0,0.55)',
+    fontSize: 14,
+    fontFamily: 'Poppins_500Medium',
+    color: 'rgba(0,0,0,0.5)',
   },
   strengthCardContainer: {
     backgroundColor: '#FFFFFF',
@@ -2263,7 +2194,7 @@ const styles = StyleSheet.create({
   },
   strengthCardLabel: {
     fontSize: 18,
-    fontWeight: fontWeights.semibold,
+    fontFamily: 'Poppins_700Bold',
     color: '#1A1A2E',
   },
   strengthCardTrack: {
@@ -2281,19 +2212,19 @@ const styles = StyleSheet.create({
   },
   strengthCardPercent: {
     fontSize: 18,
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
     minWidth: 36,
     textAlign: 'right',
   },
   strengthCardHint: {
     fontSize: 18,
-    fontWeight: '700',
+    fontFamily: 'Poppins_700Bold',
     color: 'rgba(0,0,0,0.55)',
     marginTop: 6,
   },
   strengthCardComplete: {
     fontSize: 18,
-    fontWeight: '700',
+    fontFamily: 'Poppins_700Bold',
     color: '#22C55E',
     marginTop: 6,
   },
@@ -2313,7 +2244,7 @@ const styles = StyleSheet.create({
   },
   intentionText: {
     fontSize: 18,
-    fontWeight: fontWeights.semibold,
+    fontFamily: 'Poppins_700Bold',
     letterSpacing: 0.2,
   },
 
@@ -2335,14 +2266,14 @@ const styles = StyleSheet.create({
   },
   statValue: {
     fontSize: 24,
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
     color: '#1A1A2E',
     textAlign: 'center',
     includeFontPadding: false,
   },
   statLabel: {
     fontSize: 18,
-    fontWeight: '700',
+    fontFamily: 'Poppins_700Bold',
     color: 'rgba(0,0,0,0.6)',
     marginTop: 3,
     textAlign: 'center',
@@ -2374,34 +2305,32 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    height: 46,
+    height: 42,
     borderRadius: 12,
     overflow: 'hidden',
   },
   editProfileButtonText: {
-    fontSize: 19,
-    lineHeight: 20,
-    fontFamily: 'Poppins_800ExtraBold',
-    fontWeight: '800',
+    fontSize: 15,
+    lineHeight: 18,
+    fontFamily: 'Poppins_700Bold',
     color: '#FFFFFF',
-    letterSpacing: 0.4,
+    letterSpacing: 0.3,
   },
   premiumActionButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    height: 46,
+    height: 42,
     borderRadius: 12,
     overflow: 'hidden',
   },
   premiumActionButtonText: {
-    fontSize: 19,
-    lineHeight: 20,
-    fontFamily: 'Poppins_800ExtraBold',
-    fontWeight: '800',
+    fontSize: 15,
+    lineHeight: 18,
+    fontFamily: 'Poppins_700Bold',
     color: '#FFFFFF',
-    letterSpacing: 0.4,
+    letterSpacing: 0.3,
   },
   gradientButton: {
     flexDirection: 'row',
@@ -2415,7 +2344,7 @@ const styles = StyleSheet.create({
   gradientButtonText: {
     fontSize: 18,
     lineHeight: 20,
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
     color: '#1A1A2E',
     letterSpacing: 0.3,
   },
@@ -2432,7 +2361,7 @@ const styles = StyleSheet.create({
   },
   outlinedButtonText: {
     fontSize: 18,
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
     color: palette.purple[600],
     letterSpacing: 0.3,
   },
@@ -2455,7 +2384,7 @@ const styles = StyleSheet.create({
   premiumButtonText: {
     fontSize: 18,
     lineHeight: 20,
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
     color: '#1A1A2E',
     letterSpacing: 0.3,
   },
@@ -2483,15 +2412,15 @@ const styles = StyleSheet.create({
   },
   weeklyViewsText: {
     fontSize: 18,
-    fontWeight: '700',
+    fontFamily: 'Poppins_700Bold',
     color: 'rgba(0,0,0,0.55)',
   },
   weeklyViewsBold: {
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
     color: '#1A1A2E',
   },
   weeklyViewsGoldCta: {
-    fontWeight: fontWeights.semibold,
+    fontFamily: 'Poppins_700Bold',
     color: palette.gold[500],
   },
 
@@ -2521,12 +2450,12 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(0,0,0,0.08)',
   },
   moodChipEmoji: {
-    fontSize: 18,
+    fontSize: 14,
     includeFontPadding: false,
   },
   moodChipLabel: {
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: 14,
+    fontFamily: 'Poppins_600SemiBold',
     includeFontPadding: false,
   },
 
@@ -2540,8 +2469,7 @@ const styles = StyleSheet.create({
   },
   listeningSectionTitle: {
     fontSize: 18,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: fontWeights.semibold,
+    fontFamily: 'Poppins_700Bold',
     color: '#1A1A2E',
     marginBottom: spacing.md,
   },
@@ -2553,13 +2481,12 @@ const styles = StyleSheet.create({
   },
   clearListeningText: {
     fontSize: 18,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_700Bold',
     color: palette.rose[500],
   },
   listeningInactive: {
     fontSize: 18,
-    fontWeight: '700',
+    fontFamily: 'Poppins_700Bold',
     color: 'rgba(0,0,0,0.6)',
     fontStyle: 'italic',
   },
@@ -2568,8 +2495,7 @@ const styles = StyleSheet.create({
   },
   visibilityLabel: {
     fontSize: 18,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_700Bold',
     color: 'rgba(0,0,0,0.55)',
   },
   visibilityOptions: {
@@ -2590,8 +2516,7 @@ const styles = StyleSheet.create({
   },
   visibilityChipText: {
     fontSize: 18,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '700',
+    fontFamily: 'Poppins_700Bold',
     color: 'rgba(0,0,0,0.55)',
   },
   visibilityChipTextActive: {
@@ -2606,7 +2531,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 26,
     fontFamily: 'Poppins_800ExtraBold',
-    fontWeight: '800',
     color: '#1A1A2E',
     letterSpacing: 0,
     includeFontPadding: false,
@@ -2617,7 +2541,7 @@ const styles = StyleSheet.create({
   // ── Bio ──
   bioText: {
     fontSize: 19,
-    fontWeight: '700',
+    fontFamily: 'Poppins_700Bold',
     color: 'rgba(0,0,0,0.55)',
     lineHeight: 24,
   },
@@ -2629,7 +2553,7 @@ const styles = StyleSheet.create({
   },
   subsectionTitle: {
     fontSize: 18,
-    fontWeight: fontWeights.semibold,
+    fontFamily: 'Poppins_700Bold',
     color: '#1A1A2E',
     marginBottom: spacing.sm,
   },
@@ -2650,7 +2574,7 @@ const styles = StyleSheet.create({
   },
   lookingForChipText: {
     fontSize: 18,
-    fontWeight: '700',
+    fontFamily: 'Poppins_700Bold',
     color: palette.pink[600],
   },
   hobbyChip: {
@@ -2663,7 +2587,7 @@ const styles = StyleSheet.create({
   },
   hobbyChipText: {
     fontSize: 18,
-    fontWeight: '700',
+    fontFamily: 'Poppins_700Bold',
     color: palette.purple[600],
   },
 
@@ -2691,13 +2615,13 @@ const styles = StyleSheet.create({
   },
   aboutRowLabel: {
     fontSize: 18,
-    fontWeight: '700',
+    fontFamily: 'Poppins_700Bold',
     color: 'rgba(0,0,0,0.6)',
     marginBottom: 2,
   },
   aboutRowValue: {
     fontSize: 19,
-    fontWeight: '700',
+    fontFamily: 'Poppins_700Bold',
     color: '#1A1A2E',
   },
   aboutRowValueEmpty: {
@@ -2734,7 +2658,7 @@ const styles = StyleSheet.create({
   },
   quickActionLabel: {
     fontSize: 18,
-    fontWeight: fontWeights.semibold,
+    fontFamily: 'Poppins_700Bold',
     color: '#1A1A2E',
     letterSpacing: 0.1,
   },
@@ -2773,13 +2697,13 @@ const styles = StyleSheet.create({
   },
   uyumReminderTitle: {
     fontSize: 18,
-    fontWeight: '700',
+    fontFamily: 'Poppins_700Bold',
     color: palette.purple[600],
     marginBottom: 2,
   },
   uyumReminderSubtitle: {
     fontSize: 18,
-    fontWeight: '700',
+    fontFamily: 'Poppins_700Bold',
     color: 'rgba(0,0,0,0.55)',
   },
 
@@ -2816,13 +2740,13 @@ const styles = StyleSheet.create({
   },
   boostTitle: {
     fontSize: 19,
-    fontWeight: fontWeights.semibold,
+    fontFamily: 'Poppins_700Bold',
     color: '#1A1A2E',
     marginBottom: 2,
   },
   boostSubtitle: {
     fontSize: 18,
-    fontWeight: '700',
+    fontFamily: 'Poppins_700Bold',
     color: 'rgba(0,0,0,0.55)',
   },
   boostActiveBadge: {
@@ -2842,7 +2766,7 @@ const styles = StyleSheet.create({
   },
   boostActiveText: {
     fontSize: 18,
-    fontWeight: fontWeights.semibold,
+    fontFamily: 'Poppins_700Bold',
     color: colors.success,
   },
 
@@ -2897,13 +2821,11 @@ const styles = StyleSheet.create({
   weeklyReportTitle: {
     fontSize: 19,
     fontFamily: 'Poppins_800ExtraBold',
-    fontWeight: '800',
     color: '#1A1A2E',
   },
   weeklyReportSubtitle: {
     fontSize: 17,
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
     color: 'rgba(0,0,0,0.6)',
     marginTop: 2,
   },
@@ -2934,12 +2856,12 @@ const styles = StyleSheet.create({
   },
   referralTitle: {
     fontSize: 19,
-    fontWeight: fontWeights.semibold,
+    fontFamily: 'Poppins_700Bold',
     color: '#1A1A2E',
   },
   referralSubtitle: {
     fontSize: 18,
-    fontWeight: '700',
+    fontFamily: 'Poppins_700Bold',
     color: 'rgba(0,0,0,0.55)',
     marginTop: 2,
   },
@@ -2951,7 +2873,7 @@ const styles = StyleSheet.create({
   },
   referralCodeText: {
     fontSize: 18,
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
     color: palette.purple[500],
     letterSpacing: 0.5,
   },
@@ -2983,14 +2905,14 @@ const styles = StyleSheet.create({
   },
   discountModalTitle: {
     fontSize: 24,
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
     color: '#1A1A2E',
     textAlign: 'center',
     marginBottom: 8,
   },
   discountModalSubtitle: {
     fontSize: 18,
-    fontWeight: '700',
+    fontFamily: 'Poppins_700Bold',
     color: 'rgba(0,0,0,0.6)',
     textAlign: 'center',
     lineHeight: 20,
@@ -3004,18 +2926,18 @@ const styles = StyleSheet.create({
   },
   discountOldPrice: {
     fontSize: 22,
-    fontWeight: '700',
+    fontFamily: 'Poppins_700Bold',
     color: 'rgba(0,0,0,0.6)',
     textDecorationLine: 'line-through',
   },
   discountNewPrice: {
     fontSize: 32,
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
     color: '#1A1A2E',
   },
   discountTimer: {
     fontSize: 18,
-    fontWeight: '700',
+    fontFamily: 'Poppins_700Bold',
     color: '#F59E0B',
     marginBottom: 20,
   },
@@ -3030,7 +2952,7 @@ const styles = StyleSheet.create({
   },
   discountClaimText: {
     fontSize: 20,
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
     color: '#1A1A2E',
   },
   discountDismissButton: {
@@ -3038,7 +2960,7 @@ const styles = StyleSheet.create({
   },
   discountDismissText: {
     fontSize: 18,
-    fontWeight: '700',
+    fontFamily: 'Poppins_700Bold',
     color: 'rgba(0,0,0,0.6)',
   },
 });

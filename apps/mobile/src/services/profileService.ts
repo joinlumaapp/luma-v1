@@ -329,4 +329,16 @@ export const profileService = {
       return { count: 23 };
     }
   },
+
+  // Get visitor stats — weekly count + change from previous week
+  getViewerStats: async (): Promise<{ weeklyCount: number; weeklyChange: number }> => {
+    try {
+      const response = await api.get<{ weeklyCount: number; weeklyChange: number }>(
+        '/profiles/views/stats',
+      );
+      return response.data;
+    } catch {
+      return { weeklyCount: 0, weeklyChange: 0 };
+    }
+  },
 };

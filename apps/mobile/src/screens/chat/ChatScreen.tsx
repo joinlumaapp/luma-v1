@@ -456,7 +456,7 @@ export const ChatScreen: React.FC = () => {
         [
           { text: 'Tamam', style: 'cancel' },
           {
-            text: 'Paketi Y\u00FCkselt',
+            text: 'Paketi yükselt',
             onPress: () => {
               navigation.getParent()?.navigate('ProfileTab', { screen: 'MembershipPlans' });
             },
@@ -974,7 +974,7 @@ export const ChatScreen: React.FC = () => {
               accessibilityRole="button"
               testID="chat-goback-btn"
             >
-              <Text style={styles.goBackButtonText}>Geri Dön</Text>
+              <Text style={styles.goBackButtonText}>Geri dön</Text>
             </TouchableOpacity>
           </View>
         ) : (
@@ -1159,13 +1159,11 @@ const styles = StyleSheet.create({
     ...typography.bodyLarge,
     color: colors.primary,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   headerName: {
     ...typography.bodyLarge,
     color: colors.text,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   headerAvatarWrapper: {
     position: 'relative',
@@ -1233,7 +1231,6 @@ const styles = StyleSheet.create({
     fontSize: 20,
     color: colors.text,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     lineHeight: 22,
   },
   messagesArea: {
@@ -1288,7 +1285,6 @@ const styles = StyleSheet.create({
     ...typography.bodySmall,
     color: colors.primary,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   // Input area
   inputArea: {
@@ -1334,7 +1330,6 @@ const styles = StyleSheet.create({
     fontSize: 20,
     color: colors.text,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   // Media button (image picker)
   mediaButton: {
@@ -1352,7 +1347,6 @@ const styles = StyleSheet.create({
     fontSize: 22,
     color: colors.primary,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     lineHeight: 24,
   },
   // Image preview bar
@@ -1407,14 +1401,12 @@ const styles = StyleSheet.create({
     ...typography.caption,
     color: colors.error,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   // GIF button
   gifButtonText: {
     fontSize: 14,
     color: colors.primary,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   // Mic button (voice record trigger)
   micButton: {
@@ -1461,7 +1453,6 @@ const styles = StyleSheet.create({
     ...typography.bodySmall,
     color: colors.text,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   fullscreenImage: {
     width: '100%',
@@ -1484,7 +1475,6 @@ const styles = StyleSheet.create({
     ...typography.caption,
     color: colors.error,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   // Read receipt upsell styles
   readReceiptUpsellBanner: {
@@ -1523,7 +1513,6 @@ const styles = StyleSheet.create({
     ...typography.bodyLarge,
     color: colors.text,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   limitReachedSubtitle: {
     ...typography.caption,
@@ -1543,7 +1532,6 @@ const styles = StyleSheet.create({
     ...typography.button,
     color: '#1A1A1A',
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   upgradeMessageButton: {
     width: '100%',
@@ -1558,7 +1546,6 @@ const styles = StyleSheet.create({
     ...typography.button,
     color: colors.text,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   goBackButton: {
     paddingVertical: spacing.sm,

@@ -594,7 +594,6 @@ const styles = StyleSheet.create({
   },
   loadingLetter: {
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: colors.text,
     textShadowColor: palette.purple[400],
     textShadowOffset: { width: 0, height: 0 },

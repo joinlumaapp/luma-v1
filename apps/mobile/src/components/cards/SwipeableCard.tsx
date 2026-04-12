@@ -42,7 +42,6 @@ import {
   GestureHandlerRootView,
 } from 'react-native-gesture-handler';
 import * as Haptics from 'expo-haptics';
-import { poppinsFonts, fontWeights } from '../../theme/typography';
 import { borderRadius } from '../../theme/spacing';
 
 // ─── Types ────────────────────────────────────────────────────
@@ -313,15 +312,13 @@ const styles = StyleSheet.create({
     borderColor: '#EF4444',
   },
   likeText: {
-    fontFamily: poppinsFonts.extrabold,
-    fontWeight: fontWeights.extrabold,
+    fontFamily: 'Poppins_800ExtraBold',
     fontSize: 32,
     color: '#10B981',
     letterSpacing: 2,
   },
   nopeText: {
-    fontFamily: poppinsFonts.extrabold,
-    fontWeight: fontWeights.extrabold,
+    fontFamily: 'Poppins_800ExtraBold',
     fontSize: 32,
     color: '#EF4444',
     letterSpacing: 2,

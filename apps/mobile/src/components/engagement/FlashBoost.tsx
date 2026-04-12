@@ -253,7 +253,6 @@ const styles = StyleSheet.create({
     ...typography.h3,
     color: palette.white,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   subtitle: {
     ...typography.bodySmall,
@@ -272,7 +271,6 @@ const styles = StyleSheet.create({
     ...typography.h4,
     color: palette.white,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     fontVariant: ['tabular-nums'],
   },
   priceRow: {
@@ -290,7 +288,6 @@ const styles = StyleSheet.create({
     ...typography.h4,
     color: palette.white,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   ctaButton: {
     backgroundColor: palette.white,
@@ -302,6 +299,5 @@ const styles = StyleSheet.create({
     ...typography.button,
     color: palette.gold[700],
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
 });

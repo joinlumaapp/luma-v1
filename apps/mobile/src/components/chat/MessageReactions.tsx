@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { colors, palette } from '../../theme/colors';
 import { spacing, borderRadius, shadows } from '../../theme/spacing';
-import { typography, fontWeights } from '../../theme/typography';
+import { typography } from '../../theme/typography';
 
 // ─── Types ────────────────────────────────────────────────────
 
@@ -425,7 +425,7 @@ const styles = StyleSheet.create({
     ...typography.captionSmall,
     color: colors.textSecondary,
     marginLeft: 2,
-    fontWeight: fontWeights.medium,
+    fontFamily: 'Poppins_700Bold',
   },
 
   // Message Wrapper

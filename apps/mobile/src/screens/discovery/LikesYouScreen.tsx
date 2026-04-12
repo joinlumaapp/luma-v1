@@ -473,7 +473,7 @@ const LikeCard = memo<LikeCardProps>(({ card, index, cardState, smartLabel, onCa
         accessibilityLabel={
           isClear
             ? `${card.firstName}, ${card.age} yaşında, yüzde ${card.compatibilityPercent} uyum`
-            : 'Profili g\u00F6rmek i\u00E7in dokun'
+            : 'Profili görmek için dokun'
         }
         accessibilityRole="button"
       >
@@ -934,7 +934,7 @@ export const LikesYouScreen: React.FC<LikesYouScreenProps> = ({ embedded = false
             borderWidth: 1, borderColor: 'rgba(139,92,246,0.2)',
             borderRadius: 14, alignItems: 'center',
           }}>
-            <Text style={{ color: '#fff', fontSize: 14, fontWeight: '500' }}>
+            <Text style={{ color: '#fff', fontSize: 14, fontFamily: 'Poppins_500Medium' }}>
               Tüm beğenenlerini görmek ister misin?
             </Text>
             <Text style={{ color: 'rgba(255,255,255,0.4)', fontSize: 14, marginTop: 4 }}>
@@ -947,7 +947,7 @@ export const LikesYouScreen: React.FC<LikesYouScreenProps> = ({ embedded = false
                 borderRadius: 10, paddingVertical: 10, paddingHorizontal: 40,
               }}
             >
-              <Text style={{ color: '#fff', fontSize: 14, fontWeight: '600' }}>{'Premium\'a Yükselt 👑'}</Text>
+              <Text style={{ color: '#fff', fontSize: 14, fontFamily: 'Poppins_600SemiBold' }}>{'Premium\'a Yükselt 👑'}</Text>
             </TouchableOpacity>
           </View>
         ) : null}
@@ -1018,14 +1018,12 @@ const styles = StyleSheet.create({
   likesTeaseTitle: {
     fontSize: 18,
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
     color: colors.text,
     textAlign: 'center',
   },
   likesTeaseSubtitle: {
     fontSize: 14,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '500',
+    fontFamily: 'Poppins_500Medium',
     color: colors.textSecondary,
     textAlign: 'center',
     marginBottom: 8,
@@ -1042,13 +1040,11 @@ const styles = StyleSheet.create({
   likesTeaseButtonText: {
     fontSize: 15,
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
     color: '#fff',
   },
   likesTeaseSub: {
     fontSize: 14,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '500',
+    fontFamily: 'Poppins_500Medium',
     color: colors.textTertiary,
     marginTop: 2,
   },
@@ -1090,8 +1086,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.textSecondary,
     marginTop: 2,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '500',
+    fontFamily: 'Poppins_500Medium',
   },
   countBadge: {
     borderRadius: borderRadius.full,
@@ -1113,7 +1108,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#1A1A2E',
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
 
   // ── Compact likes summary card ──
@@ -1147,15 +1141,13 @@ const styles = StyleSheet.create({
   compactMainText: {
     color: colors.text,
     fontSize: 15,
-    fontWeight: '700',
     fontFamily: 'Poppins_600SemiBold',
   },
   compactSubText: {
     color: colors.textSecondary,
     fontSize: 14,
     marginTop: 1,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '500',
+    fontFamily: 'Poppins_500Medium',
   },
   compactUpgradeChip: {
     flexDirection: 'row',
@@ -1169,7 +1161,6 @@ const styles = StyleSheet.create({
   compactUpgradeText: {
     color: palette.gold[400],
     fontSize: 14,
-    fontWeight: '600',
     fontFamily: 'Poppins_600SemiBold',
   },
   compactDivider: {
@@ -1193,13 +1184,11 @@ const styles = StyleSheet.create({
   compactChipTitle: {
     color: colors.text,
     fontSize: 14,
-    fontWeight: '600',
     fontFamily: 'Poppins_600SemiBold',
   },
   compactChipValue: {
     fontSize: 14,
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
   },
 
   // ── Grid section label ──
@@ -1207,7 +1196,6 @@ const styles = StyleSheet.create({
     ...typography.bodySmall,
     color: colors.textSecondary,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     marginBottom: spacing.smd,
     marginTop: spacing.xs,
     letterSpacing: 0.8,
@@ -1373,7 +1361,6 @@ const styles = StyleSheet.create({
   smartLabelText: {
     fontSize: 7,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: '#FFFFFF',
     letterSpacing: 0.3,
   },
@@ -1393,7 +1380,6 @@ const styles = StyleSheet.create({
     lineHeight: 16,
     color: '#FFFFFF',
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     letterSpacing: 0.1,
     textShadowColor: 'rgba(0,0,0,0.3)',
     textShadowOffset: { width: 0, height: 1 },
@@ -1415,7 +1401,6 @@ const styles = StyleSheet.create({
     lineHeight: 13,
     color: 'rgba(255, 255, 255, 0.85)',
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
     letterSpacing: 0.1,
   },
   compatPill: {
@@ -1429,7 +1414,6 @@ const styles = StyleSheet.create({
   compatPillText: {
     fontSize: 8,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     letterSpacing: 0.2,
   },
   superCompatBorder: {
@@ -1617,7 +1601,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: palette.purple[400],
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
   },
   modalCtaButton: {
     flexDirection: 'row',
@@ -1651,7 +1634,6 @@ const styles = StyleSheet.create({
     ...typography.caption,
     color: palette.gold[400],
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   modalDismissBtn: {
     marginTop: spacing.xs,

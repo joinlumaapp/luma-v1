@@ -358,7 +358,6 @@ function createDynamicStyles(c: ThemeColors) {
       ...typography.bodyLarge,
       color: c.text,
       fontFamily: 'Poppins_600SemiBold',
-      fontWeight: '600',
       includeFontPadding: false,
     },
     scrollContent: {
@@ -422,7 +421,6 @@ function createDynamicStyles(c: ThemeColors) {
       ...typography.body,
       color: c.text,
       fontFamily: 'Poppins_500Medium',
-      fontWeight: '500',
       flex: 1,
       includeFontPadding: false,
     },
@@ -443,7 +441,6 @@ function createDynamicStyles(c: ThemeColors) {
       ...typography.caption,
       color: c.textTertiary,
       fontFamily: 'Poppins_600SemiBold',
-      fontWeight: '600',
       marginTop: spacing.lg,
       marginBottom: spacing.sm,
       paddingHorizontal: spacing.xs,
@@ -489,7 +486,6 @@ function createDynamicStyles(c: ThemeColors) {
       ...typography.body,
       color: c.text,
       fontFamily: 'Poppins_500Medium',
-      fontWeight: '500',
       includeFontPadding: false,
     },
     actionTitleDestructive: {

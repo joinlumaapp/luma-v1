@@ -6,7 +6,7 @@ import { View, Text, Pressable, Animated, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, palette } from '../../theme/colors';
-import { typography, fontWeights } from '../../theme/typography';
+import { typography } from '../../theme/typography';
 
 
 // ─── Types ──────────────────────────────────────────────────────
@@ -182,7 +182,7 @@ const styles = StyleSheet.create({
   message: {
     ...typography.body,
     color: colors.text,
-    fontWeight: fontWeights.semibold,
+    fontFamily: 'Poppins_700Bold',
     lineHeight: 20,
   },
   detail: {
@@ -201,6 +201,6 @@ const styles = StyleSheet.create({
   },
   actionText: {
     fontSize: 14,
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
   },
 });

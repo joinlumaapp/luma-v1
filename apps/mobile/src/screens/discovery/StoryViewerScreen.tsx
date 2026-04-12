@@ -787,7 +787,6 @@ const styles = StyleSheet.create({
   },
   overlayText: {
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     textShadowColor: 'rgba(0,0,0,0.5)',
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 3,
@@ -866,14 +865,12 @@ const styles = StyleSheet.create({
   headerAvatarInitial: {
     fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: '#fff',
   },
   headerName: {
     ...typography.bodySmall,
     color: '#fff',
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   headerTime: {
     ...typography.captionSmall,
@@ -897,7 +894,6 @@ const styles = StyleSheet.create({
     ...typography.captionSmall,
     color: 'rgba(255,255,255,0.8)',
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   closeButton: {
     width: 36,
@@ -971,14 +967,12 @@ const styles = StyleSheet.create({
     ...typography.bodySmall,
     color: '#FFFFFF',
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
   },
   viewerUpsellText: {
     ...typography.captionSmall,
     color: 'rgba(255,255,255,0.5)',
     marginTop: spacing.xs,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '500',
+    fontFamily: 'Poppins_500Medium',
   },
 
   // Empty state

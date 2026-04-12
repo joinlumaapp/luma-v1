@@ -54,26 +54,26 @@ export const fontWeights = {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const fontSizes = {
-  /** 18px — Micro labels, badge counts (minimum allowed) */
-  xs: 18,
-  /** 19px — Captions, timestamps, helper text */
-  sm: 19,
-  /** 20px — Body small, secondary text */
-  md: 20,
-  /** 21px — Body default, primary readable text */
-  base: 21,
-  /** 24px — Body large, emphasized content */
-  lg: 24,
-  /** 26px — Subtitle, section headers (h4) */
-  xl: 26,
-  /** 28px — Title h3, screen sub-headers */
-  '2xl': 28,
-  /** 32px — Title h2 */
-  '3xl': 32,
-  /** 38px — Display h1, screen headers */
-  '4xl': 38,
-  /** 46px — Hero display, onboarding headlines */
-  '5xl': 46,
+  /** 12px — Micro labels, badge counts */
+  xs: 12,
+  /** 13px — Captions, timestamps, helper text */
+  sm: 13,
+  /** 14px — Body small, secondary text */
+  md: 14,
+  /** 15px — Body default, primary readable text */
+  base: 15,
+  /** 17px — Body large, emphasized content */
+  lg: 17,
+  /** 20px — Subtitle, section headers (h4) */
+  xl: 20,
+  /** 24px — Title h3, screen sub-headers */
+  '2xl': 24,
+  /** 28px — Title h2 */
+  '3xl': 28,
+  /** 34px — Display h1, screen headers */
+  '4xl': 34,
+  /** 42px — Hero display, onboarding headlines */
+  '5xl': 42,
 } as const;
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -81,16 +81,16 @@ export const fontSizes = {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const lineHeights = {
-  xs: 24,
-  sm: 26,
-  md: 28,
-  base: 30,
-  lg: 32,
-  xl: 34,
-  '2xl': 36,
-  '3xl': 40,
-  '4xl': 46,
-  '5xl': 56,
+  xs: 16,
+  sm: 18,
+  md: 20,
+  base: 22,
+  lg: 24,
+  xl: 28,
+  '2xl': 32,
+  '3xl': 36,
+  '4xl': 42,
+  '5xl': 52,
 } as const;
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -113,148 +113,130 @@ export const letterSpacing = {
 export const typography = {
   // ── Display — Hero text ──
   display: {
-    fontFamily: poppinsFonts.extrabold,
     fontSize: fontSizes['5xl'],
     lineHeight: lineHeights['5xl'],
-    fontWeight: fontWeights.extrabold,
+    fontFamily: 'Poppins_800ExtraBold',
     letterSpacing: letterSpacing.tight,
     ...androidFix,
   },
 
   // ── Headlines — h1-h4 all use '800' weight, tight spacing ──
   h1: {
-    fontFamily: poppinsFonts.bold,
     fontSize: fontSizes['4xl'],
     lineHeight: lineHeights['4xl'],
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
     letterSpacing: letterSpacing.tight,
     ...androidFix,
   },
   h2: {
-    fontFamily: poppinsFonts.bold,
     fontSize: fontSizes['3xl'],
     lineHeight: lineHeights['3xl'],
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
     letterSpacing: letterSpacing.tight,
     ...androidFix,
   },
   h3: {
-    fontFamily: poppinsFonts.bold,
     fontSize: fontSizes['2xl'],
     lineHeight: lineHeights['2xl'],
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
     letterSpacing: letterSpacing.tight,
     ...androidFix,
   },
   h4: {
-    fontFamily: poppinsFonts.semibold,
     fontSize: fontSizes.xl,
     lineHeight: lineHeights.xl,
-    fontWeight: fontWeights.semibold,
+    fontFamily: 'Poppins_700Bold',
     letterSpacing: letterSpacing.snug,
     ...androidFix,
   },
 
   // ── Body — '600' weight, 17px minimum ──
   bodyLarge: {
-    fontFamily: poppinsFonts.medium,
     fontSize: fontSizes.lg,
     lineHeight: lineHeights.lg,
-    fontWeight: fontWeights.medium,
+    fontFamily: 'Poppins_600SemiBold',
     ...androidFix,
   },
   body: {
-    fontFamily: poppinsFonts.medium,
     fontSize: fontSizes.base,
     lineHeight: lineHeights.base,
-    fontWeight: fontWeights.medium,
+    fontFamily: 'Poppins_500Medium',
     ...androidFix,
   },
   bodySmall: {
-    fontFamily: poppinsFonts.medium,
     fontSize: fontSizes.md,
     lineHeight: lineHeights.md,
-    fontWeight: fontWeights.medium,
+    fontFamily: 'Poppins_500Medium',
     ...androidFix,
   },
 
-  // ── Captions — '500' weight, 15px minimum ──
+  // ── Captions ──
   caption: {
-    fontFamily: poppinsFonts.light,
     fontSize: fontSizes.sm,
     lineHeight: lineHeights.sm,
-    fontWeight: fontWeights.light,
+    fontFamily: 'Poppins_500Medium',
     ...androidFix,
   },
   captionSmall: {
-    fontFamily: poppinsFonts.light,
     fontSize: fontSizes.xs,
     lineHeight: lineHeights.xs,
-    fontWeight: fontWeights.light,
+    fontFamily: 'Poppins_500Medium',
     ...androidFix,
   },
 
   // ── UI Elements ──
   button: {
-    fontFamily: poppinsFonts.semibold,
-    fontSize: 22,
-    lineHeight: 28,
-    fontWeight: fontWeights.semibold,
+    fontSize: 16,
+    lineHeight: 22,
+    fontFamily: 'Poppins_700Bold',
     letterSpacing: letterSpacing.wider,
     ...androidFix,
   },
   buttonSmall: {
-    fontFamily: poppinsFonts.medium,
     fontSize: fontSizes.md,
     lineHeight: lineHeights.md,
-    fontWeight: fontWeights.medium,
+    fontFamily: 'Poppins_700Bold',
     letterSpacing: letterSpacing.wide,
     ...androidFix,
   },
   label: {
-    fontFamily: poppinsFonts.medium,
     fontSize: fontSizes.md,
     lineHeight: lineHeights.md,
-    fontWeight: fontWeights.medium,
+    fontFamily: 'Poppins_700Bold',
     ...androidFix,
   },
   tabBar: {
-    fontFamily: poppinsFonts.light,
     fontSize: fontSizes.xs,
     lineHeight: lineHeights.xs,
-    fontWeight: fontWeights.light,
+    fontFamily: 'Poppins_700Bold',
     ...androidFix,
   },
 
   // ── Special ──
   subtitle: {
-    fontFamily: poppinsFonts.medium,
     fontSize: fontSizes.lg,
     lineHeight: lineHeights.lg,
-    fontWeight: fontWeights.medium,
+    fontFamily: 'Poppins_700Bold',
     letterSpacing: letterSpacing.snug,
     ...androidFix,
   },
   elegant: {
-    fontFamily: poppinsFonts.light,
     fontSize: fontSizes.md,
     lineHeight: lineHeights.md,
-    fontWeight: fontWeights.light,
+    fontFamily: 'Poppins_700Bold',
     letterSpacing: letterSpacing.wide,
     ...androidFix,
   },
   numeric: {
-    fontFamily: poppinsFonts.bold,
     fontSize: fontSizes.lg,
     lineHeight: lineHeights.lg,
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
     ...androidFix,
   },
   numericLarge: {
-    fontFamily: poppinsFonts.bold,
     fontSize: fontSizes['3xl'],
     lineHeight: lineHeights['3xl'],
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
     letterSpacing: letterSpacing.normal,
     ...androidFix,
   },

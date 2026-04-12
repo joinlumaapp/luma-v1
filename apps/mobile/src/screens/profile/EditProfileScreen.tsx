@@ -24,7 +24,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { ProfileStackParamList } from '../../navigation/types';
 import { colors, palette } from '../../theme/colors';
-import { fontWeights, poppinsFonts } from '../../theme/typography';
+import { poppinsFonts } from '../../theme/typography';
 import { spacing, borderRadius, shadows } from '../../theme/spacing';
 import {
   ZODIAC_SIGNS, EDUCATION_LEVELS, MARITAL_STATUS_OPTIONS,
@@ -755,58 +755,6 @@ export const EditProfileScreen: React.FC = () => {
               main Profile screen via the "Uyumunu Keşfet" card, so duplicating
               it here was redundant. */}
 
-          {/* ── Kişilik Testi ──────────────────────────────────────────── */}
-          <SectionHeader title="Kişilik Tipin" description="Eğlenceli bir quiz ile kişiliğini keşfet" />
-          <TouchableOpacity
-            style={{
-              backgroundColor: colors.surface,
-              borderWidth: 1,
-              borderColor: colors.surfaceBorder,
-              borderRadius: 16,
-              marginHorizontal: 24,
-              padding: 16,
-              flexDirection: 'row',
-              alignItems: 'center',
-            }}
-            onPress={() => navigation.navigate('PersonalitySelection' as never)}
-            activeOpacity={0.7}
-          >
-            <View style={{
-              width: 44,
-              height: 44,
-              borderRadius: 22,
-              backgroundColor: 'rgba(139, 92, 246, 0.12)',
-              justifyContent: 'center',
-              alignItems: 'center',
-              marginRight: 12,
-            }}>
-              <Text style={{ fontSize: 26 }}>{profile.personalityType ? '🧠' : '🎯'}</Text>
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={{
-                fontSize: 19,
-                fontWeight: '700',
-                fontFamily: poppinsFonts.semibold,
-                color: colors.text,
-              }}>
-                {profile.personalityType
-                  ? `${profile.personalityType}`
-                  : 'Kişilik Testini Çöz'}
-              </Text>
-              <Text style={{
-                fontSize: 18,
-                fontFamily: poppinsFonts.regular,
-                color: colors.textTertiary,
-                marginTop: 2,
-              }}>
-                {profile.personalityType
-                  ? 'Tekrar çöz veya sonucunu güncelle'
-                  : '5 eğlenceli soru, 1 dakikada biter'}
-              </Text>
-            </View>
-            <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
-          </TouchableOpacity>
-
           {/* ─── Section 1: Medya ─── */}
 
           {/* ── Profil Videosu ─────────────────────────────────────────── */}
@@ -1273,14 +1221,12 @@ export const EditProfileScreen: React.FC = () => {
                   <View style={{ flex: 1 }}>
                     <Text style={{
                       fontSize: 19,
-                      fontFamily: 'Poppins_600SemiBold',
-                      fontWeight: '700',
+                      fontFamily: 'Poppins_700Bold',
                       color: colors.text,
                     }}>{option.label}</Text>
                     <Text style={{
                       fontSize: 18,
-                      fontFamily: 'Poppins_400Regular',
-                      fontWeight: '700',
+                      fontFamily: 'Poppins_700Bold',
                       color: colors.textSecondary,
                       marginTop: 2,
                     }}>{option.description}</Text>
@@ -1330,7 +1276,6 @@ export const EditProfileScreen: React.FC = () => {
           <FieldRow icon="🌍" label="Seyahat" value={travelFrequency || ''} onPress={() => openPicker('Seyahat', TRAVEL_FREQUENCY_OPTIONS, 'travelFrequency')} />
           <FieldRow icon="📏" label="Mesafe Tercihi" value={distancePreference || ''} onPress={() => openPicker('Mesafe Tercihi', DISTANCE_PREFERENCE_OPTIONS, 'distancePreference')} />
           <FieldRow icon="💬" label="İletişim Tarzı" value={communicationStyle || ''} onPress={() => openPicker('İletişim Tarzı', COMMUNICATION_STYLE_OPTIONS, 'communicationStyle')} />
-          <FieldRow icon="🚬" label="Nargile" value={hookah || ''} onPress={() => openPicker('Nargile', HOOKAH_OPTIONS, 'hookah')} />
 
           {/* ── İlgi Alanları ─────────────────────────────────────────── */}
           <SectionHeader title="İlgi Alanları" description="Başkalarına neyle ilgilendiğini söyle" />
@@ -1357,7 +1302,7 @@ export const EditProfileScreen: React.FC = () => {
                     borderWidth: 1,
                     borderColor: '#93C5FD',
                   }}>
-                    <Text style={{ fontSize: 18, color: '#1E40AF', fontFamily: 'Poppins_500Medium', fontWeight: '700' }}>{getInterestDisplay(tag).emoji} {getInterestDisplay(tag).display}</Text>
+                    <Text style={{ fontSize: 18, color: '#1E40AF', fontFamily: 'Poppins_700Bold' }}>{getInterestDisplay(tag).emoji} {getInterestDisplay(tag).display}</Text>
                   </View>
                 ))}
               </View>
@@ -1368,7 +1313,7 @@ export const EditProfileScreen: React.FC = () => {
             )}
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 12 }}>
               <Ionicons name="add-circle-outline" size={18} color={colors.primary} />
-              <Text style={{ fontSize: 18, color: colors.primary, fontFamily: 'Poppins_600SemiBold', fontWeight: '700', marginLeft: 6 }}>
+              <Text style={{ fontSize: 18, color: colors.primary, fontFamily: 'Poppins_700Bold', marginLeft: 6 }}>
                 {profile.interestTags.length > 0 ? 'Düzenle' : 'Seç'}
               </Text>
             </View>
@@ -1386,7 +1331,7 @@ export const EditProfileScreen: React.FC = () => {
                   style={styles.promptEditAnswer}
                   value={prompt.answer}
                   onChangeText={(text) => updatePromptAnswer(idx, text)}
-                  placeholder="Cevabini yaz..."
+                  placeholder="Cevabını yaz..."
                   placeholderTextColor={colors.textTertiary}
                   maxLength={200}
                   multiline
@@ -1550,7 +1495,7 @@ export const EditProfileScreen: React.FC = () => {
                 style={[sectionStyles.pickerOption, { justifyContent: 'center', marginTop: 8 }]}
                 onPress={() => setShowLanguagesPicker(false)}
               >
-                <Text style={[sectionStyles.pickerOptionText, { color: colors.primary, fontWeight: '800' }]}>
+                <Text style={[sectionStyles.pickerOptionText, { color: colors.primary, fontFamily: 'Poppins_800ExtraBold' }]}>
                   Tamam
                 </Text>
               </TouchableOpacity>
@@ -1594,8 +1539,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 22,
-    fontFamily: poppinsFonts.semibold,
-    fontWeight: fontWeights.semibold,
+    fontFamily: 'Poppins_700Bold',
     color: colors.text,
     includeFontPadding: false,
   },
@@ -1631,7 +1575,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 22,
     fontFamily: 'Poppins_800ExtraBold',
-    fontWeight: '800',
     color: '#1A1A2E',
     letterSpacing: 0,
     marginBottom: 8,
@@ -1640,8 +1583,7 @@ const styles = StyleSheet.create({
   },
   sectionHint: {
     fontSize: 18,
-    fontFamily: poppinsFonts.regular,
-    fontWeight: fontWeights.regular,
+    fontFamily: 'Poppins_700Bold',
     color: colors.textTertiary,
     textAlign: 'center',
     marginBottom: spacing.md,
@@ -1707,8 +1649,7 @@ const styles = StyleSheet.create({
   },
   photoMainBadgeText: {
     fontSize: 18,
-    fontFamily: poppinsFonts.bold,
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
     color: '#FFFFFF',
     includeFontPadding: false,
     letterSpacing: 0.5,
@@ -1726,8 +1667,7 @@ const styles = StyleSheet.create({
   },
   photoOrderText: {
     fontSize: 18,
-    fontFamily: poppinsFonts.bold,
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
     color: '#FFFFFF',
     includeFontPadding: false,
   },
@@ -1739,8 +1679,7 @@ const styles = StyleSheet.create({
   },
   photoUploadingText: {
     fontSize: 18,
-    fontFamily: poppinsFonts.medium,
-    fontWeight: fontWeights.medium,
+    fontFamily: 'Poppins_700Bold',
     color: colors.textTertiary,
     includeFontPadding: false,
   },
@@ -1748,8 +1687,7 @@ const styles = StyleSheet.create({
   // ── Bio ──
   charCounter: {
     fontSize: 18,
-    fontFamily: poppinsFonts.regular,
-    fontWeight: fontWeights.regular,
+    fontFamily: 'Poppins_700Bold',
     color: colors.textTertiary,
     includeFontPadding: false,
   },
@@ -1761,8 +1699,7 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.md,
     padding: spacing.md,
     fontSize: 19,
-    fontFamily: poppinsFonts.regular,
-    fontWeight: fontWeights.regular,
+    fontFamily: 'Poppins_700Bold',
     color: colors.text,
     minHeight: 120,
     borderWidth: 1,
@@ -1793,16 +1730,14 @@ const styles = StyleSheet.create({
   },
   infoLabel: {
     fontSize: 18,
-    fontFamily: poppinsFonts.medium,
-    fontWeight: fontWeights.medium,
+    fontFamily: 'Poppins_700Bold',
     color: colors.textTertiary,
     marginBottom: 2,
     includeFontPadding: false,
   },
   infoValue: {
     fontSize: 19,
-    fontFamily: poppinsFonts.medium,
-    fontWeight: fontWeights.medium,
+    fontFamily: 'Poppins_700Bold',
     color: colors.text,
     includeFontPadding: false,
   },
@@ -1818,8 +1753,7 @@ const styles = StyleSheet.create({
   },
   readOnlyTagText: {
     fontSize: 18,
-    fontFamily: poppinsFonts.medium,
-    fontWeight: fontWeights.medium,
+    fontFamily: 'Poppins_700Bold',
     color: colors.textTertiary,
     includeFontPadding: false,
   },
@@ -1851,14 +1785,12 @@ const styles = StyleSheet.create({
   },
   pickerItemText: {
     fontSize: 19,
-    fontFamily: poppinsFonts.regular,
-    fontWeight: fontWeights.regular,
+    fontFamily: 'Poppins_700Bold',
     color: colors.text,
     includeFontPadding: false,
   },
   pickerItemTextSelected: {
-    fontFamily: poppinsFonts.semibold,
-    fontWeight: fontWeights.semibold,
+    fontFamily: 'Poppins_700Bold',
     color: palette.gold[600],
   },
 
@@ -1875,8 +1807,7 @@ const styles = StyleSheet.create({
   },
   textFieldInput: {
     fontSize: 19,
-    fontFamily: poppinsFonts.regular,
-    fontWeight: fontWeights.regular,
+    fontFamily: 'Poppins_700Bold',
     color: colors.text,
     paddingVertical: 2,
     paddingHorizontal: 0,
@@ -1906,15 +1837,13 @@ const styles = StyleSheet.create({
   },
   intentionLabel: {
     fontSize: 18,
-    fontFamily: poppinsFonts.medium,
-    fontWeight: fontWeights.medium,
+    fontFamily: 'Poppins_700Bold',
     color: colors.text,
     includeFontPadding: false,
   },
   intentionLabelSelected: {
     color: palette.purple[600],
-    fontFamily: poppinsFonts.semibold,
-    fontWeight: fontWeights.semibold,
+    fontFamily: 'Poppins_700Bold',
   },
 
   // Interest styles moved to InterestPickerScreen
@@ -1930,8 +1859,7 @@ const styles = StyleSheet.create({
   },
   promptEditQuestion: {
     fontSize: 18,
-    fontFamily: poppinsFonts.medium,
-    fontWeight: fontWeights.medium,
+    fontFamily: 'Poppins_700Bold',
     color: colors.textSecondary,
     marginBottom: spacing.sm,
     lineHeight: 18,
@@ -1939,8 +1867,7 @@ const styles = StyleSheet.create({
   },
   promptEditAnswer: {
     fontSize: 19,
-    fontFamily: poppinsFonts.regular,
-    fontWeight: fontWeights.regular,
+    fontFamily: 'Poppins_700Bold',
     color: colors.text,
     minHeight: 60,
     padding: 0,
@@ -1958,8 +1885,7 @@ const styles = StyleSheet.create({
   },
   charCount: {
     fontSize: 18,
-    fontFamily: poppinsFonts.regular,
-    fontWeight: fontWeights.regular,
+    fontFamily: 'Poppins_700Bold',
     color: colors.textTertiary,
     includeFontPadding: false,
   },
@@ -1977,8 +1903,7 @@ const styles = StyleSheet.create({
   },
   addPromptText: {
     fontSize: 18,
-    fontFamily: poppinsFonts.semibold,
-    fontWeight: fontWeights.semibold,
+    fontFamily: 'Poppins_700Bold',
     color: palette.purple[500],
     includeFontPadding: false,
   },
@@ -2020,16 +1945,14 @@ const styles = StyleSheet.create({
   },
   voiceTitle: {
     fontSize: 19,
-    fontFamily: poppinsFonts.semibold,
-    fontWeight: fontWeights.semibold,
+    fontFamily: 'Poppins_700Bold',
     color: colors.text,
     marginBottom: 2,
     includeFontPadding: false,
   },
   voiceSubtitle: {
     fontSize: 18,
-    fontFamily: poppinsFonts.regular,
-    fontWeight: fontWeights.regular,
+    fontFamily: 'Poppins_700Bold',
     color: colors.textSecondary,
     includeFontPadding: false,
   },
@@ -2042,8 +1965,7 @@ const styles = StyleSheet.create({
   },
   videoUploadingText: {
     fontSize: 18,
-    fontFamily: poppinsFonts.medium,
-    fontWeight: fontWeights.medium,
+    fontFamily: 'Poppins_700Bold',
     color: palette.gold[600],
     includeFontPadding: false,
   },
@@ -2094,8 +2016,7 @@ const styles = StyleSheet.create({
   },
   videoDurationText: {
     fontSize: 18,
-    fontFamily: poppinsFonts.semibold,
-    fontWeight: fontWeights.semibold,
+    fontFamily: 'Poppins_700Bold',
     color: '#FFFFFF',
     includeFontPadding: false,
   },
@@ -2120,8 +2041,7 @@ const styles = StyleSheet.create({
   },
   videoActionText: {
     fontSize: 18,
-    fontFamily: poppinsFonts.semibold,
-    fontWeight: fontWeights.semibold,
+    fontFamily: 'Poppins_700Bold',
     color: palette.gold[600],
     includeFontPadding: false,
   },
@@ -2146,8 +2066,7 @@ const styles = StyleSheet.create({
   },
   videoAddText: {
     fontSize: 20,
-    fontFamily: poppinsFonts.semibold,
-    fontWeight: fontWeights.semibold,
+    fontFamily: 'Poppins_700Bold',
     color: palette.gold[600],
     includeFontPadding: false,
   },
@@ -2185,7 +2104,6 @@ const styles = StyleSheet.create({
   saveButtonText: {
     fontSize: 18,
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
     color: '#FFFFFF',
     letterSpacing: 0.3,
     includeFontPadding: false,
@@ -2201,7 +2119,6 @@ const sectionStyles = StyleSheet.create({
   headerTitle: {
     fontSize: 22,
     fontFamily: 'Poppins_800ExtraBold',
-    fontWeight: '800',
     color: '#1A1A2E',
     marginBottom: 8,
     textAlign: 'center',
@@ -2209,7 +2126,6 @@ const sectionStyles = StyleSheet.create({
   headerDesc: {
     fontSize: 18,
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
     color: colors.textSecondary,
     textAlign: 'center',
   },
@@ -2238,7 +2154,6 @@ const sectionStyles = StyleSheet.create({
     marginRight: 8,
     fontSize: 16,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: '#1A1A2E',
   },
   fieldRight: {
@@ -2252,7 +2167,6 @@ const sectionStyles = StyleSheet.create({
     flexShrink: 1,
     fontSize: 15,
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
     color: '#666666',
     textAlign: 'right',
   },
@@ -2260,7 +2174,6 @@ const sectionStyles = StyleSheet.create({
     flexShrink: 1,
     fontSize: 15,
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
     color: '#AAAAAA',
     textAlign: 'right',
   },
@@ -2290,7 +2203,6 @@ const sectionStyles = StyleSheet.create({
   pickerTitle: {
     fontSize: 20,
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
     color: colors.text,
     marginBottom: 16,
     textAlign: 'center',
@@ -2310,12 +2222,11 @@ const sectionStyles = StyleSheet.create({
   },
   pickerOptionText: {
     fontSize: 19,
-    fontFamily: 'Poppins_500Medium',
-    fontWeight: '700',
+    fontFamily: 'Poppins_700Bold',
     color: colors.text,
   },
   pickerOptionTextSelected: {
     color: colors.primary,
-    fontWeight: '700',
+    fontFamily: 'Poppins_700Bold',
   },
 });

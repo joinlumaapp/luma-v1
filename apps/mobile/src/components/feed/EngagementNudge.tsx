@@ -168,7 +168,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.text,
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
     textAlign: 'center',
     marginBottom: 4,
   },
@@ -193,6 +192,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#FFFFFF',
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
 });

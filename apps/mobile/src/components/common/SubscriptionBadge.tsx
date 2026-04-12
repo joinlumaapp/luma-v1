@@ -225,7 +225,6 @@ const badgeStyles = StyleSheet.create({
   },
   supremeLabel: {
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: GOLD_24K.light,
     includeFontPadding: false,
   },
@@ -260,7 +259,6 @@ const badgeStyles = StyleSheet.create({
   },
   premiumLabel: {
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: '#FFFFFF',
     letterSpacing: 0.5,
   },

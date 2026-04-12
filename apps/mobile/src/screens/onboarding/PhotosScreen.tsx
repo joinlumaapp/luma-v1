@@ -367,15 +367,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: onboardingColors.text,
     marginBottom: 8,
     ...Platform.select({ android: { includeFontPadding: false } }),
   },
   subtitle: {
     fontSize: 15,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '500',
+    fontFamily: 'Poppins_500Medium',
     lineHeight: 22,
     color: onboardingColors.textSecondary,
     marginBottom: 16,
@@ -390,7 +388,6 @@ const styles = StyleSheet.create({
   countText: {
     fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: onboardingColors.textSecondary,
     ...Platform.select({ android: { includeFontPadding: false } }),
   },
@@ -468,7 +465,6 @@ const styles = StyleSheet.create({
   mainBadgeText: {
     fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: GOLD_ACCENT,
     ...Platform.select({ android: { includeFontPadding: false } }),
   },
@@ -484,7 +480,6 @@ const styles = StyleSheet.create({
   fileSizeText: {
     fontSize: 9,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: '#FFFFFF',
     ...Platform.select({ android: { includeFontPadding: false } }),
   },
@@ -511,7 +506,6 @@ const styles = StyleSheet.create({
   profileSlotLabel: {
     fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: GOLD_ACCENT,
     textAlign: 'center',
     ...Platform.select({ android: { includeFontPadding: false } }),
@@ -525,7 +519,6 @@ const styles = StyleSheet.create({
   compressingText: {
     fontSize: 14,
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
     color: onboardingColors.textSecondary,
     ...Platform.select({ android: { includeFontPadding: false } }),
   },
@@ -546,7 +539,6 @@ const styles = StyleSheet.create({
   tipsTitle: {
     fontSize: 15,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: onboardingColors.text,
     ...Platform.select({ android: { includeFontPadding: false } }),
   },
@@ -555,8 +547,7 @@ const styles = StyleSheet.create({
   },
   tipItem: {
     fontSize: 14,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '500',
+    fontFamily: 'Poppins_500Medium',
     lineHeight: 20,
     color: onboardingColors.textSecondary,
     paddingLeft: 4,

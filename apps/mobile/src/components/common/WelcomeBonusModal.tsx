@@ -168,7 +168,6 @@ const styles = StyleSheet.create({
   },
   title: {
     fontFamily: 'Poppins_800ExtraBold',
-    fontWeight: '800',
     fontSize: 24,
     color: '#1A1A2E',
     textAlign: 'center',
@@ -177,7 +176,6 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     fontSize: 15,
     color: '#4A4A6A',
     textAlign: 'center',
@@ -203,7 +201,6 @@ const styles = StyleSheet.create({
   },
   giftTitle: {
     fontFamily: 'Poppins_800ExtraBold',
-    fontWeight: '800',
     fontSize: 16,
     color: '#8B5CF6',
     textAlign: 'center',
@@ -223,13 +220,11 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: '#1A1A2E',
     lineHeight: 20,
   },
   giftBold: {
     fontFamily: 'Poppins_800ExtraBold',
-    fontWeight: '800',
     color: '#8B5CF6',
   },
 
@@ -253,7 +248,6 @@ const styles = StyleSheet.create({
   ctaText: {
     fontSize: 17,
     fontFamily: 'Poppins_800ExtraBold',
-    fontWeight: '800',
     color: '#FFFFFF',
     letterSpacing: 0.4,
   },

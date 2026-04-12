@@ -245,7 +245,6 @@ const localStyles = StyleSheet.create({
   },
   scoreText: {
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     paddingHorizontal: 2,
     includeFontPadding: false,
   },

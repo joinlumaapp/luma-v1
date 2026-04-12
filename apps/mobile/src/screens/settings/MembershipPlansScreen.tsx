@@ -23,7 +23,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { SocialProofBanner } from '../../components/premium/SmartUpgradePrompts';
 import { palette } from '../../theme/colors';
-import { typography, fontWeights, fontSizes } from '../../theme/typography';
+import { typography, fontSizes } from '../../theme/typography';
 import { spacing, borderRadius, layout } from '../../theme/spacing';
 import { useAuthStore, type PackageTier } from '../../stores/authStore';
 import { usePremiumStore } from '../../stores/premiumStore';
@@ -271,7 +271,8 @@ const featureStyles = StyleSheet.create({
     alignItems: 'center',
   },
   label: {
-    ...typography.bodySmall,
+    fontSize: 14,
+    fontFamily: 'Poppins_500Medium',
     color: GLASS.textBody,
     flex: 1,
   },
@@ -279,8 +280,8 @@ const featureStyles = StyleSheet.create({
     color: GLASS.textMuted,
   },
   detail: {
-    ...typography.caption,
-    fontWeight: fontWeights.semibold,
+    fontSize: 12,
+    fontFamily: 'Poppins_700Bold',
     flexShrink: 0,
     marginLeft: spacing.md,
     textAlign: 'right',
@@ -576,7 +577,7 @@ const coinStackStyles = StyleSheet.create({
   },
   coinText: {
     fontSize: 22,
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
     color: '#FFFFFF',
     textShadowColor: 'rgba(0,0,0,0.2)',
     textShadowOffset: { width: 0, height: 1 },
@@ -664,9 +665,9 @@ const coinCardStyles = StyleSheet.create({
     borderBottomLeftRadius: borderRadius.md,
   },
   badgeText: {
-    ...typography.captionSmall,
+    fontSize: 10,
     color: '#FFFFFF',
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
     includeFontPadding: false,
   },
   content: {
@@ -681,18 +682,19 @@ const coinCardStyles = StyleSheet.create({
   amount: {
     fontSize: 36,
     lineHeight: 48,
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
     color: GLASS.textPrimary,
   },
   label: {
-    ...typography.bodySmall,
+    fontSize: 14,
+    fontFamily: 'Poppins_500Medium',
     color: GLASS.textHalf,
     marginBottom: spacing.xs,
   },
   price: {
-    ...typography.h4,
+    fontSize: 18,
     color: GLASS.goldAccent,
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
   },
   buyButton: {
     borderRadius: 28,
@@ -704,9 +706,9 @@ const coinCardStyles = StyleSheet.create({
     borderRadius: 28,
   },
   buyText: {
-    ...typography.button,
+    fontSize: 16,
     color: '#FFFFFF',
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
   },
 });
 
@@ -1178,7 +1180,7 @@ export const MembershipPlansScreen: React.FC = () => {
                     style={emotionalStyles.quickCta}
                   >
                     <Ionicons name="lock-open" size={18} color="#FFFFFF" />
-                    <Text style={emotionalStyles.quickCtaText}>Hemen Eşleşmeye Başla</Text>
+                    <Text style={emotionalStyles.quickCtaText}>Hemen eşleşmeye başla</Text>
                   </LinearGradient>
                 </TouchableOpacity>
               </Animated.View>
@@ -1320,7 +1322,8 @@ const screenStyles = StyleSheet.create({
     alignItems: 'center',
   },
   headerTitle: {
-    ...typography.h4,
+    fontSize: 18,
+    fontFamily: 'Poppins_700Bold',
     color: GLASS.textPrimary,
     flex: 1,
     flexShrink: 1,
@@ -1355,8 +1358,8 @@ const screenStyles = StyleSheet.create({
     borderColor: 'rgba(212,175,55,0.4)',
   },
   tabText: {
-    fontSize: fontSizes.sm,
-    fontWeight: fontWeights.semibold,
+    fontSize: 14,
+    fontFamily: 'Poppins_700Bold',
     color: GLASS.textHalf,
   },
   tabTextActive: {
@@ -1375,14 +1378,16 @@ const screenStyles = StyleSheet.create({
     paddingTop: spacing.sm,
   },
   subtitle: {
-    ...typography.body,
+    fontSize: 14,
+    fontFamily: 'Poppins_500Medium',
     color: GLASS.textSecondary,
     textAlign: 'center',
     marginBottom: spacing.lg,
     paddingHorizontal: spacing.md,
   },
   disclaimer: {
-    ...typography.caption,
+    fontSize: 12,
+    fontFamily: 'Poppins_500Medium',
     color: 'rgba(255,255,255,0.35)',
     textAlign: 'center',
     marginTop: spacing.lg,
@@ -1392,12 +1397,14 @@ const screenStyles = StyleSheet.create({
 
   // ── Coin Section ──
   coinSectionTitle: {
-    ...typography.h3,
+    fontSize: 22,
+    fontFamily: 'Poppins_800ExtraBold',
     color: GLASS.textPrimary,
     marginBottom: spacing.xs,
   },
   coinSectionSubtitle: {
-    ...typography.bodySmall,
+    fontSize: 14,
+    fontFamily: 'Poppins_500Medium',
     color: GLASS.textHalf,
     marginBottom: spacing.lg,
   },
@@ -1421,11 +1428,13 @@ const screenStyles = StyleSheet.create({
     flex: 1,
   },
   adTitle: {
-    ...typography.h4,
+    fontSize: 18,
+    fontFamily: 'Poppins_700Bold',
     color: GLASS.textPrimary,
   },
   adSubtitle: {
-    ...typography.caption,
+    fontSize: 12,
+    fontFamily: 'Poppins_500Medium',
     color: GLASS.textHalf,
   },
   adButton: {
@@ -1440,9 +1449,9 @@ const screenStyles = StyleSheet.create({
     borderRadius: 28,
   },
   adButtonText: {
-    ...typography.button,
+    fontSize: 16,
     color: '#1A1A1A',
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
   },
   cooldownContainer: {
     flexDirection: 'row',
@@ -1455,9 +1464,9 @@ const screenStyles = StyleSheet.create({
     borderRadius: borderRadius.md,
   },
   cooldownText: {
-    ...typography.body,
+    fontSize: 14,
     color: GLASS.textHalf,
-    fontWeight: fontWeights.medium,
+    fontFamily: 'Poppins_700Bold',
   },
 });
 
@@ -1522,8 +1531,8 @@ const cardStyles = StyleSheet.create({
     marginTop: 4,
   },
   popularBadgeText: {
-    ...typography.captionSmall,
-    fontWeight: fontWeights.bold,
+    fontSize: 10,
+    fontFamily: 'Poppins_800ExtraBold',
     color: palette.white,
   },
 
@@ -1554,13 +1563,14 @@ const cardStyles = StyleSheet.create({
     flex: 1,
   },
   tierName: {
-    fontSize: fontSizes.xl,
-    fontWeight: fontWeights.bold,
-    lineHeight: 28,
+    fontSize: 20,
+    fontFamily: 'Poppins_800ExtraBold',
+    lineHeight: 24,
     paddingRight: 4,
   },
   tierSubtitle: {
-    ...typography.caption,
+    fontSize: 12,
+    fontFamily: 'Poppins_500Medium',
     color: GLASS.textTertiary,
     marginTop: 2,
   },
@@ -1572,17 +1582,18 @@ const cardStyles = StyleSheet.create({
     paddingBottom: 6,
   },
   price: {
-    fontSize: fontSizes['2xl'],
-    fontWeight: fontWeights.bold,
-    lineHeight: 38,
+    fontSize: 22,
+    fontFamily: 'Poppins_800ExtraBold',
+    lineHeight: 28,
     includeFontPadding: false,
     paddingHorizontal: 6,
   },
   pricePeriod: {
-    ...typography.caption,
+    fontSize: 12,
+    fontFamily: 'Poppins_500Medium',
     color: GLASS.textTertiary,
     marginLeft: 4,
-    lineHeight: 20,
+    lineHeight: 16,
     includeFontPadding: false,
   },
 
@@ -1598,8 +1609,8 @@ const cardStyles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   currentBadgeText: {
-    ...typography.caption,
-    fontWeight: fontWeights.semibold,
+    fontSize: 12,
+    fontFamily: 'Poppins_700Bold',
   },
 
   // Ad indicator (free tier)
@@ -1615,9 +1626,9 @@ const cardStyles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   adIndicatorText: {
-    ...typography.captionSmall,
+    fontSize: 11,
     color: GLASS.textHalf,
-    fontWeight: fontWeights.medium,
+    fontFamily: 'Poppins_700Bold',
   },
 
   // Divider
@@ -1642,14 +1653,14 @@ const cardStyles = StyleSheet.create({
     borderRadius: 28,
   },
   ctaText: {
-    ...typography.button,
+    fontSize: 16,
     color: palette.white,
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
   },
   ctaTextDark: {
-    ...typography.button,
+    fontSize: 16,
     color: '#1A1A1A',
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
   },
   ctaOutlined: {
     height: 56,
@@ -1661,9 +1672,9 @@ const cardStyles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.15)',
   },
   ctaOutlinedText: {
-    ...typography.button,
+    fontSize: 16,
     color: GLASS.textPrimary,
-    fontWeight: fontWeights.semibold,
+    fontFamily: 'Poppins_700Bold',
   },
 });
 
@@ -1713,18 +1724,18 @@ const emotionalStyles = StyleSheet.create({
   },
   urgencyBannerPrimary: {
     fontSize: 16,
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
     color: '#FFFFFF',
   },
   urgencyBannerNumber: {
     fontSize: 20,
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
     color: '#FFFFFF',
     includeFontPadding: false,
   },
   urgencyBannerSecondary: {
     fontSize: 14,
-    fontWeight: fontWeights.medium,
+    fontFamily: 'Poppins_700Bold',
     color: 'rgba(255,255,255,0.8)',
   },
 
@@ -1739,14 +1750,14 @@ const emotionalStyles = StyleSheet.create({
   },
   socialProofText: {
     fontSize: 14,
-    fontWeight: fontWeights.medium,
+    fontFamily: 'Poppins_700Bold',
     color: GLASS.textSecondary,
   },
 
   // ── Loss aversion ──
   lossText: {
     fontSize: 14,
-    fontWeight: fontWeights.regular,
+    fontFamily: 'Poppins_700Bold',
     color: GLASS.textTertiary,
     textAlign: 'center',
     marginBottom: spacing.md,
@@ -1764,9 +1775,9 @@ const emotionalStyles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   quickCtaText: {
-    ...typography.button,
+    fontSize: 16,
     color: '#FFFFFF',
-    fontWeight: fontWeights.semibold,
+    fontFamily: 'Poppins_700Bold',
     letterSpacing: 0.5,
   },
 
@@ -1789,13 +1800,15 @@ const emotionalStyles = StyleSheet.create({
     borderColor: 'rgba(167, 139, 250, 0.2)',
   },
   exitTitle: {
-    ...typography.h4,
+    fontSize: 20,
+    fontFamily: 'Poppins_700Bold',
     color: GLASS.textPrimary,
     marginTop: spacing.md,
     marginBottom: spacing.xs,
   },
   exitSubtitle: {
-    ...typography.body,
+    fontSize: 14,
+    fontFamily: 'Poppins_500Medium',
     color: GLASS.textSecondary,
     textAlign: 'center',
     marginBottom: spacing.lg,
@@ -1812,7 +1825,8 @@ const emotionalStyles = StyleSheet.create({
     width: '100%',
   },
   exitCtaText: {
-    ...typography.button,
+    fontSize: 16,
+    fontFamily: 'Poppins_700Bold',
     color: '#FFFFFF',
     letterSpacing: 0.5,
   },
@@ -1821,7 +1835,8 @@ const emotionalStyles = StyleSheet.create({
     paddingVertical: spacing.sm,
   },
   exitDismissText: {
-    ...typography.caption,
+    fontSize: 14,
+    fontFamily: 'Poppins_500Medium',
     color: GLASS.textTertiary,
   },
 });

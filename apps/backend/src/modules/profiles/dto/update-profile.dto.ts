@@ -187,6 +187,62 @@ export class UpdateProfileDto {
   @MaxLength(200)
   lifeValues?: string;
 
+  // ── Hakkımda Daha Fazlası — 9 new lifestyle fields ──
+
+  @ApiPropertyOptional({ description: "Living situation", maxLength: 30 })
+  @IsOptional()
+  @IsString()
+  @MaxLength(30)
+  livingSituation?: string;
+
+  @ApiPropertyOptional({ description: "Languages spoken", type: [String] })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  languages?: string[];
+
+  @ApiPropertyOptional({ description: "Sleep schedule", maxLength: 30 })
+  @IsOptional()
+  @IsString()
+  @MaxLength(30)
+  sleepSchedule?: string;
+
+  @ApiPropertyOptional({ description: "Diet preference", maxLength: 30 })
+  @IsOptional()
+  @IsString()
+  @MaxLength(30)
+  diet?: string;
+
+  @ApiPropertyOptional({ description: "Work style", maxLength: 30 })
+  @IsOptional()
+  @IsString()
+  @MaxLength(30)
+  workStyle?: string;
+
+  @ApiPropertyOptional({ description: "Travel frequency", maxLength: 30 })
+  @IsOptional()
+  @IsString()
+  @MaxLength(30)
+  travelFrequency?: string;
+
+  @ApiPropertyOptional({ description: "Distance preference", maxLength: 30 })
+  @IsOptional()
+  @IsString()
+  @MaxLength(30)
+  distancePreference?: string;
+
+  @ApiPropertyOptional({ description: "Communication style", maxLength: 30 })
+  @IsOptional()
+  @IsString()
+  @MaxLength(30)
+  communicationStyle?: string;
+
+  @ApiPropertyOptional({ description: "Hookah/nargile usage", maxLength: 30 })
+  @IsOptional()
+  @IsString()
+  @MaxLength(30)
+  hookah?: string;
+
   @ApiPropertyOptional({
     description: "Interests / hobbies tags",
     type: [String],

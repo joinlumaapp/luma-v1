@@ -25,7 +25,7 @@ import Animated, {
   SlideInUp,
 } from 'react-native-reanimated';
 import { colors } from '../../theme/colors';
-import { fontWeights } from '../../theme/typography';
+import {  } from '../../theme/typography';
 import { spacing, borderRadius } from '../../theme/spacing';
 import type { MatchesStackParamList } from '../../navigation/types';
 
@@ -267,7 +267,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     flex: 1, textAlign: 'center',
-    fontSize: 18, fontWeight: fontWeights.bold, color: colors.text,
+    fontSize: 18, fontFamily: 'Poppins_800ExtraBold', color: colors.text,
   },
   progressBar: {
     height: 4, backgroundColor: colors.surface, marginHorizontal: spacing.lg,
@@ -282,12 +282,13 @@ const styles = StyleSheet.create({
   },
   questionEmoji: { fontSize: 56, textAlign: 'center' },
   questionText: {
-    fontSize: 22, fontWeight: fontWeights.bold, color: colors.text,
+    fontSize: 22, fontFamily: 'Poppins_800ExtraBold', color: colors.text,
     textAlign: 'center', lineHeight: 30, marginTop: spacing.md,
   },
   answerInput: {
     backgroundColor: colors.surface, borderRadius: borderRadius.xl,
-    padding: spacing.lg, fontSize: 16, color: colors.text,
+    padding: spacing.lg, fontSize: 16,
+    fontFamily: 'Poppins_500Medium', color: colors.text,
     borderWidth: 1, borderColor: colors.surfaceBorder,
     minHeight: 80, textAlignVertical: 'top',
   },
@@ -303,24 +304,24 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(236,72,153,0.08)', borderColor: 'rgba(236,72,153,0.2)',
   },
   compareLabel: {
-    fontSize: 14, fontWeight: fontWeights.semibold, color: colors.textTertiary,
+    fontSize: 14, fontFamily: 'Poppins_700Bold', color: colors.textTertiary,
     marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5,
   },
   compareAnswer: {
-    fontSize: 16, fontWeight: fontWeights.medium, color: colors.text, lineHeight: 22,
+    fontSize: 16, fontFamily: 'Poppins_700Bold', color: colors.text, lineHeight: 22,
   },
   // Final results
   finalContent: { padding: spacing.lg, gap: spacing.md },
   finalHeader: { alignItems: 'center', gap: spacing.sm, marginBottom: spacing.md },
   finalEmoji: { fontSize: 56 },
-  finalTitle: { fontSize: 24, fontWeight: fontWeights.bold, color: colors.text },
-  finalSubtitle: { fontSize: 15, fontWeight: fontWeights.regular, color: colors.textSecondary },
+  finalTitle: { fontSize: 24, fontFamily: 'Poppins_800ExtraBold', color: colors.text },
+  finalSubtitle: { fontSize: 15, fontFamily: 'Poppins_700Bold', color: colors.textSecondary },
   resultCard: {
     backgroundColor: colors.surface, borderRadius: borderRadius.xl,
     padding: spacing.md, borderWidth: 1, borderColor: colors.surfaceBorder,
   },
   resultQuestion: {
-    fontSize: 15, fontWeight: fontWeights.semibold, color: colors.text, marginBottom: spacing.sm,
+    fontSize: 15, fontFamily: 'Poppins_700Bold', color: colors.text, marginBottom: spacing.sm,
   },
   resultAnswers: { gap: spacing.sm },
   resultAnswer: {
@@ -331,11 +332,11 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(236,72,153,0.06)',
   },
   resultAnswerLabel: {
-    fontSize: 14, fontWeight: fontWeights.semibold, color: colors.textTertiary,
+    fontSize: 14, fontFamily: 'Poppins_700Bold', color: colors.textTertiary,
     marginBottom: 4, textTransform: 'uppercase', letterSpacing: 0.5,
   },
   resultAnswerText: {
-    fontSize: 14, fontWeight: fontWeights.medium, color: colors.text, lineHeight: 20,
+    fontSize: 14, fontFamily: 'Poppins_700Bold', color: colors.text, lineHeight: 20,
   },
   // Buttons
   finalButtons: { gap: spacing.md, marginTop: spacing.lg, paddingBottom: spacing.xl },
@@ -343,7 +344,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16, alignItems: 'center', borderRadius: borderRadius.xl,
     backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.surfaceBorder,
   },
-  secondaryBtnText: { fontSize: 16, fontWeight: fontWeights.semibold, color: colors.text },
+  secondaryBtnText: { fontSize: 16, fontFamily: 'Poppins_700Bold', color: colors.text },
   primaryBtn: { paddingVertical: 16, alignItems: 'center', borderRadius: borderRadius.xl },
-  primaryBtnText: { fontSize: 16, fontWeight: fontWeights.bold, color: '#FFFFFF' },
+  primaryBtnText: { fontSize: 16, fontFamily: 'Poppins_800ExtraBold', color: '#FFFFFF' },
 });

@@ -237,7 +237,6 @@ const styles = StyleSheet.create({
   skipText: {
     fontSize: 16,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: '#8B5CF6',
   },
   skipPlaceholder: {
@@ -315,7 +314,6 @@ const styles = StyleSheet.create({
   fullButtonText: {
     fontSize: 18,
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
     color: '#FFFFFF',
     letterSpacing: 0.5,
   },

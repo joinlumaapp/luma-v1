@@ -19,7 +19,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import type { MatchesStackParamList } from '../../navigation/types';
 import { colors, palette } from '../../theme/colors';
-import { fontWeights } from '../../theme/typography';
+import {  } from '../../theme/typography';
 import { spacing, borderRadius } from '../../theme/spacing';
 import { useMatchStore } from '../../stores/matchStore';
 import { JETON_COSTS } from '@luma/shared';
@@ -173,16 +173,16 @@ export const MatchDetailScreen: React.FC = () => {
         return canViewStats ? (
           <View style={{ flexDirection: 'row', gap: 10, marginTop: 12 }}>
             <View style={{ flex: 1, backgroundColor: colors.surface, borderRadius: 16, paddingVertical: 16, alignItems: 'center', borderWidth: 1, borderColor: colors.surfaceBorder }}>
-              <Text style={{ fontSize: 22, fontWeight: '600', color: palette.purple[600], paddingHorizontal: 4, textAlign: 'center', width: '100%' }}>{(selectedMatch as unknown as { postCount?: number }).postCount ?? 0}</Text>
-              <Text style={{ fontSize: 9, fontWeight: '600', color: colors.textTertiary, marginTop: 4, letterSpacing: 1, textTransform: 'uppercase' }}>Gönderi</Text>
+              <Text style={{ fontSize: 22, fontFamily: 'Poppins_600SemiBold', color: palette.purple[600], paddingHorizontal: 4, textAlign: 'center', width: '100%' }}>{(selectedMatch as unknown as { postCount?: number }).postCount ?? 0}</Text>
+              <Text style={{ fontSize: 9, fontFamily: 'Poppins_600SemiBold', color: colors.textTertiary, marginTop: 4, letterSpacing: 1, textTransform: 'uppercase' }}>Gönderi</Text>
             </View>
             <View style={{ flex: 1, backgroundColor: colors.surface, borderRadius: 16, paddingVertical: 16, alignItems: 'center', borderWidth: 1, borderColor: colors.surfaceBorder }}>
-              <Text style={{ fontSize: 22, fontWeight: '600', color: palette.purple[600], paddingHorizontal: 4, textAlign: 'center', width: '100%' }}>{(selectedMatch as unknown as { followerCount?: number }).followerCount ?? 0}</Text>
-              <Text style={{ fontSize: 9, fontWeight: '600', color: colors.textTertiary, marginTop: 4, letterSpacing: 1, textTransform: 'uppercase' }}>Takipçi</Text>
+              <Text style={{ fontSize: 22, fontFamily: 'Poppins_600SemiBold', color: palette.purple[600], paddingHorizontal: 4, textAlign: 'center', width: '100%' }}>{(selectedMatch as unknown as { followerCount?: number }).followerCount ?? 0}</Text>
+              <Text style={{ fontSize: 9, fontFamily: 'Poppins_600SemiBold', color: colors.textTertiary, marginTop: 4, letterSpacing: 1, textTransform: 'uppercase' }}>Takipçi</Text>
             </View>
             <View style={{ flex: 1, backgroundColor: colors.surface, borderRadius: 16, paddingVertical: 16, alignItems: 'center', borderWidth: 1, borderColor: colors.surfaceBorder }}>
-              <Text style={{ fontSize: 22, fontWeight: '600', color: palette.purple[600], paddingHorizontal: 4, textAlign: 'center', width: '100%' }}>{(selectedMatch as unknown as { followingCount?: number }).followingCount ?? 0}</Text>
-              <Text style={{ fontSize: 9, fontWeight: '600', color: colors.textTertiary, marginTop: 4, letterSpacing: 1, textTransform: 'uppercase' }}>Takip</Text>
+              <Text style={{ fontSize: 22, fontFamily: 'Poppins_600SemiBold', color: palette.purple[600], paddingHorizontal: 4, textAlign: 'center', width: '100%' }}>{(selectedMatch as unknown as { followingCount?: number }).followingCount ?? 0}</Text>
+              <Text style={{ fontSize: 9, fontFamily: 'Poppins_600SemiBold', color: colors.textTertiary, marginTop: 4, letterSpacing: 1, textTransform: 'uppercase' }}>Takip</Text>
             </View>
           </View>
         ) : (
@@ -213,12 +213,12 @@ export const MatchDetailScreen: React.FC = () => {
         {selectedMatch.bio && <Text style={styles.bioText}>{selectedMatch.bio}</Text>}
         {selectedMatch.intentionTag && (
           <View style={{ marginTop: 12 }}>
-            <Text style={{ fontSize: 14, fontWeight: fontWeights.semibold, color: colors.text, marginBottom: 8 }}>
+            <Text style={{ fontSize: 14, fontFamily: 'Poppins_700Bold', color: colors.text, marginBottom: 8 }}>
               Burada olma sebebi
             </Text>
             <View style={{ flexDirection: 'row' }}>
               <View style={{ backgroundColor: 'rgba(139,92,246,0.12)', paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20 }}>
-                <Text style={{ fontSize: 14, fontWeight: fontWeights.medium, color: '#8B5CF6' }}>
+                <Text style={{ fontSize: 14, fontFamily: 'Poppins_700Bold', color: '#8B5CF6' }}>
                   {translateIntentionTag(selectedMatch.intentionTag)}
                 </Text>
               </View>
@@ -276,7 +276,7 @@ export const MatchDetailScreen: React.FC = () => {
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
           {matchInterests.map((tag: string) => (
             <View key={tag} style={{ backgroundColor: 'rgba(139, 92, 246, 0.08)', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(139, 92, 246, 0.15)' }}>
-              <Text style={{ fontSize: 14, fontWeight: fontWeights.medium, color: palette.purple[600] }}>{tag}</Text>
+              <Text style={{ fontSize: 14, fontFamily: 'Poppins_700Bold', color: palette.purple[600] }}>{tag}</Text>
             </View>
           ))}
         </View>
@@ -314,8 +314,8 @@ export const MatchDetailScreen: React.FC = () => {
                 <Ionicons name={row.icon} size={18} color={colors.text} />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={{ fontSize: 14, fontWeight: fontWeights.medium, color: colors.textTertiary, marginBottom: 2 }}>{row.label}</Text>
-                <Text style={{ fontSize: 15, fontWeight: fontWeights.medium, color: colors.text }}>{row.value}</Text>
+                <Text style={{ fontSize: 14, fontFamily: 'Poppins_700Bold', color: colors.textTertiary, marginBottom: 2 }}>{row.label}</Text>
+                <Text style={{ fontSize: 15, fontFamily: 'Poppins_700Bold', color: colors.text }}>{row.value}</Text>
               </View>
             </View>
           ))}
@@ -474,7 +474,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 28,
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
     color: colors.text,
     letterSpacing: 0,
   },
@@ -498,20 +498,20 @@ const styles = StyleSheet.create({
   },
   userName: {
     fontSize: 28,
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
     color: colors.text,
     letterSpacing: 0,
     flexShrink: 1,
   },
   jobTitle: {
     fontSize: 15,
-    fontWeight: fontWeights.semibold,
+    fontFamily: 'Poppins_700Bold',
     color: palette.purple[600],
     letterSpacing: 0.1,
   },
   cityText: {
     fontSize: 14,
-    fontWeight: fontWeights.regular,
+    fontFamily: 'Poppins_700Bold',
     color: colors.textSecondary,
   },
   intentionChip: {
@@ -523,7 +523,7 @@ const styles = StyleSheet.create({
   },
   intentionText: {
     fontSize: 14,
-    fontWeight: fontWeights.semibold,
+    fontFamily: 'Poppins_700Bold',
     color: colors.primary,
     letterSpacing: 0.2,
   },
@@ -541,11 +541,11 @@ const styles = StyleSheet.create({
   },
   compatInlineText: {
     fontSize: 17,
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
   },
   compatSuperLabel: {
     fontSize: 14,
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
     color: colors.accent,
     backgroundColor: colors.accent + '18',
     borderRadius: borderRadius.full,
@@ -572,14 +572,14 @@ const styles = StyleSheet.create({
   },
   statValue: {
     fontSize: 20,
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
     color: colors.text,
     textAlign: 'center',
     includeFontPadding: false,
   },
   statLabel: {
     fontSize: 14,
-    fontWeight: fontWeights.medium,
+    fontFamily: 'Poppins_700Bold',
     color: colors.textTertiary,
     marginTop: 3,
     textAlign: 'center',
@@ -599,14 +599,14 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
     color: colors.text,
     letterSpacing: 0,
     marginBottom: spacing.md,
   },
   bioText: {
     fontSize: 15,
-    fontWeight: fontWeights.regular,
+    fontFamily: 'Poppins_700Bold',
     color: colors.textSecondary,
     lineHeight: 24,
   },
@@ -622,12 +622,12 @@ const styles = StyleSheet.create({
   },
   categoryName: {
     fontSize: 15,
-    fontWeight: fontWeights.medium,
+    fontFamily: 'Poppins_700Bold',
     color: colors.text,
   },
   categoryScore: {
     fontSize: 15,
-    fontWeight: fontWeights.semibold,
+    fontFamily: 'Poppins_700Bold',
   },
   breakdownBar: {
     height: 6,
@@ -648,7 +648,7 @@ const styles = StyleSheet.create({
   },
   matchInfoText: {
     fontSize: 15,
-    fontWeight: fontWeights.regular,
+    fontFamily: 'Poppins_700Bold',
     color: colors.textSecondary,
   },
 
@@ -677,7 +677,7 @@ const styles = StyleSheet.create({
   },
   gradientButtonText: {
     fontSize: 14,
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
     color: '#FFFFFF',
     letterSpacing: 0.3,
   },
@@ -694,7 +694,7 @@ const styles = StyleSheet.create({
   },
   outlinedButtonText: {
     fontSize: 14,
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
     color: palette.purple[600],
     letterSpacing: 0.3,
   },
@@ -709,7 +709,7 @@ const styles = StyleSheet.create({
   },
   jetonCostText: {
     fontSize: 9,
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
     color: palette.purple[600],
     letterSpacing: 0.2,
   },
@@ -730,7 +730,7 @@ const styles = StyleSheet.create({
   },
   unmatchButtonText: {
     fontSize: 14,
-    fontWeight: fontWeights.medium,
+    fontFamily: 'Poppins_700Bold',
     color: colors.error,
   },
 });

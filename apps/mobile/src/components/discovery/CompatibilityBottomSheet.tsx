@@ -25,7 +25,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { compatibilityService } from '../../services/compatibilityService';
 import type { DetailedCompatibilityResponse } from '../../services/compatibilityService';
 import { colors, palette, glassmorphism } from '../../theme/colors';
-import { typography, fontWeights } from '../../theme/typography';
+import { typography } from '../../theme/typography';
 import { spacing, borderRadius } from '../../theme/spacing';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -274,7 +274,7 @@ const styles = StyleSheet.create({
   closeText: {
     fontSize: 14,
     color: colors.textSecondary,
-    fontWeight: fontWeights.semibold,
+    fontFamily: 'Poppins_700Bold',
   },
   scrollContent: {
     flex: 1,
@@ -305,7 +305,7 @@ const styles = StyleSheet.create({
   retryText: {
     ...typography.bodySmall,
     color: palette.purple[300],
-    fontWeight: fontWeights.semibold,
+    fontFamily: 'Poppins_700Bold',
   },
   // Score bar
   scoreSection: {
@@ -330,7 +330,7 @@ const styles = StyleSheet.create({
   scoreValue: {
     ...typography.h3,
     color: palette.purple[300],
-    fontWeight: fontWeights.bold,
+    fontFamily: 'Poppins_800ExtraBold',
   },
   scoreValueSuper: {
     color: palette.gold[300],
@@ -342,7 +342,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 15,
-    fontWeight: fontWeights.semibold,
+    fontFamily: 'Poppins_700Bold',
     color: colors.text,
     marginBottom: 2,
   },
@@ -356,12 +356,12 @@ const styles = StyleSheet.create({
   },
   areaLabel: {
     fontSize: 14,
-    fontWeight: fontWeights.semibold,
+    fontFamily: 'Poppins_700Bold',
     color: palette.purple[300],
   },
   areaDescription: {
     fontSize: 14,
-    fontWeight: fontWeights.regular,
+    fontFamily: 'Poppins_700Bold',
     color: colors.textSecondary,
     lineHeight: 19,
   },
@@ -375,7 +375,7 @@ const styles = StyleSheet.create({
   },
   starterText: {
     fontSize: 14,
-    fontWeight: fontWeights.regular,
+    fontFamily: 'Poppins_700Bold',
     color: colors.text,
     fontStyle: 'italic',
     lineHeight: 20,

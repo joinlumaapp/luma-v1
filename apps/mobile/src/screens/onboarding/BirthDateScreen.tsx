@@ -244,7 +244,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: onboardingColors.text,
     marginBottom: 20,
   },
@@ -261,13 +260,11 @@ const styles = StyleSheet.create({
   dateText: {
     fontSize: 17,
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
     color: onboardingColors.textSecondary,
   },
   label: {
     fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: onboardingColors.textSecondary,
     marginBottom: 8,
     marginTop: 12,
@@ -310,13 +307,11 @@ const styles = StyleSheet.create({
   chipText: {
     fontSize: 14,
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
     color: onboardingColors.text,
   },
   chipTextActive: {
     color: onboardingColors.selectedText,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   zodiacCard: {
     flexDirection: 'row',
@@ -332,14 +327,12 @@ const styles = StyleSheet.create({
   zodiacText: {
     flex: 1,
     fontSize: 14,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '500',
+    fontFamily: 'Poppins_500Medium',
     color: onboardingColors.textSecondary,
     lineHeight: 20,
   },
   zodiacBold: {
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: onboardingColors.text,
   },
 });

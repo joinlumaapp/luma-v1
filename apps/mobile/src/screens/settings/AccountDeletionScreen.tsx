@@ -212,7 +212,7 @@ export const AccountDeletionScreen: React.FC = () => {
         {isSendingOtp ? (
           <ActivityIndicator size="small" color="#FFFFFF" />
         ) : (
-          <Text style={dynamicStyles.primaryButtonText}>Devam Et</Text>
+          <Text style={dynamicStyles.primaryButtonText}>Devam et</Text>
         )}
       </TouchableOpacity>
     </ScrollView>
@@ -266,7 +266,7 @@ export const AccountDeletionScreen: React.FC = () => {
           {isVerifyingOtp ? (
             <ActivityIndicator size="small" color="#FFFFFF" />
           ) : (
-            <Text style={dynamicStyles.deleteButtonText}>Doğrula ve Devam Et</Text>
+            <Text style={dynamicStyles.deleteButtonText}>Doğrula ve Devam et</Text>
           )}
         </TouchableOpacity>
       </View>
@@ -386,7 +386,6 @@ function createDynamicStyles(c: ThemeColors) {
       ...typography.bodyLarge,
       color: c.text,
       fontFamily: 'Poppins_600SemiBold',
-      fontWeight: '600',
       includeFontPadding: false,
     },
     scrollContent: {
@@ -418,7 +417,6 @@ function createDynamicStyles(c: ThemeColors) {
       ...typography.bodyLarge,
       color: c.error,
       fontFamily: 'Poppins_600SemiBold',
-      fontWeight: '600',
       marginBottom: spacing.sm,
       textAlign: 'center',
       includeFontPadding: false,
@@ -449,7 +447,6 @@ function createDynamicStyles(c: ThemeColors) {
       ...typography.bodySmall,
       color: c.primary,
       fontFamily: 'Poppins_600SemiBold',
-      fontWeight: '600',
       marginBottom: 4,
       includeFontPadding: false,
     },
@@ -465,7 +462,6 @@ function createDynamicStyles(c: ThemeColors) {
       ...typography.caption,
       color: c.textTertiary,
       fontFamily: 'Poppins_600SemiBold',
-      fontWeight: '600',
       marginBottom: spacing.sm,
       paddingHorizontal: spacing.xs,
       letterSpacing: 0.5,
@@ -514,7 +510,6 @@ function createDynamicStyles(c: ThemeColors) {
     },
     reasonTextSelected: {
       fontFamily: 'Poppins_500Medium',
-      fontWeight: '500',
     },
 
     // Other input
@@ -568,7 +563,6 @@ function createDynamicStyles(c: ThemeColors) {
       ...typography.h4,
       color: c.text,
       fontFamily: 'Poppins_600SemiBold',
-      fontWeight: '600',
       marginBottom: spacing.sm,
       includeFontPadding: false,
     },
@@ -603,7 +597,6 @@ function createDynamicStyles(c: ThemeColors) {
       ...typography.bodySmall,
       color: c.primary,
       fontFamily: 'Poppins_500Medium',
-      fontWeight: '500',
       includeFontPadding: false,
     },
     deleteButton: {
@@ -649,7 +642,6 @@ function createDynamicStyles(c: ThemeColors) {
       ...typography.h4,
       color: c.error,
       fontFamily: 'Poppins_600SemiBold',
-      fontWeight: '600',
       marginBottom: spacing.md,
       textAlign: 'center',
       includeFontPadding: false,
@@ -687,7 +679,6 @@ function createDynamicStyles(c: ThemeColors) {
       ...typography.button,
       color: '#FFFFFF',
       fontFamily: 'Poppins_600SemiBold',
-      fontWeight: '600',
       includeFontPadding: false,
     },
   });

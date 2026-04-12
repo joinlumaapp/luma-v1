@@ -38,6 +38,18 @@ export class CompatibilityController {
     return this.compatibilityService.submitAnswersBulk(userId, dto);
   }
 
+  @Get("progress")
+  @ApiOperation({ summary: "Get user's quiz progress (completed questions + last question)" })
+  async getProgress(@CurrentUser("sub") userId: string) {
+    return this.compatibilityService.getProgress(userId);
+  }
+
+  @Post("calculate")
+  @ApiOperation({ summary: "Trigger compatibility score calculation after completing all 20 questions" })
+  async triggerCalculate(@CurrentUser("sub") userId: string) {
+    return this.compatibilityService.triggerCalculate(userId);
+  }
+
   @Get("my-answers")
   @ApiOperation({ summary: "Get all answers submitted by the current user" })
   async getMyAnswers(@CurrentUser("sub") userId: string) {

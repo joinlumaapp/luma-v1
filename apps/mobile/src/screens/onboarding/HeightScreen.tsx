@@ -178,14 +178,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: onboardingColors.text,
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '500',
+    fontFamily: 'Poppins_500Medium',
     color: onboardingColors.textSecondary,
     marginBottom: 32,
     lineHeight: 22,
@@ -224,13 +222,11 @@ const styles = StyleSheet.create({
   itemText: {
     fontSize: 16,
     color: onboardingColors.textSecondary,
-    fontFamily: 'Poppins_400Regular',
-    fontWeight: '500',
+    fontFamily: 'Poppins_500Medium',
   },
   itemTextCenter: {
     fontSize: 20,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: onboardingColors.text,
   },
   itemTextFaded: {
@@ -246,13 +242,11 @@ const styles = StyleSheet.create({
   selectedValue: {
     fontSize: 32,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: onboardingColors.text,
   },
   selectedConversion: {
     fontSize: 18,
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
     color: onboardingColors.textSecondary,
   },
 });

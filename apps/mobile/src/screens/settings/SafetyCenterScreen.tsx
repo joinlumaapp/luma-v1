@@ -288,7 +288,6 @@ function createDynamicStyles(c: ThemeColors) {
       ...typography.bodyLarge,
       color: c.text,
       fontFamily: 'Poppins_600SemiBold',
-      fontWeight: '600',
     },
 
     // Hero banner
@@ -345,7 +344,6 @@ function createDynamicStyles(c: ThemeColors) {
       ...typography.body,
       color: c.text,
       fontFamily: 'Poppins_600SemiBold',
-      fontWeight: '600',
       flex: 1,
     },
 
@@ -375,7 +373,6 @@ function createDynamicStyles(c: ThemeColors) {
       ...typography.captionSmall,
       color: c.primary,
       fontFamily: 'Poppins_600SemiBold',
-      fontWeight: '600',
     },
     tipText: {
       ...typography.bodySmall,
@@ -412,7 +409,6 @@ function createDynamicStyles(c: ThemeColors) {
       ...typography.body,
       color: c.text,
       fontFamily: 'Poppins_500Medium',
-      fontWeight: '500',
     },
 
     // Link button
@@ -432,7 +428,6 @@ function createDynamicStyles(c: ThemeColors) {
       ...typography.body,
       color: c.primary,
       fontFamily: 'Poppins_600SemiBold',
-      fontWeight: '600',
       flex: 1,
     },
   });

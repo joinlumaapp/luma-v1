@@ -24,7 +24,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { MatchesStackParamList } from '../../navigation/types';
 import { colors } from '../../theme/colors';
-import { typography, fontWeights } from '../../theme/typography';
+import { typography } from '../../theme/typography';
 import { spacing, borderRadius, layout } from '../../theme/spacing';
 import { useMatchStore } from '../../stores/matchStore';
 import type { Match } from '../../stores/matchStore';
@@ -1151,13 +1151,13 @@ export const MatchesListScreen: React.FC = () => {
         icon: '\uD83D\uDC9C',
         title: 'Henüz Beğenen Yok',
         subtitle: 'Profilini zenginleştirerek daha fazla beğeni alabilirsin.',
-        ctaLabel: 'Profilini Güçlendir',
+        ctaLabel: 'Profilini güçlendir',
       },
       followers: {
         icon: '\uD83D\uDC65',
         title: 'Henüz takipçin yok',
         subtitle: 'Profilini paylaş ve takipçi kazan!',
-        ctaLabel: 'Profilini Paylaş',
+        ctaLabel: 'Profilini paylaş',
       },
       viewers: {
         icon: '\uD83D\uDC40',
@@ -1486,13 +1486,11 @@ const weeklyReportStyles = StyleSheet.create({
   title: {
     fontSize: 15,
     fontFamily: 'Poppins_800ExtraBold',
-    fontWeight: '800',
     color: '#1A1A2E',
   },
   subtitle: {
     fontSize: 13,
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
     color: 'rgba(0,0,0,0.6)',
     marginTop: 2,
   },
@@ -1535,7 +1533,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: palette.purple[400],
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   dynamicSubtitle: {
     fontSize: 14,
@@ -1593,14 +1590,12 @@ const styles = StyleSheet.create({
     lineHeight: 16,
     color: colors.textSecondary,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   tabChipTextActive: {
     fontSize: 14,
     lineHeight: 16,
     color: '#FFFFFF',
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   tabBadgeActive: {
     backgroundColor: 'rgba(255,255,255,0.3)',
@@ -1613,7 +1608,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#FFFFFF',
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   // ── Nudge section ("not talked today") ──
   nudgeCompletedSection: {
@@ -1626,7 +1620,6 @@ const styles = StyleSheet.create({
     ...typography.bodySmall,
     color: colors.textSecondary,
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
   },
   nudgeSection: {
     marginBottom: spacing.md,
@@ -1636,7 +1629,6 @@ const styles = StyleSheet.create({
     ...typography.bodySmall,
     color: colors.textSecondary,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     marginBottom: spacing.sm,
   },
   nudgeScroll: {
@@ -1672,13 +1664,11 @@ const styles = StyleSheet.create({
     ...typography.bodyLarge,
     color: colors.primary,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   nudgeName: {
     ...typography.captionSmall,
     color: colors.text,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     marginBottom: 2,
     textAlign: 'center',
     width: 88,
@@ -1686,7 +1676,6 @@ const styles = StyleSheet.create({
   nudgeCompat: {
     ...typography.captionSmall,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     marginBottom: 6,
   },
   nudgeCta: {
@@ -1699,7 +1688,6 @@ const styles = StyleSheet.create({
     ...typography.captionSmall,
     color: '#fff',
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     fontSize: 9,
   },
   // ── List ──
@@ -1765,7 +1753,6 @@ const styles = StyleSheet.create({
   newBadgeText: {
     fontSize: 8,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: '#FFFFFF',
     letterSpacing: 0.5,
   },
@@ -1777,7 +1764,6 @@ const styles = StyleSheet.create({
   newInlineBadgeText: {
     fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: '#FFFFFF',
   },
   matchNameNew: {
@@ -1809,12 +1795,10 @@ const styles = StyleSheet.create({
   },
   matchNameUnread: {
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   messagePreviewUnread: {
     color: colors.text,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   unreadCountBadge: {
     backgroundColor: colors.primary,
@@ -1829,7 +1813,6 @@ const styles = StyleSheet.create({
   unreadCountText: {
     fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: '#FFFFFF',
   },
   // Tab badge for likes count — inline to avoid Android ScrollView clipping
@@ -1846,7 +1829,6 @@ const styles = StyleSheet.create({
   tabBadgeText: {
     fontSize: 9,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: '#FFFFFF',
     lineHeight: 12,
   },
@@ -1863,7 +1845,6 @@ const styles = StyleSheet.create({
     ...typography.bodyLarge,
     color: colors.text,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   messagePreview: {
     ...typography.bodySmall,
@@ -1895,7 +1876,6 @@ const styles = StyleSheet.create({
     ...typography.captionSmall,
     color: colors.primary,
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
     fontSize: 14,
   },
   lastActivity: {
@@ -1925,7 +1905,7 @@ const styles = StyleSheet.create({
   compatText: {
     ...typography.caption,
     color: colors.primary,
-    fontWeight: fontWeights.medium,
+    fontFamily: 'Poppins_700Bold',
   },
   verifiedDot: {
     marginLeft: 2,
@@ -2048,7 +2028,6 @@ const styles = StyleSheet.create({
     ...typography.h4,
     color: colors.text,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   viewersCountBadge: {
     backgroundColor: '#8B5CF6',
@@ -2062,7 +2041,6 @@ const styles = StyleSheet.create({
   viewersCountBadgeText: {
     fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: '#FFFFFF',
     lineHeight: 15,
   },
@@ -2116,7 +2094,6 @@ const styles = StyleSheet.create({
     ...typography.h4,
     color: '#8B5CF6',
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   viewerBlurredAvatar: {
     width: 60,
@@ -2138,7 +2115,6 @@ const styles = StyleSheet.create({
     ...typography.h4,
     color: '#5B2D8E' + '60',
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   viewerLockBadge: {
     position: 'absolute',
@@ -2163,7 +2139,6 @@ const styles = StyleSheet.create({
     ...typography.bodyLarge,
     color: colors.text,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     marginBottom: 2,
   },
   viewerNameBlurred: {
@@ -2191,7 +2166,6 @@ const styles = StyleSheet.create({
   viewerTimeTextRecent: {
     color: '#8B5CF6',
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   viewerPremiumHint: {
     marginTop: 4,
@@ -2204,7 +2178,6 @@ const styles = StyleSheet.create({
   viewerPremiumHintText: {
     fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: '#8B5CF6',
     lineHeight: 14,
   },
@@ -2224,7 +2197,6 @@ const styles = StyleSheet.create({
     fontSize: 20,
     color: '#8B5CF6',
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     lineHeight: 24,
     marginTop: -1,
   },
@@ -2237,7 +2209,6 @@ const styles = StyleSheet.create({
   viewerUpgradeText: {
     fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: '#FFFFFF',
     letterSpacing: 0.5,
     lineHeight: 14,

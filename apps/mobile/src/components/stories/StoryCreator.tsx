@@ -130,7 +130,6 @@ const DraggableTextOverlay: React.FC<DraggableTextOverlayProps> = React.memo(
         <Text
           style={{
             fontFamily: 'Poppins_600SemiBold',
-            fontWeight: '600',
             fontSize: overlay.fontSize,
             color: overlay.color,
             textShadowColor: 'rgba(0,0,0,0.5)',
@@ -424,7 +423,7 @@ export const StoryCreator: React.FC<StoryCreatorProps> = ({
     } catch {
       setIsUploading(false);
       setUploadProgress(0);
-      Alert.alert('Hata', 'Hikaye paylasilamadi. Lutfen tekrar dene.', [{ text: 'Tamam' }]);
+      Alert.alert('Hata', 'Hikaye paylaşılamadı. Lütfen tekrar dene.', [{ text: 'Tamam' }]);
     }
   }, [imageUri, mediaType, textOverlays, stickerOverlays, drawingPaths, createStory, onStoryCreated, navigation]);
 
@@ -844,7 +843,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: 'rgba(255,255,255,0.6)',
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
   },
   expiryNote: {
     fontSize: 14,
@@ -852,7 +850,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: spacing.md,
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
   },
   closeButtonEmpty: {
     position: 'absolute',
@@ -900,7 +897,6 @@ const styles = StyleSheet.create({
   },
   overlayText: {
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     textShadowColor: 'rgba(0,0,0,0.5)',
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 3,
@@ -932,7 +928,6 @@ const styles = StyleSheet.create({
   textInputField: {
     color: '#FFFFFF',
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     textAlign: 'center',
     minHeight: 60,
     textShadowColor: 'rgba(0,0,0,0.5)',
@@ -959,13 +954,11 @@ const styles = StyleSheet.create({
     ...typography.bodySmall,
     color: '#FFFFFF',
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   fontSizeLabel: {
     ...typography.body,
     color: '#FFFFFF',
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     minWidth: 28,
     textAlign: 'center',
   },
@@ -999,7 +992,6 @@ const styles = StyleSheet.create({
     ...typography.bodySmall,
     color: '#FFFFFF',
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   stickerGrid: {
     gap: spacing.sm,
@@ -1088,7 +1080,6 @@ const styles = StyleSheet.create({
     ...typography.bodySmall,
     color: '#FFFFFF',
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   publishButton: {
     flexDirection: 'row',
@@ -1166,8 +1157,7 @@ const styles = StyleSheet.create({
   progressBarText: {
     textAlign: 'center',
     fontSize: 14,
-    fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600' as const,
+    fontFamily: 'Poppins_600SemiBold' as const,
     color: '#FFFFFF',
   },
 });

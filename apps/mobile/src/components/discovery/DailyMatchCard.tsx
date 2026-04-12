@@ -264,7 +264,7 @@ export const DailyMatchCard = memo<DailyMatchCardProps>(
               {/* CTA */}
               <View style={styles.ctaContainer}>
                 <View style={styles.ctaButton}>
-                  <Text style={styles.ctaText}>Profili Gor</Text>
+                  <Text style={styles.ctaText}>Profili gör</Text>
                 </View>
               </View>
             </View>
@@ -333,7 +333,6 @@ const styles = StyleSheet.create({
   badgeText: {
     fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: GOLD_BORDER,
     letterSpacing: 0.3,
   },
@@ -368,7 +367,6 @@ const styles = StyleSheet.create({
   photoPlaceholderText: {
     fontSize: 28,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: palette.purple[500],
   },
 
@@ -380,7 +378,6 @@ const styles = StyleSheet.create({
   name: {
     ...typography.bodyLarge,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: colors.text,
   },
   city: {
@@ -403,7 +400,6 @@ const styles = StyleSheet.create({
   compatBadgeText: {
     fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: palette.purple[600],
   },
   compatBadgeTextSuper: {
@@ -412,7 +408,6 @@ const styles = StyleSheet.create({
   superLabel: {
     fontSize: 14,
     fontFamily: 'Poppins_700Bold',
-    fontWeight: '700',
     color: SUPER_GLOW_COLOR,
   },
 
@@ -429,7 +424,6 @@ const styles = StyleSheet.create({
   ctaText: {
     fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: '#FFFFFF',
   },
 
@@ -444,7 +438,6 @@ const styles = StyleSheet.create({
   remainingText: {
     fontSize: 14,
     fontFamily: 'Poppins_500Medium',
-    fontWeight: '500',
     color: GOLD_BORDER,
   },
 
@@ -485,7 +478,6 @@ const styles = StyleSheet.create({
   countdownValue: {
     fontSize: 14,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: GOLD_BORDER,
     fontVariant: ['tabular-nums'],
   },

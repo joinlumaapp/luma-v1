@@ -65,7 +65,7 @@ import { PlacesScreen } from '../screens/places/PlacesScreen';
 import { NotificationSettingsScreen } from '../screens/settings/NotificationSettingsScreen';
 import { NotificationsScreen } from '../screens/notifications/NotificationsScreen';
 import { MembershipPlansScreen } from '../screens/settings/MembershipPlansScreen';
-import { PersonalitySelectionScreen } from '../screens/profile/PersonalitySelectionScreen';
+// PersonalitySelectionScreen removed — kişilik testi kaldırıldı
 import { ProfileCoachScreen } from '../screens/profile/ProfileCoachScreen';
 import { FollowListScreen } from '../screens/profile/FollowListScreen';
 import { BlockedUsersScreen } from '../screens/settings/BlockedUsersScreen';
@@ -487,7 +487,7 @@ const ProfileStackNavigator: React.FC = React.memo(() => (
     <ProfileStack.Screen name="Places" component={PlacesScreen} />
     <ProfileStack.Screen name="NotificationSettings" component={NotificationSettingsScreen} />
     <ProfileStack.Screen name="MembershipPlans" component={MembershipPlansScreen} />
-    <ProfileStack.Screen name="PersonalitySelection" component={PersonalitySelectionScreen} />
+    {/* PersonalitySelection removed — kişilik testi kaldırıldı */}
     <ProfileStack.Screen name="ProfileCoach" component={ProfileCoachScreen} />
     <ProfileStack.Screen name="BlockedUsers" component={BlockedUsersScreen} />
     <ProfileStack.Screen name="SafetyCenter" component={SafetyCenterScreen} />
@@ -561,15 +561,16 @@ export const MainTabNavigator: React.FC = () => {
         tabBarStyle: {
           backgroundColor: '#08080F',
           borderTopWidth: 0,
-          height: 64,
-          paddingBottom: 8,
-          paddingTop: 4,
+          height: 70,
+          paddingBottom: 12,
+          paddingTop: 6,
         },
         tabBarActiveTintColor: '#9B6BF8',
         tabBarInactiveTintColor: 'rgba(255,255,255,0.5)',
         tabBarLabelStyle: {
-          fontSize: 11,
-          fontWeight: '600' as const,
+          fontSize: 10,
+          fontFamily: 'Poppins_500Medium' as const,
+          marginTop: -2,
         },
       }}
     >
@@ -579,7 +580,7 @@ export const MainTabNavigator: React.FC = () => {
         options={{
           tabBarLabel: t('tabs.feed'),
           tabBarIcon: ({ color }) => (
-            <Ionicons name="home" size={26} color={color} />
+            <Ionicons name="home" size={22} color={color} />
           ),
           tabBarAccessibilityLabel: t('tabs.feed'),
           tabBarButtonTestID: 'tab-feed',
@@ -592,7 +593,7 @@ export const MainTabNavigator: React.FC = () => {
         options={{
           tabBarLabel: t('tabs.discover'),
           tabBarIcon: ({ color }) => (
-            <Ionicons name="compass" size={26} color={color} />
+            <Ionicons name="compass" size={22} color={color} />
           ),
           tabBarAccessibilityLabel: t('tabs.discover'),
           tabBarButtonTestID: 'tab-discovery',
@@ -605,7 +606,7 @@ export const MainTabNavigator: React.FC = () => {
         options={{
           tabBarLabel: t('tabs.live'),
           tabBarIcon: ({ color }) => (
-            <Ionicons name="videocam" size={26} color={color} />
+            <Ionicons name="videocam" size={22} color={color} />
           ),
           tabBarAccessibilityLabel: t('tabs.live'),
           tabBarButtonTestID: 'tab-live',
@@ -619,7 +620,7 @@ export const MainTabNavigator: React.FC = () => {
           tabBarLabel: t('tabs.matches'),
           tabBarIcon: ({ color }) => (
             <View>
-              <Ionicons name="heart" size={26} color={color} />
+              <Ionicons name="heart" size={22} color={color} />
               {matchesTabBadge > 0 && (
                 <View style={styles.unreadBadge}>
                   <Text style={styles.unreadBadgeText}>
@@ -640,7 +641,7 @@ export const MainTabNavigator: React.FC = () => {
         options={{
           tabBarLabel: t('tabs.profile'),
           tabBarIcon: ({ color }) => (
-            <Ionicons name="person" size={26} color={color} />
+            <Ionicons name="person" size={22} color={color} />
           ),
           tabBarAccessibilityLabel: t('tabs.profile'),
           tabBarButtonTestID: 'tab-profile',
@@ -694,7 +695,6 @@ const styles = StyleSheet.create({
     ...typography.captionSmall,
     color: '#FFFFFF',
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     fontSize: 9,
     lineHeight: 12,
   },

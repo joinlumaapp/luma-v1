@@ -301,7 +301,6 @@ const styles = StyleSheet.create({
     ...typography.h3,
     color: palette.white,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   headerSubtitle: {
     ...typography.bodySmall,
@@ -352,7 +351,6 @@ const styles = StyleSheet.create({
   dayJetons: {
     ...typography.captionSmall,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     color: colors.textSecondary,
   },
   dayJetonsCurrent: {
@@ -379,13 +377,11 @@ const styles = StyleSheet.create({
     ...typography.h2,
     color: palette.white,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   coinLabel: {
     ...typography.captionSmall,
     color: 'rgba(255,255,255,0.9)',
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   bonusBadge: {
     flexDirection: 'row',
@@ -401,13 +397,11 @@ const styles = StyleSheet.create({
     ...typography.caption,
     color: palette.gold[500],
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
   multiplierText: {
     ...typography.caption,
     color: palette.gold[500],
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     marginTop: spacing.xs,
   },
   streakInfo: {
@@ -432,6 +426,5 @@ const styles = StyleSheet.create({
     ...typography.button,
     color: palette.white,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
 });

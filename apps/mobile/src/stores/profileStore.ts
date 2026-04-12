@@ -577,9 +577,6 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
     // Hedefim: +8
     if ((profile.intentionTag ?? '').length > 0) pct += 8;
 
-    // Kişilik Testi (solved): +8
-    if (profile.personalityType != null && profile.personalityType.length > 0) pct += 8;
-
     // Prompt'larım (≥ 1): +8
     if ((profile.prompts ?? []).length >= 1) pct += 8;
 
@@ -628,7 +625,6 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
       profile.travelFrequency,
       profile.distancePreference,
       profile.communicationStyle,
-      profile.hookah,
     ].filter((v) => (v ?? '').length > 0).length;
     if (newExtended >= 3) pct += 7;
 

@@ -290,6 +290,35 @@ Implementation:
 
 **Uyum Analizi is no longer part of profile strength.** The earlier 95%-cap-if-incomplete rule has been removed — Uyum Analizi now only affects matching.
 
+## Decision 040: Uyum Analizi — 8 Psikolojik Boyut ile Derin Karakter Analizi
+**Date:** 2026-04-12
+**Decision:** 20 uyum sorusu tamamen yeniden yazıldı. Eski yüzeysel sorular (hafta sonu planı, evcil hayvan, sabah rutini) yerine ilişki psikolojisine dayalı 8 boyutta derin karakter soruları kullanılıyor.
+**Boyutlar:** İletişim Tarzı (%15), Çatışma Çözümü (%15), Duygusal Derinlik (%15), Sosyal Enerji (%10), Yaşam Temposu (%10), Uzun Vadeli Vizyon (%15), İlişki Beklentisi (%10), Yaşam Tarzı Uyumu (%10)
+**Ek:** Yaşam tarzı bonus skoru (sigara/alkol/diyet vb. eşleşmesi max +7 puan) + deal-breaker cezaları (çocuk -5, sigara -3, alkol -2)
+**Rejected:** Eski 15-kategori sistemi (frontend/backend uyumsuzdu), per-question weight (artık category-level weight)
+
+## Decision 041: Kişilik Testi Kaldırıldı
+**Date:** 2026-04-12
+**Decision:** 5 soruluk Kişilik Testi tamamen kaldırıldı. Kozmetikti, eşleşmeye etkisi yoktu, 20 derin uyum sorusu zaten karakteri ölçüyor.
+**Kaldırılan:** PersonalitySelectionScreen navigasyondan çıkarıldı, EditProfileScreen'den buton silindi, profil tamamlanma skorundan çıkarıldı (%8 serbest)
+
+## Decision 042: Nargile Alanı Kaldırıldı
+**Date:** 2026-04-12
+**Decision:** Nargile (hookah) alanı UI'dan ve uyum skorundan kaldırıldı — sigara ile aynı kategori sayılır. DB'de kolon duruyor (mevcut veri korunur).
+
+## Decision 043: Poppins Font — fontWeight Yerine fontFamily Zorunlu
+**Date:** 2026-04-12
+**Decision:** Android'de fontWeight tek başına custom font aktive etmiyor. Tüm fontWeight değerleri fontFamily ile değiştirildi (807 değişiklik, 128 dosya). Global defaultProps ile Text/TextInput varsayılan Poppins_500Medium kullanıyor.
+**Rejected:** fontWeight ile çalışma (Android'de çalışmıyor)
+
+## Decision 044: Typography Ölçeği Küçültüldü
+**Date:** 2026-04-12
+**Decision:** fontSizes ölçeği küçültüldü — gövde yazıları 13-17px, başlıklar 24-42px. Eski ölçek (18-46px) tüm yazıları çok büyük gösteriyordu. Gövde fontları Poppins_500Medium/600SemiBold, başlıklar 700Bold/800ExtraBold.
+
+## Decision 045: Uyum Soruları Atlama — Minimum Eşik Gerekli (TODO)
+**Date:** 2026-04-12
+**Decision:** Kullanıcı tüm soruları "Atla" yapınca sahte sonuç gösterilmemeli. Minimum 10 soru cevaplanmalı, yoksa analiz/sonuç ekranı gösterilmemeli. **Henüz implement edilmedi — bir sonraki oturumda yapılacak.**
+
 **Rejected:**
 - Equal-weight field counting (old `filled/22 * 100`) — rewards filling 20 tiny fields over one big "photos" field.
 - Separate backend computation — keep client-side so it updates live as the user edits.

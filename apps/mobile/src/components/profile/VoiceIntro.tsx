@@ -15,7 +15,7 @@ import { Audio } from 'expo-av';
 import type { AVPlaybackStatus } from 'expo-av';
 import { colors, palette } from '../../theme/colors';
 import { spacing, borderRadius, shadows } from '../../theme/spacing';
-import { typography, fontWeights } from '../../theme/typography';
+import { typography } from '../../theme/typography';
 
 // ─── Types ────────────────────────────────────────────────────
 
@@ -672,7 +672,7 @@ const styles = StyleSheet.create({
     ...typography.body,
     color: colors.textSecondary,
     textAlign: 'center',
-    fontWeight: fontWeights.medium,
+    fontFamily: 'Poppins_700Bold',
     marginBottom: spacing.lg,
   },
   controls: {
@@ -695,7 +695,7 @@ const styles = StyleSheet.create({
   recordButtonLabel: {
     ...typography.bodySmall,
     color: colors.textSecondary,
-    fontWeight: fontWeights.medium,
+    fontFamily: 'Poppins_700Bold',
   },
 
   // Stop Button
@@ -806,7 +806,7 @@ const styles = StyleSheet.create({
   voicePlayerText: {
     ...typography.bodySmall,
     color: palette.purple[400],
-    fontWeight: fontWeights.semibold,
+    fontFamily: 'Poppins_700Bold',
   },
   miniWaveform: {
     flexDirection: 'row',

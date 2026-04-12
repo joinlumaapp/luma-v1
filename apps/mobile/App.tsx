@@ -7,6 +7,7 @@ import {
   StyleSheet,
   View,
   Text,
+  TextInput,
   Image,
   TouchableOpacity,
   ActivityIndicator,
@@ -374,6 +375,18 @@ function AppVersionGate(): React.JSX.Element | null {
 
   return null;
 }
+
+// ─── Global Poppins font default ──────────────────────────────────────
+// On Android, fontWeight alone does NOT activate custom fonts — the
+// explicit fontFamily mapping is required. This sets a baseline so every
+// Text/TextInput uses Poppins even when a screen forgets to set fontFamily.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+if (!(Text as any).defaultProps) (Text as any).defaultProps = {};
+(Text as any).defaultProps.style = { fontFamily: 'Poppins_500Medium' };
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+if (!(TextInput as any).defaultProps) (TextInput as any).defaultProps = {};
+(TextInput as any).defaultProps.style = { fontFamily: 'Poppins_500Medium' };
 
 // ─── App Root ─────────────────────────────────────────────────────────
 export default function App(): React.JSX.Element {

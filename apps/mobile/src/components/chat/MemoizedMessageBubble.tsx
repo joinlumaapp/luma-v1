@@ -371,7 +371,6 @@ const styles = StyleSheet.create({
     ...typography.captionSmall,
     color: colors.primary,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
     ...(Platform.OS === 'android' ? { includeFontPadding: false } : {}),
   },
   gifTime: {
@@ -421,6 +420,5 @@ const styles = StyleSheet.create({
     ...typography.captionSmall,
     color: colors.primary,
     fontFamily: 'Poppins_600SemiBold',
-    fontWeight: '600',
   },
 });
